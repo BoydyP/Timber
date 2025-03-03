@@ -1,47 +1,34 @@
 package com.bignerdranch.android.timberworkoutlogs
-
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.bignerdranch.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity(), WorkoutListFragment.WorkoutListListener {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            TimberWorkoutLogsTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
+        setContentView(R.layout.activity_main)
+
+        if (savedInstanceState == null) { // Prevent fragment recreation on rotation
+            showWorkoutList()
         }
     }
-}
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+    private fun showWorkoutList() {
+        val fragment = WorkoutListFragment()
+        supportFragmentManager.beginTransaction()
+            .add(R.id.fragment_container, fragment)
+            .commit()
+    }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    TimberWorkoutLogsTheme {
-        Greeting("Android")
+    override fun onWorkoutSelected(workoutId: Long) {
+        showWorkoutDetail(workoutId)
+    }
+
+    private fun showWorkoutDetail(workoutId: Long) {
+        val fragment = WorkoutDetailFragment.newInstance(workoutId)
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, fragment)
+            .addToBackStack(null) // Add to back stack for "back" button navigation
+            .commit()
     }
 }
