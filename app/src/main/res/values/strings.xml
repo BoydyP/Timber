@@ -5,4 +5,8 @@
     <string name="workout_duration">Duration:</string>
     <string name="workout_name">Workout Name</string>
     <string name="exercise_name">Exercise Name</string>
+    <string name="plate_calculator">Plate Calculator</string>
+    <string name="discard_workout">Discard Workout</string>
+    <string name="workout_notes">Workout Notes</string>
+    <string name="finish_workout">Finish Workout</string>
 </resources>
