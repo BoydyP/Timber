@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-package com.bignerdranch.android.timberworkoutlogs
+package com.bignerdranch.android.timberworkoutlogs.ui.screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,6 +17,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.bignerdranch.android.timberworkoutlogs.Exercise
+import com.bignerdranch.android.timberworkoutlogs.ExerciseSet
+import com.bignerdranch.android.timberworkoutlogs.R
+import com.bignerdranch.android.timberworkoutlogs.Workout
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
