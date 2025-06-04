@@ -1,4 +1,4 @@
-package com.bignerdranch.android.timberworkoutlogs
+package com.bignerdranch.android.timberworkoutlogs.models
 
 data class Exercise(
     val id: Long = 0, // Represent as a long as will not be a huge number

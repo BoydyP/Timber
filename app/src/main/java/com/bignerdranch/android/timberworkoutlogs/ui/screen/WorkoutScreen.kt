@@ -1,136 +1,238 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
-
 package com.bignerdranch.android.timberworkoutlogs.ui.screen
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.ui.res.painterResource
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.bignerdranch.android.timberworkoutlogs.Exercise
-import com.bignerdranch.android.timberworkoutlogs.ExerciseSet
-import com.bignerdranch.android.timberworkoutlogs.R
-import com.bignerdranch.android.timberworkoutlogs.Workout
+import com.bignerdranch.android.timberworkoutlogs.models.Exercise
+import com.bignerdranch.android.timberworkoutlogs.models.ExerciseSet
+import com.bignerdranch.android.timberworkoutlogs.models.Workout
+import com.bignerdranch.android.timberworkoutlogs.ui.theme.TimberOrange
+import com.bignerdranch.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
+
 import kotlinx.coroutines.delay
-import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Locale // For String.format
 
+// Note: The old data classes WorkoutSet and ExerciseEntry are removed from this file.
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WorkoutScreen(
-    workout: Workout,
-    workoutName: String = getDefaultWorkoutName(),
-    onFinishWorkout: () -> Unit = {},
-    onDiscardWorkout: () -> Unit = {},
-    onNotesClick: () -> Unit = {},
-    onPlateCalculatorClick: () -> Unit = {},
-    onAddSet: (exerciseId: Long, weight: Double, reps: Int) -> Unit = { _, _, _ -> }
+fun NewWorkoutScreen(
+    // workout: Workout, // You might pass a full Workout object in the future
+    initialWorkoutName: String = "New Workout", // Can be dynamic
+    onFinishWorkout: (currentWorkoutData: com.bignerdranch.android.timberworkoutlogs.models.Workout) -> Unit, // Pass back the workout data
+    onOpenNotes: (currentNotes: String) -> Unit, // Pass current notes
+    onUpdateNotes: (newNotes: String) -> Unit, // To update notes from a potential notes screen
+    onOpenPlateCalculator: () -> Unit
 ) {
-    var timerSeconds by remember { mutableIntStateOf(0) }
+    // Local state for the current workout being built
+    var workoutName by remember { mutableStateOf(initialWorkoutName) }
+    val exercises = remember { mutableStateListOf<Exercise>() }
+    var workoutNotes by remember { mutableStateOf("")} // For session notes
 
-    // Timer effect
+    // Initialize with placeholder exercises if the list is empty (e.g., on first composition)
+    LaunchedEffect(Unit) {
+        if (exercises.isEmpty()) {
+            exercises.addAll(
+                listOf(
+                    Exercise(name = "Bench Press (Barbell)", sets = mutableListOf(ExerciseSet(weight = 100.0, reps = 8), ExerciseSet(weight = 95.0, reps = 7))),
+                    Exercise(name = "Deadlift", sets = mutableListOf(ExerciseSet()))
+                )
+            )
+        }
+    }
+
+    var secondsElapsed by remember { mutableStateOf(0) }
     LaunchedEffect(Unit) {
         while (true) {
             delay(1000)
-            timerSeconds++
+            secondsElapsed++
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        // Header Row
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top
-        ) {
-            // Workout Name
-            Text(
-                text = workoutName,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f)
-            )
-
-            // Timer
-            Text(
-                text = formatTime(timerSeconds),
-                fontSize = 16.sp,
-                modifier = Modifier.padding(horizontal = 16.dp),
-                textAlign = TextAlign.Center
-            )
-
-            // Finish Workout Button
-            IconButton(
-                onClick = onFinishWorkout
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_checkered_flag),
-                    contentDescription = "Finish Workout"
-                )
-            }
+    val timerText = remember(secondsElapsed) {
+        val hours = secondsElapsed / 3600
+        val minutes = (secondsElapsed % 3600) / 60
+        val secs = secondsElapsed % 60
+        if (hours > 0) {
+            String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, secs)
+        } else {
+            String.format(Locale.getDefault(), "%02d:%02d", minutes, secs)
         }
+    }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Exercises List
+    Scaffold(
+        topBar = {
+            NewWorkoutTopAppBar(
+                title = workoutName, // Use dynamic workout name
+                timerText = timerText,
+                onFinishWorkout = {
+                    // Construct the Workout object to pass back
+                    val finishedWorkout = Workout(
+                        // id will likely be generated when saving
+                        name = workoutName,
+                        durationSeconds = secondsElapsed,
+                        exercises = exercises.toMutableList(), // Create a new list instance
+                        notes = workoutNotes
+                    )
+                    onFinishWorkout(finishedWorkout)
+                }
+            )
+        },
+        bottomBar = {
+            NewWorkoutBottomActions(
+                onOpenNotes = { onOpenNotes(workoutNotes) },
+                onOpenPlateCalculator = onOpenPlateCalculator
+            )
+        },
+        modifier = Modifier.fillMaxSize()
+    ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(innerPadding)
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp)
         ) {
-            items(workout.exercises) { exercise ->
-                ExerciseCard(
+            items(exercises, key = { it.id }) { exercise ->
+                ExerciseInputCard(
                     exercise = exercise,
-                    onAddSet = { weight, reps ->
-                        onAddSet(exercise.id, weight, reps)
+                    onAddSet = {
+                        // Create a new ExerciseSet instance
+                        exercise.sets.add(ExerciseSet())
+                        // Force recomposition by creating a new list reference if needed,
+                        // though SnapshotStateList should handle this.
+                    },
+                    onSetChanged = { setIndex, updatedSet ->
+                        if (setIndex >= 0 && setIndex < exercise.sets.size) {
+                            exercise.sets[setIndex] = updatedSet
+                        }
+                    },
+                    onExerciseNameChange = { newName ->
+                        val exerciseIndex = exercises.indexOfFirst { it.id == exercise.id }
+                        if(exerciseIndex != -1) {
+                            exercises[exerciseIndex] = exercise.copy(name = newName)
+                        }
                     }
                 )
             }
+            // TODO: Add an "Add Exercise" button here
+            item {
+                Button(
+                    onClick = {
+                        exercises.add(Exercise(name = "New Exercise ${exercises.size + 1}", sets = mutableListOf(ExerciseSet())))
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = TimberOrange, // Use TimberOrange for background
+                        contentColor = Color.Black // Set content color for good contrast
+                    )
+                ) {
+                    Text("Add Exercise")
+                }
+            }
         }
+    }
+}
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Bottom Row
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Notes Button
-            IconButton(onClick = onNotesClick) {
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NewWorkoutTopAppBar(
+    title: String,
+    timerText: String,
+    onFinishWorkout: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    TopAppBar(
+        title = { Text(title, fontWeight = FontWeight.Bold) }, // Consider making workout title editable
+        actions = {
+            Text(
+                text = timerText,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.align(Alignment.CenterVertically).padding(end = 8.dp)
+            )
+            IconButton(onClick = onFinishWorkout) {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_notes),
-                    contentDescription = "Workout Notes"
+                    imageVector = Icons.Filled.Flag,
+                    contentDescription = "Finish Workout"
                 )
             }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        ),
+        modifier = modifier
+    )
+}
 
-            // Discard Workout Button
-            TextButton(
-                onClick = onDiscardWorkout,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Discard Workout")
+@Composable
+fun ExerciseInputCard(
+    exercise: Exercise,
+    onAddSet: () -> Unit,
+    onSetChanged: (setIndex: Int, updatedSet: ExerciseSet) -> Unit,
+    onExerciseNameChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Make Exercise Name an OutlinedTextField for editing
+            OutlinedTextField(
+                value = exercise.name,
+                onValueChange = onExerciseNameChange,
+                label = { Text("Exercise Name") },
+                textStyle = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                singleLine = true
+            )
+
+            exercise.sets.forEachIndexed { index, set ->
+                // No local 'currentSet' needed if we pass index for updates
+                SetInputRow(
+                    setNumber = index + 1,
+                    workoutSet = set, // Pass the set directly
+                    onWeightChange = { newWeightStr ->
+                        val newWeight = newWeightStr.toDoubleOrNull() ?: set.weight // Keep old if invalid
+                        onSetChanged(index, set.copy(weight = newWeight))
+                    },
+                    onRepsChange = { newRepsStr ->
+                        val newReps = newRepsStr.toIntOrNull() ?: set.reps // Keep old if invalid
+                        onSetChanged(index, set.copy(reps = newReps))
+                    },
+                    onDoneChange = { isDone ->
+                        onSetChanged(index, set.copy(isDone = isDone))
+                    }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // Plate Calculator Button
-            IconButton(onClick = onPlateCalculatorClick) {
+            IconButton(
+                onClick = onAddSet,
+                modifier = Modifier.align(Alignment.End)
+            ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_calculator),
-                    contentDescription = "Plate Calculator"
+                    imageVector = Icons.Filled.AddCircle,
+                    contentDescription = "Add Set",
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -138,137 +240,98 @@ fun WorkoutScreen(
 }
 
 @Composable
-fun ExerciseCard(
-    exercise: Exercise,
-    onAddSet: (weight: Double, reps: Int) -> Unit = { _, _ -> }
+fun SetInputRow(
+    setNumber: Int,
+    workoutSet: ExerciseSet,
+    onWeightChange: (String) -> Unit,
+    onRepsChange: (String) -> Unit,
+    onDoneChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = exercise.name,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
-            )
+        OutlinedTextField(
+            value = if (workoutSet.weight == 0.0 && workoutSet.reps == 0) "" else workoutSet.weight.toString(), // Show empty if 0.0
+            onValueChange = onWeightChange,
+            label = { Text("Weight") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.weight(1f),
+            singleLine = true,
+            placeholder = { Text("kg/lbs") }
+        )
+        OutlinedTextField(
+            value = if (workoutSet.weight == 0.0 && workoutSet.reps == 0 && workoutSet.reps == 0) "" else workoutSet.reps.toString(), // Show empty if 0
+            onValueChange = onRepsChange,
+            label = { Text("Reps") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.weight(1f),
+            singleLine = true
+        )
+        Checkbox(
+            checked = workoutSet.isDone,
+            onCheckedChange = onDoneChange,
+            modifier = Modifier.padding(start = 8.dp)
+        )
+    }
+}
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Sets
-            if (exercise.sets.isNotEmpty()) {
-                exercise.sets.forEachIndexed { index, set ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("Set ${index + 1}")
-                        Text(
-                            text = if (set.weight == 0.0) {
-                                "Bodyweight × ${set.reps}"
-                            } else {
-                                "${formatWeight(set.weight)} × ${set.reps}"
-                            }
-                        )
-                    }
-                }
-            } else {
-                Text(
-                    text = "No sets recorded",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Add Set Button
-            TextButton(
-                onClick = {
-                    // For now, add a default set - you can make this more interactive
-                    onAddSet(0.0, 1)
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Add Set")
-            }
+@Composable
+fun NewWorkoutBottomActions(
+    onOpenNotes: () -> Unit,
+    onOpenPlateCalculator: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(onClick = onOpenNotes, modifier = Modifier.size(56.dp)) {
+            Icon(Icons.Filled.MenuBook, contentDescription = "Session Notes", modifier = Modifier.size(32.dp))
+        }
+        // Example "Discard Workout" button (from wireframe)
+        TextButton(onClick = { /* TODO: Handle discard workout action */ }) {
+            Text("Discard Workout")
+        }
+        IconButton(onClick = onOpenPlateCalculator, modifier = Modifier.size(56.dp)) {
+            Icon(Icons.Filled.Calculate, contentDescription = "Plate Calculator", modifier = Modifier.size(32.dp))
         }
     }
 }
 
-// Helper function to get default workout name with current date
-fun getDefaultWorkoutName(): String {
-    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    val currentDate = dateFormat.format(Date())
-    return "Workout - $currentDate"
-}
 
-// Helper function to format weight
-fun formatWeight(weight: Double): String {
-    return if (weight == weight.toInt().toDouble()) {
-        "${weight.toInt()} kg"
-    } else {
-        "$weight kg"
+@Preview(showBackground = true, widthDp = 360, heightDp = 800) // Increased height for Add Exercise button
+@Composable
+fun NewWorkoutScreenPreview() {
+    TimberWorkoutLogsTheme {
+        NewWorkoutScreen(
+            onFinishWorkout = {},
+            onOpenNotes = {},
+            onUpdateNotes = {},
+            onOpenPlateCalculator = {},
+        )
     }
-}
-// Helper function to format timer
-fun formatTime(seconds: Int): String {
-    val hours = seconds / 3600
-    val minutes = (seconds % 3600) / 60
-    val secs = seconds % 60
-    return String.format(locale = Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, secs)
 }
 
 @Preview(showBackground = true)
 @Composable
-fun WorkoutScreenPreview() {
-    MaterialTheme {
-        val sampleWorkout = Workout(
-            id = 1,
-            duration = 45,
-            exercises = mutableListOf(
-                Exercise(
-                    id = 1,
-                    name = "Bench Press",
-                    sets = mutableListOf(
-                        ExerciseSet(1, 135.0, 8),
-                        ExerciseSet(2, 145.0, 6),
-                        ExerciseSet(3, 155.0, 4)
-                    )
-                ),
-                Exercise(
-                    id = 2,
-                    name = "Incline Dumbbell Press",
-                    sets = mutableListOf(
-                        ExerciseSet(4, 60.0, 10),
-                        ExerciseSet(5, 65.0, 8)
-                    )
-                ),
-                Exercise(
-                    id = 3,
-                    name = "Push-ups",
-                    sets = mutableListOf(
-                        ExerciseSet(6, 0.0, 15),
-                        ExerciseSet(7, 0.0, 12),
-                        ExerciseSet(8, 0.0, 10)
-                    )
-                )
+fun ExerciseInputCardPreview() {
+    TimberWorkoutLogsTheme {
+        var exercise by remember {
+            mutableStateOf(
+                Exercise(name = "Bench Press", sets = mutableListOf(ExerciseSet(weight = 100.0, reps = 5, isDone = true), ExerciseSet(weight = 120.0, reps = 3)))
             )
-        )
-
-        WorkoutScreen(
-            workout = sampleWorkout,
-            workoutName = "Push Day" // Override default for preview
+        }
+        ExerciseInputCard(
+            exercise = exercise,
+            onAddSet = { exercise.sets.add(ExerciseSet()) },
+            onSetChanged = { index, updatedSet -> exercise.sets[index] = updatedSet },
+            onExerciseNameChange = { newName -> exercise = exercise.copy(name = newName) }
         )
     }
 }
