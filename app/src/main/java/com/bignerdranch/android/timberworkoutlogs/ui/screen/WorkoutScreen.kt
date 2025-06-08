@@ -24,40 +24,38 @@ import com.bignerdranch.android.timberworkoutlogs.models.ExerciseSet
 import com.bignerdranch.android.timberworkoutlogs.models.Workout
 import com.bignerdranch.android.timberworkoutlogs.ui.theme.TimberOrange
 import com.bignerdranch.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
-
 import kotlinx.coroutines.delay
 import java.util.Locale
-
-// Note: The old data classes WorkoutSet and ExerciseEntry are removed from this file.
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NewWorkoutScreen(
-    // workout: Workout, // You might pass a full Workout object in the future
-    initialWorkoutName: String = "New Workout", // Can be dynamic
-    onFinishWorkout: (currentWorkoutData: Workout) -> Unit, // Pass back the workout data
-    onOpenNotes: (currentNotes: String) -> Unit, // Pass current notes
-    onUpdateNotes: (newNotes: String) -> Unit, // To update notes from a potential notes screen
+fun WorkoutScreen(
+    initialWorkoutName: String = "New Workout",
+    onFinishWorkout: (currentWorkoutData: Workout) -> Unit,
+    onOpenNotes: (currentNotes: String) -> Unit,
+    onDiscardWorkout: () -> Unit,
     onOpenPlateCalculator: () -> Unit
 ) {
-    // Local state for the current workout being built
+    // State is now managed locally within the composable
     var workoutName by remember { mutableStateOf(initialWorkoutName) }
     val exercises = remember { mutableStateListOf<Exercise>() }
-    var workoutNotes by remember { mutableStateOf("")} // For session notes
+    var workoutNotes by remember { mutableStateOf("")}
+    var secondsElapsed by remember { mutableStateOf(0) }
 
-    // Initialize with placeholder exercises if the list is empty (e.g., on first composition)
+    // LaunchedEffect to populate initial data
     LaunchedEffect(Unit) {
         if (exercises.isEmpty()) {
             exercises.addAll(
                 listOf(
-                    // These now get unique IDs automatically
                     Exercise(name = "Bench Press (Barbell)", sets = mutableListOf(ExerciseSet(weight = 100.0, reps = 8), ExerciseSet(weight = 95.0, reps = 7))),
+                    Exercise(name = "Deadlift", sets = mutableListOf(ExerciseSet()))
                 )
             )
         }
     }
 
-    var secondsElapsed by remember { mutableStateOf(0) }
+    // LaunchedEffect for the timer
     LaunchedEffect(Unit) {
         while (true) {
             delay(1000)
@@ -65,6 +63,7 @@ fun NewWorkoutScreen(
         }
     }
 
+    // Calculate timer text from state
     val timerText = remember(secondsElapsed) {
         val hours = secondsElapsed / 3600
         val minutes = (secondsElapsed % 3600) / 60
@@ -76,18 +75,49 @@ fun NewWorkoutScreen(
         }
     }
 
+    // Stable lambdas to prevent unnecessary recompositions in the LazyColumn
+    val onAddSet = remember { { exerciseId: UUID ->
+        val index = exercises.indexOfFirst { it.id == exerciseId }
+        if (index != -1) {
+            val updatedSets = exercises[index].sets.toMutableList().apply { add(ExerciseSet()) }
+            exercises[index] = exercises[index].copy(sets = updatedSets)
+        }
+    } }
+
+    val onSetChanged = remember { { exerciseId: UUID, setIndex: Int, updatedSet: ExerciseSet ->
+        val index = exercises.indexOfFirst { it.id == exerciseId }
+        if (index != -1) {
+            val updatedSets = exercises[index].sets.toMutableList()
+            if (setIndex >= 0 && setIndex < updatedSets.size) {
+                updatedSets[setIndex] = updatedSet
+                exercises[index] = exercises[index].copy(sets = updatedSets)
+            }
+        }
+    } }
+
+    val onExerciseNameChange = remember { { exerciseId: UUID, newName: String ->
+        val index = exercises.indexOfFirst { it.id == exerciseId }
+        if(index != -1) {
+            exercises[index] = exercises[index].copy(name = newName)
+        }
+    } }
+
+    // FIX: Explicitly declare the type of the lambda to be () -> Unit.
+    // This tells the compiler to ignore the Boolean returned by the .add() function.
+    val onAddExercise: () -> Unit = remember { {
+        exercises.add(Exercise(name = "New Exercise ${exercises.size + 1}", sets = mutableListOf(ExerciseSet())))
+    } }
+
     Scaffold(
         topBar = {
-            NewWorkoutTopAppBar(
-                title = workoutName, // Use dynamic workout name
+            WorkoutTopAppBar(
+                title = workoutName,
                 timerText = timerText,
                 onFinishWorkout = {
-                    // Construct the Workout object to pass back
                     val finishedWorkout = Workout(
-                        // id will likely be generated when saving
                         name = workoutName,
                         durationSeconds = secondsElapsed,
-                        exercises = exercises.toMutableList(), // Create a new list instance
+                        exercises = exercises.toMutableList(),
                         notes = workoutNotes
                     )
                     onFinishWorkout(finishedWorkout)
@@ -95,65 +125,70 @@ fun NewWorkoutScreen(
             )
         },
         bottomBar = {
-            NewWorkoutBottomActions(
+            WorkoutBottomActions(
                 onOpenNotes = { onOpenNotes(workoutNotes) },
+                onDiscardWorkout = onDiscardWorkout,
                 onOpenPlateCalculator = onOpenPlateCalculator
             )
         },
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp)
-        ) {
-            items(exercises, key = { it.id }) { exercise -> // The key is now guaranteed to be unique
-                ExerciseInputCard(
-                    exercise = exercise,
-                    onAddSet = {
-                        // Create a new ExerciseSet instance
-                        exercise.sets.add(ExerciseSet())
-                        // Force recomposition by creating a new list reference if needed,
-                        // though SnapshotStateList should handle this.
-                    },
-                    onSetChanged = { setIndex, updatedSet ->
-                        if (setIndex >= 0 && setIndex < exercise.sets.size) {
-                            exercise.sets[setIndex] = updatedSet
-                        }
-                    },
-                    onExerciseNameChange = { newName ->
-                        val exerciseIndex = exercises.indexOfFirst { it.id == exercise.id }
-                        if(exerciseIndex != -1) {
-                            // Creating a copy is a good practice for state updates
-                            exercises[exerciseIndex] = exercises[exerciseIndex].copy(name = newName)
-                        }
-                    }
+        WorkoutExerciseList(
+            modifier = Modifier.padding(innerPadding),
+            exercises = exercises,
+            onAddSet = onAddSet,
+            onSetChanged = onSetChanged,
+            onExerciseNameChange = onExerciseNameChange,
+            onAddExercise = onAddExercise
+        )
+    }
+}
+
+@Composable
+private fun WorkoutExerciseList(
+    modifier: Modifier = Modifier,
+    exercises: List<Exercise>,
+    onAddSet: (UUID) -> Unit,
+    onSetChanged: (UUID, Int, ExerciseSet) -> Unit,
+    onExerciseNameChange: (UUID, String) -> Unit,
+    onAddExercise: () -> Unit
+) {
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp)
+    ) {
+        items(items = exercises, key = { it.id }) { exercise ->
+            ExerciseInputCard(
+                exercise = exercise,
+                onAddSet = { onAddSet(exercise.id) },
+                onSetChanged = { setIndex, updatedSet -> onSetChanged(exercise.id, setIndex, updatedSet) },
+                onExerciseNameChange = { newName -> onExerciseNameChange(exercise.id, newName) }
+            )
+        }
+        item {
+            Button(
+                onClick = onAddExercise,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = TimberOrange,
+                    contentColor = Color.Black
                 )
-            }
-            item {
-                Button(
-                    onClick = {
-                        exercises.add(Exercise(name = "New Exercise ${exercises.size + 1}", sets = mutableListOf(ExerciseSet())))
-                    },
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = TimberOrange,
-                        contentColor = Color.Black
-                    )
-                ) {
-                    Text("Add Exercise")
-                }
+            ) {
+                Text("Add Exercise")
             }
         }
     }
 }
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NewWorkoutTopAppBar(
+fun WorkoutTopAppBar(
     title: String,
     timerText: String,
     onFinishWorkout: () -> Unit,
@@ -179,6 +214,58 @@ fun NewWorkoutTopAppBar(
         ),
         modifier = modifier
     )
+}
+
+@Composable
+fun WorkoutBottomActions(
+    onOpenNotes: () -> Unit,
+    onDiscardWorkout: () -> Unit,
+    onOpenPlateCalculator: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(onClick = onOpenNotes, modifier = Modifier.size(56.dp)) {
+            Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = "Session Notes", modifier = Modifier.size(32.dp))
+        }
+        DiscardWorkoutButton(onConfirmDiscard = onDiscardWorkout)
+        IconButton(onClick = onOpenPlateCalculator, modifier = Modifier.size(56.dp)) {
+            Icon(Icons.Filled.Calculate, contentDescription = "Plate Calculator", modifier = Modifier.size(32.dp))
+        }
+    }
+}
+
+@Composable
+private fun DiscardWorkoutButton(
+    onConfirmDiscard: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isConfirming by remember { mutableStateOf(false) }
+
+    val clickedColor = Color(0xFFe86c6c)
+    val containerColor = if (isConfirming) clickedColor else Color.Transparent
+    val text = if (isConfirming) "Are you sure?" else "Discard Workout"
+
+    TextButton(
+        onClick = {
+            if (isConfirming) {
+                onConfirmDiscard()
+            } else {
+                isConfirming = true
+            }
+        },
+        colors = ButtonDefaults.textButtonColors(
+            containerColor = containerColor
+        ),
+        modifier = modifier
+    ) {
+        Text(text)
+    }
 }
 
 @Composable
@@ -276,40 +363,16 @@ fun SetInputRow(
     }
 }
 
-@Composable
-fun NewWorkoutBottomActions(
-    onOpenNotes: () -> Unit,
-    onOpenPlateCalculator: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconButton(onClick = onOpenNotes, modifier = Modifier.size(56.dp)) {
-            Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = "Session Notes", modifier = Modifier.size(32.dp))
-        }
-        TextButton(onClick = { /* TODO: Handle discard workout action */ }) {
-            Text("Discard Workout")
-        }
-        IconButton(onClick = onOpenPlateCalculator, modifier = Modifier.size(56.dp)) {
-            Icon(Icons.Filled.Calculate, contentDescription = "Plate Calculator", modifier = Modifier.size(32.dp))
-        }
-    }
-}
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Composable
-fun NewWorkoutScreenPreview() {
+fun WorkoutScreenPreview() {
     TimberWorkoutLogsTheme {
-        NewWorkoutScreen(
+        WorkoutScreen(
             onFinishWorkout = {},
             onOpenNotes = {},
-            onUpdateNotes = {},
-            onOpenPlateCalculator = {},
+            onDiscardWorkout = {},
+            onOpenPlateCalculator = {}
         )
     }
 }
