@@ -16,11 +16,11 @@ import com.bignerdranch.android.timberworkoutlogs.ui.screen.HomeScreen
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.SettingsScreen
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.StatsScreen
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.TemplatesScreen
-import com.bignerdranch.android.timberworkoutlogs.ui.screen.WorkoutScreen
+import com.bignerdranch.android.timberworkoutlogs.ui.screen.workout.WorkoutScreen
 
 object AppDestinations {
     const val HOME_ROUTE = "home"
-    const val STATS_ROUTE = "stats" // Added a dedicated route for stats
+    const val STATS_ROUTE = "stats"
     const val HISTORY_ROUTE = "history"
     const val WORKOUT_ROUTE = "workout"
     const val TEMPLATES_ROUTE = "templates"
@@ -33,10 +33,9 @@ fun TimberApp() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Define the routes that show the main scaffold with top/bottom bars
     val mainScreenRoutes = setOf(
         AppDestinations.HOME_ROUTE,
-        AppDestinations.STATS_ROUTE, // Added Stats to the main screens
+        AppDestinations.STATS_ROUTE,
         AppDestinations.HISTORY_ROUTE,
         AppDestinations.TEMPLATES_ROUTE,
         AppDestinations.SETTINGS_ROUTE
@@ -44,13 +43,11 @@ fun TimberApp() {
 
     Scaffold(
         topBar = {
-            // Only show the top app bar on the main screens
             if (currentRoute in mainScreenRoutes) {
                 TimberTopAppBar(onLanguageClick = { /* TODO */ })
             }
         },
         bottomBar = {
-            // Only show the bottom navigation bar on the main screens
             if (currentRoute in mainScreenRoutes) {
                 TimberBottomNavigationBar(
                     currentRoute = currentRoute,
@@ -72,12 +69,18 @@ fun TimberApp() {
         NavHost(
             navController = navController,
             startDestination = AppDestinations.HOME_ROUTE,
-            modifier = Modifier.padding(innerPadding)
+            // FIX: Conditionally apply padding. The WorkoutScreen should not have padding,
+            // allowing it to draw over the entire screen area.
+            modifier = if (currentRoute in mainScreenRoutes) {
+                Modifier.padding(innerPadding)
+            } else {
+                Modifier
+            }
         ) {
             composable(AppDestinations.HOME_ROUTE) {
                 HomeScreen()
             }
-            composable(AppDestinations.STATS_ROUTE) { // Added composable for StatsScreen
+            composable(AppDestinations.STATS_ROUTE) {
                 StatsScreen()
             }
             composable(AppDestinations.HISTORY_ROUTE) {

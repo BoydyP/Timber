@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bignerdranch.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
+import com.bignerdranch.android.timberworkoutlogs.util.getGreetingByTime
 
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier) {
@@ -31,17 +32,16 @@ fun HomeScreenContent(modifier: Modifier = Modifier) {
             .padding(16.dp)
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         // Welcome text at the top
         Text(
             // TODO: Replace with actual user name from profile/auth
-            text = "Welcome, User!",
-            style = MaterialTheme.typography.headlineMedium,
+            text = getGreetingByTime(),
+            style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            textAlign = TextAlign.Center
+                .align(Alignment.Start)
+                .padding(bottom = 6.dp),
         )
 
         // Top graph placeholder for best lifts
