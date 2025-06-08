@@ -12,42 +12,53 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.bignerdranch.android.timberworkoutlogs.ui.navigation.AppDestinations
-import com.bignerdranch.android.timberworkoutlogs.ui.screen.BottomNavItem
+
+data class BottomNavItem(
+    val label: String,
+    val icon: ImageVector,
+    val contentDescription: String,
+    val route: String
+)
 
 private val BottomBarDefaultItems = listOf(
-    // Each item now has a route associated with it
-    BottomNavItem("Stats", Icons.Outlined.BarChart, "Statistics and analytics", AppDestinations.HOME_ROUTE), // Assuming "Stats" is part of home for now
-    BottomNavItem("History", Icons.Outlined.History, "Workout history", AppDestinations.HOME_ROUTE), // Assuming "History" is part of home for now
-    BottomNavItem("Workout", Icons.Outlined.FitnessCenter, "Workout now", AppDestinations.NEW_WORKOUT_ROUTE),
-    BottomNavItem("Templates", Icons.Outlined.AddBox, "Add workout templates/exercises", AppDestinations.HOME_ROUTE), // Assuming "Templates" is part of home for now
-    BottomNavItem("Settings", Icons.Outlined.Settings, "Settings", AppDestinations.HOME_ROUTE) // Assuming "Settings" is part of home for now
+    // The "Stats" item now correctly points to the STATS_ROUTE
+    BottomNavItem("Stats", Icons.Outlined.BarChart, "Statistics and analytics", AppDestinations.STATS_ROUTE),
+    BottomNavItem("History", Icons.Outlined.History, "Workout history", AppDestinations.HISTORY_ROUTE),
+    BottomNavItem("Workout", Icons.Outlined.FitnessCenter, "Workout now", AppDestinations.WORKOUT_ROUTE),
+    BottomNavItem("Templates", Icons.Outlined.AddBox, "Workout templates", AppDestinations.TEMPLATES_ROUTE),
+    BottomNavItem("Settings", Icons.Outlined.Settings, "Settings", AppDestinations.SETTINGS_ROUTE)
 )
 
 @Composable
 fun TimberBottomNavigationBar(
-    selectedItemIndex: Int,
-    onItemSelected: (Int, String) -> Unit, // Pass back index and route
+    currentRoute: String?,
+    onItemSelected: (String) -> Unit,
     modifier: Modifier = Modifier,
     items: List<BottomNavItem> = BottomBarDefaultItems,
 ) {
     NavigationBar(modifier = modifier) {
-        items.forEachIndexed { index, item ->
-            val isSelected = selectedItemIndex == index
+        items.forEach { item ->
+            val isSelected = if (item.route != AppDestinations.WORKOUT_ROUTE) {
+                currentRoute == item.route
+            } else {
+                false
+            }
+
             NavigationBarItem(
                 selected = isSelected,
-                onClick = { onItemSelected(index, item.route) }, // Pass the route on click
+                onClick = { onItemSelected(item.route) },
                 icon = {
                     Icon(
                         imageVector = item.icon,
                         contentDescription = item.contentDescription,
-                        // Make the "Workout" icon larger
                         modifier = if (item.label == "Workout") Modifier.size(32.dp) else Modifier.size(24.dp)
                     )
                 },
                 label = { Text(item.label, style = MaterialTheme.typography.labelSmall) },
-                alwaysShowLabel = true // Shows labels for all items
+                alwaysShowLabel = true
             )
         }
     }

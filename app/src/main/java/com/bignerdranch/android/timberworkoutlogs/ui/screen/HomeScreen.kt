@@ -1,7 +1,5 @@
 package com.bignerdranch.android.timberworkoutlogs.ui.screen
 
-import TimberBottomNavigationBar
-import TimberTopAppBar
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -11,94 +9,57 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.bignerdranch.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 
-data class BottomNavItem(
-    val label: String,
-    val icon: ImageVector,
-    val contentDescription: String,
-    val route: String // Add route for navigation
-)
-
 @Composable
-fun HomeScreen(
-    navController: NavController
-) {
-    // State for the currently selected bottom navigation item.
-    // The "Workout" item (index 2) is selected by default visually.
-    var selectedItemIndex by remember { mutableStateOf(2) }
-
-    Scaffold(
-        topBar = {
-            TimberTopAppBar(onLanguageClick = { /* TODO: Handle language/region selection */ })
-        },
-        bottomBar = {
-            TimberBottomNavigationBar(
-                selectedItemIndex = selectedItemIndex,
-                onItemSelected = { index, route ->
-                    selectedItemIndex = index
-                    // Navigate to the selected route
-                    navController.navigate(route) {
-                        // This makes sure you don't build up a large stack of screens
-                        // on the back stack as you tap on the bottom bar.
-                        popUpTo(navController.graph.startDestinationId)
-                        launchSingleTop = true
-                    }
-                }
-            )
-        },
-        modifier = Modifier.fillMaxSize()
-    ) { innerPadding ->
-        HomeScreenContent(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-        )
-    }
+fun HomeScreen(modifier: Modifier = Modifier) {
+    HomeScreenContent(modifier = modifier)
 }
-
 
 @Composable
 fun HomeScreenContent(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .padding(16.dp) // Add padding around the content
+            .padding(16.dp)
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp) // Space between items
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Top Placeholder
-        PlaceholderContent(
-            label = "Top Placeholder Area",
+        // Welcome text at the top
+        Text(
+            // TODO: Replace with actual user name from profile/auth
+            text = "Welcome, User!",
+            style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier
-                .weight(1f) // Takes up 1 part of the available vertical space
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            textAlign = TextAlign.Center
+        )
+
+        // Top graph placeholder for best lifts
+        PlaceholderContent(
+            label = "Best Lifts (e.g., Bench Press)",
+            modifier = Modifier
+                .weight(1f)
                 .fillMaxWidth()
         )
 
-        // Workouts this week section
+        // Bottom graph placeholder for weekly volume
         Column(
             modifier = Modifier
-                .weight(1f) // Takes up 1 part of the available vertical space
+                .weight(1f)
                 .fillMaxWidth()
         ) {
             Text(
-                text = "Workouts this week",
+                text = "Volume this week",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.padding(bottom = 8.dp)
@@ -107,7 +68,7 @@ fun HomeScreenContent(modifier: Modifier = Modifier) {
                 label = "KG / Day of Week Graph Placeholder",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxSize() // Fills the space allocated by the parent Column's weight
+                    .fillMaxSize()
             )
         }
     }
@@ -134,8 +95,7 @@ fun PlaceholderContent(label: String, modifier: Modifier = Modifier) {
 @Preview(showBackground = true, widthDp = 360, heightDp = 740)
 @Composable
 fun HomeScreenPreview() {
-    TimberWorkoutLogsTheme { // Ensure this is your actual app theme
-        // The preview won't navigate, so we pass a dummy NavController
-        HomeScreen(navController = rememberNavController())
+    TimberWorkoutLogsTheme {
+        HomeScreen()
     }
 }

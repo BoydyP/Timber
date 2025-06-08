@@ -8,4 +8,6 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="timber_background_color">#f0aa49</color>
+
+    <color name="discard_button_clicked_color">#e86c6c</color>
 </resources>
