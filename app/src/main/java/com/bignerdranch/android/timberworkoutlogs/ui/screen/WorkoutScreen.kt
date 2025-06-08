@@ -6,10 +6,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.Flag
-import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,7 +26,7 @@ import com.bignerdranch.android.timberworkoutlogs.ui.theme.TimberOrange
 import com.bignerdranch.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 
 import kotlinx.coroutines.delay
-import java.util.Locale // For String.format
+import java.util.Locale
 
 // Note: The old data classes WorkoutSet and ExerciseEntry are removed from this file.
 
@@ -35,7 +35,7 @@ import java.util.Locale // For String.format
 fun NewWorkoutScreen(
     // workout: Workout, // You might pass a full Workout object in the future
     initialWorkoutName: String = "New Workout", // Can be dynamic
-    onFinishWorkout: (currentWorkoutData: com.bignerdranch.android.timberworkoutlogs.models.Workout) -> Unit, // Pass back the workout data
+    onFinishWorkout: (currentWorkoutData: Workout) -> Unit, // Pass back the workout data
     onOpenNotes: (currentNotes: String) -> Unit, // Pass current notes
     onUpdateNotes: (newNotes: String) -> Unit, // To update notes from a potential notes screen
     onOpenPlateCalculator: () -> Unit
@@ -50,8 +50,8 @@ fun NewWorkoutScreen(
         if (exercises.isEmpty()) {
             exercises.addAll(
                 listOf(
+                    // These now get unique IDs automatically
                     Exercise(name = "Bench Press (Barbell)", sets = mutableListOf(ExerciseSet(weight = 100.0, reps = 8), ExerciseSet(weight = 95.0, reps = 7))),
-                    Exercise(name = "Deadlift", sets = mutableListOf(ExerciseSet()))
                 )
             )
         }
@@ -110,7 +110,7 @@ fun NewWorkoutScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp)
         ) {
-            items(exercises, key = { it.id }) { exercise ->
+            items(exercises, key = { it.id }) { exercise -> // The key is now guaranteed to be unique
                 ExerciseInputCard(
                     exercise = exercise,
                     onAddSet = {
@@ -127,12 +127,12 @@ fun NewWorkoutScreen(
                     onExerciseNameChange = { newName ->
                         val exerciseIndex = exercises.indexOfFirst { it.id == exercise.id }
                         if(exerciseIndex != -1) {
-                            exercises[exerciseIndex] = exercise.copy(name = newName)
+                            // Creating a copy is a good practice for state updates
+                            exercises[exerciseIndex] = exercises[exerciseIndex].copy(name = newName)
                         }
                     }
                 )
             }
-            // TODO: Add an "Add Exercise" button here
             item {
                 Button(
                     onClick = {
@@ -140,8 +140,8 @@ fun NewWorkoutScreen(
                     },
                     modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = TimberOrange, // Use TimberOrange for background
-                        contentColor = Color.Black // Set content color for good contrast
+                        containerColor = TimberOrange,
+                        contentColor = Color.Black
                     )
                 ) {
                     Text("Add Exercise")
@@ -160,7 +160,7 @@ fun NewWorkoutTopAppBar(
     modifier: Modifier = Modifier
 ) {
     TopAppBar(
-        title = { Text(title, fontWeight = FontWeight.Bold) }, // Consider making workout title editable
+        title = { Text(title, fontWeight = FontWeight.Bold) },
         actions = {
             Text(
                 text = timerText,
@@ -195,7 +195,6 @@ fun ExerciseInputCard(
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Make Exercise Name an OutlinedTextField for editing
             OutlinedTextField(
                 value = exercise.name,
                 onValueChange = onExerciseNameChange,
@@ -206,16 +205,15 @@ fun ExerciseInputCard(
             )
 
             exercise.sets.forEachIndexed { index, set ->
-                // No local 'currentSet' needed if we pass index for updates
                 SetInputRow(
                     setNumber = index + 1,
-                    workoutSet = set, // Pass the set directly
+                    workoutSet = set,
                     onWeightChange = { newWeightStr ->
-                        val newWeight = newWeightStr.toDoubleOrNull() ?: set.weight // Keep old if invalid
+                        val newWeight = newWeightStr.toDoubleOrNull() ?: set.weight
                         onSetChanged(index, set.copy(weight = newWeight))
                     },
                     onRepsChange = { newRepsStr ->
-                        val newReps = newRepsStr.toIntOrNull() ?: set.reps // Keep old if invalid
+                        val newReps = newRepsStr.toIntOrNull() ?: set.reps
                         onSetChanged(index, set.copy(reps = newReps))
                     },
                     onDoneChange = { isDone ->
@@ -254,7 +252,7 @@ fun SetInputRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         OutlinedTextField(
-            value = if (workoutSet.weight == 0.0 && workoutSet.reps == 0) "" else workoutSet.weight.toString(), // Show empty if 0.0
+            value = if (workoutSet.weight == 0.0 && workoutSet.reps == 0) "" else workoutSet.weight.toString(),
             onValueChange = onWeightChange,
             label = { Text("Weight") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -263,7 +261,7 @@ fun SetInputRow(
             placeholder = { Text("kg/lbs") }
         )
         OutlinedTextField(
-            value = if (workoutSet.weight == 0.0 && workoutSet.reps == 0 && workoutSet.reps == 0) "" else workoutSet.reps.toString(), // Show empty if 0
+            value = if (workoutSet.weight == 0.0 && workoutSet.reps == 0) "" else workoutSet.reps.toString(),
             onValueChange = onRepsChange,
             label = { Text("Reps") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -292,9 +290,8 @@ fun NewWorkoutBottomActions(
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onOpenNotes, modifier = Modifier.size(56.dp)) {
-            Icon(Icons.Filled.MenuBook, contentDescription = "Session Notes", modifier = Modifier.size(32.dp))
+            Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = "Session Notes", modifier = Modifier.size(32.dp))
         }
-        // Example "Discard Workout" button (from wireframe)
         TextButton(onClick = { /* TODO: Handle discard workout action */ }) {
             Text("Discard Workout")
         }
@@ -304,8 +301,7 @@ fun NewWorkoutBottomActions(
     }
 }
 
-
-@Preview(showBackground = true, widthDp = 360, heightDp = 800) // Increased height for Add Exercise button
+@Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Composable
 fun NewWorkoutScreenPreview() {
     TimberWorkoutLogsTheme {

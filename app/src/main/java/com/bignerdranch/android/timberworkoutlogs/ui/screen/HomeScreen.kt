@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -26,23 +25,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.bignerdranch.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 
-// Data class to represent items in the Bottom Navigation Bar
 data class BottomNavItem(
     val label: String,
     val icon: ImageVector,
     val contentDescription: String,
-    // val route: String // Add this later for Jetpack Navigation
+    val route: String // Add route for navigation
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    // viewModel: HomeViewModel = hiltViewModel() // Example for later ViewModel integration
+    navController: NavController
 ) {
-    // State for the currently selected bottom navigation item
-    // The "Workout Now" item (index 2) is selected by default.
+    // State for the currently selected bottom navigation item.
+    // The "Workout" item (index 2) is selected by default visually.
     var selectedItemIndex by remember { mutableStateOf(2) }
 
     Scaffold(
@@ -52,9 +51,15 @@ fun HomeScreen(
         bottomBar = {
             TimberBottomNavigationBar(
                 selectedItemIndex = selectedItemIndex,
-                onItemSelected = { index ->
+                onItemSelected = { index, route ->
                     selectedItemIndex = index
-                    // TODO: Handle navigation based on index or item.route
+                    // Navigate to the selected route
+                    navController.navigate(route) {
+                        // This makes sure you don't build up a large stack of screens
+                        // on the back stack as you tap on the bottom bar.
+                        popUpTo(navController.graph.startDestinationId)
+                        launchSingleTop = true
+                    }
                 }
             )
         },
@@ -130,6 +135,7 @@ fun PlaceholderContent(label: String, modifier: Modifier = Modifier) {
 @Composable
 fun HomeScreenPreview() {
     TimberWorkoutLogsTheme { // Ensure this is your actual app theme
-        HomeScreen()
+        // The preview won't navigate, so we pass a dummy NavController
+        HomeScreen(navController = rememberNavController())
     }
 }

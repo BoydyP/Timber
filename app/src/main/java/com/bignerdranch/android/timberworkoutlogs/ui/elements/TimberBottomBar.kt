@@ -13,29 +13,31 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.bignerdranch.android.timberworkoutlogs.ui.navigation.AppDestinations
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.BottomNavItem
 
 private val BottomBarDefaultItems = listOf(
-        BottomNavItem("Stats", Icons.Outlined.BarChart, "Statistics and analytics"),
-        BottomNavItem("History", Icons.Outlined.History, "Workout history"),
-        BottomNavItem("Workout", Icons.Outlined.FitnessCenter, "Workout now"),
-        BottomNavItem("Templates", Icons.Outlined.AddBox, "Add workout templates/exercises"), // Changed label for clarity
-        BottomNavItem("Settings", Icons.Outlined.Settings, "Settings")
-    )
+    // Each item now has a route associated with it
+    BottomNavItem("Stats", Icons.Outlined.BarChart, "Statistics and analytics", AppDestinations.HOME_ROUTE), // Assuming "Stats" is part of home for now
+    BottomNavItem("History", Icons.Outlined.History, "Workout history", AppDestinations.HOME_ROUTE), // Assuming "History" is part of home for now
+    BottomNavItem("Workout", Icons.Outlined.FitnessCenter, "Workout now", AppDestinations.NEW_WORKOUT_ROUTE),
+    BottomNavItem("Templates", Icons.Outlined.AddBox, "Add workout templates/exercises", AppDestinations.HOME_ROUTE), // Assuming "Templates" is part of home for now
+    BottomNavItem("Settings", Icons.Outlined.Settings, "Settings", AppDestinations.HOME_ROUTE) // Assuming "Settings" is part of home for now
+)
 
 @Composable
 fun TimberBottomNavigationBar(
     selectedItemIndex: Int,
-    onItemSelected: (Int) -> Unit,
+    onItemSelected: (Int, String) -> Unit, // Pass back index and route
     modifier: Modifier = Modifier,
     items: List<BottomNavItem> = BottomBarDefaultItems,
-    ) {
+) {
     NavigationBar(modifier = modifier) {
         items.forEachIndexed { index, item ->
             val isSelected = selectedItemIndex == index
             NavigationBarItem(
                 selected = isSelected,
-                onClick = { onItemSelected(index) },
+                onClick = { onItemSelected(index, item.route) }, // Pass the route on click
                 icon = {
                     Icon(
                         imageVector = item.icon,
