@@ -46,12 +46,8 @@ fun WorkoutScreen(
     // LaunchedEffect to populate initial data
     LaunchedEffect(Unit) {
         if (exercises.isEmpty()) {
-            exercises.addAll(
-                listOf(
-                    Exercise(name = "Bench Press (Barbell)", sets = mutableListOf(ExerciseSet(weight = 100.0, reps = 8), ExerciseSet(weight = 95.0, reps = 7))),
-                    Exercise(name = "Deadlift", sets = mutableListOf(ExerciseSet()))
-                )
-            )
+            // Start with a single generic exercise
+            exercises.add(Exercise(name = "New Exercise 1", sets = mutableListOf(ExerciseSet())))
         }
     }
 
