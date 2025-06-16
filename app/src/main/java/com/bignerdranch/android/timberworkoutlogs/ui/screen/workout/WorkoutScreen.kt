@@ -22,7 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.bignerdranch.android.timberworkoutlogs.models.Exercise
+import com.bignerdranch.android.timberworkoutlogs.models.WorkoutExercise
 import com.bignerdranch.android.timberworkoutlogs.models.ExerciseSet
 import com.bignerdranch.android.timberworkoutlogs.models.Workout
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.workout.components.ExerciseInputCard
@@ -43,13 +43,13 @@ fun WorkoutScreen(
     onOpenPlateCalculator: () -> Unit
 ) {
     var workoutName by remember { mutableStateOf(initialWorkoutName) }
-    val exercises = remember { mutableStateListOf<Exercise>() }
+    val workoutExercises = remember { mutableStateListOf<WorkoutExercise>() }
     var workoutNotes by remember { mutableStateOf("")}
     var secondsElapsed by remember { mutableStateOf(0) }
 
     LaunchedEffect(Unit) {
-        if (exercises.isEmpty()) {
-            exercises.add(Exercise(name = "New Exercise 1", sets = mutableListOf(ExerciseSet())))
+        if (workoutExercises.isEmpty()) {
+            workoutExercises.add(WorkoutExercise(sets = mutableListOf(ExerciseSet())))
         }
     }
 
@@ -72,33 +72,33 @@ fun WorkoutScreen(
     }
 
     val onAddSet = remember { { exerciseId: UUID ->
-        val index = exercises.indexOfFirst { it.id == exerciseId }
+        val index = workoutExercises.indexOfFirst { it.id == exerciseId }
         if (index != -1) {
-            val updatedSets = exercises[index].sets.toMutableList().apply { add(ExerciseSet()) }
-            exercises[index] = exercises[index].copy(sets = updatedSets)
+            val updatedSets = workoutExercises[index].sets.toMutableList().apply { add(ExerciseSet()) }
+            workoutExercises[index] = workoutExercises[index].copy(sets = updatedSets)
         }
     } }
 
     val onSetChanged = remember { { exerciseId: UUID, setIndex: Int, updatedSet: ExerciseSet ->
-        val index = exercises.indexOfFirst { it.id == exerciseId }
+        val index = workoutExercises.indexOfFirst { it.id == exerciseId }
         if (index != -1) {
-            val updatedSets = exercises[index].sets.toMutableList()
+            val updatedSets = workoutExercises[index].sets.toMutableList()
             if (setIndex >= 0 && setIndex < updatedSets.size) {
                 updatedSets[setIndex] = updatedSet
-                exercises[index] = exercises[index].copy(sets = updatedSets)
+                workoutExercises[index] = workoutExercises[index].copy(sets = updatedSets)
             }
         }
     } }
 
     val onExerciseNameChange = remember { { exerciseId: UUID, newName: String ->
-        val index = exercises.indexOfFirst { it.id == exerciseId }
+        val index = workoutExercises.indexOfFirst { it.id == exerciseId }
         if(index != -1) {
-            exercises[index] = exercises[index].copy(name = newName)
+            workoutExercises[index] = workoutExercises[index].copy(name = newName)
         }
     } }
 
-    val onAddExercise: () -> Unit = remember { {
-        exercises.add(Exercise(name = "New Exercise ${exercises.size + 1}", sets = mutableListOf(ExerciseSet())))
+    val onAddWorkoutExercise: () -> Unit = remember { {
+        workoutExercises.add(WorkoutExercise(sets = mutableListOf(ExerciseSet())))
     } }
 
     // FIX: Replaced the nested Scaffold with a Column to prevent the double app bar bug.
@@ -111,7 +111,7 @@ fun WorkoutScreen(
                 val finishedWorkout = Workout(
                     name = workoutName,
                     durationSeconds = secondsElapsed,
-                    exercises = exercises.toMutableList(),
+                    workoutExercises = workoutExercises.toMutableList(),
                     notes = workoutNotes
                 )
                 onFinishWorkout(finishedWorkout)
@@ -121,11 +121,11 @@ fun WorkoutScreen(
         // The exercise list now takes up the remaining available space.
         WorkoutExerciseList(
             modifier = Modifier.weight(1f), // Use weight to fill the space
-            exercises = exercises,
+            workoutExercises = workoutExercises,
             onAddSet = onAddSet,
             onSetChanged = onSetChanged,
             onExerciseNameChange = onExerciseNameChange,
-            onAddExercise = onAddExercise
+            onAddExercise = onAddWorkoutExercise
         )
 
         // The bottom actions are placed at the end of the column.
@@ -140,7 +140,7 @@ fun WorkoutScreen(
 @Composable
 private fun WorkoutExerciseList(
     modifier: Modifier = Modifier,
-    exercises: List<Exercise>,
+    workoutExercises: List<WorkoutExercise>,
     onAddSet: (UUID) -> Unit,
     onSetChanged: (UUID, Int, ExerciseSet) -> Unit,
     onExerciseNameChange: (UUID, String) -> Unit,
@@ -152,9 +152,9 @@ private fun WorkoutExerciseList(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp)
     ) {
-        items(items = exercises, key = { it.id }) { exercise ->
+        items(items = workoutExercises, key = { it.id }) { exercise ->
             ExerciseInputCard(
-                exercise = exercise,
+                workoutExercise = exercise,
                 onAddSet = { onAddSet(exercise.id) },
                 onSetChanged = { setIndex, updatedSet -> onSetChanged(exercise.id, setIndex, updatedSet) },
                 onExerciseNameChange = { newName -> onExerciseNameChange(exercise.id, newName) }

@@ -24,12 +24,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.bignerdranch.android.timberworkoutlogs.models.Exercise
+import com.bignerdranch.android.timberworkoutlogs.models.WorkoutExercise
 import com.bignerdranch.android.timberworkoutlogs.models.ExerciseSet
 
 @Composable
 fun ExerciseInputCard(
-    exercise: Exercise,
+    workoutExercise: WorkoutExercise,
     onAddSet: () -> Unit,
     onSetChanged: (setIndex: Int, updatedSet: ExerciseSet) -> Unit,
     onExerciseNameChange: (String) -> Unit,
@@ -42,15 +42,16 @@ fun ExerciseInputCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             OutlinedTextField(
-                value = exercise.name,
+                value = workoutExercise.name,
                 onValueChange = onExerciseNameChange,
                 label = { Text("Exercise Name") },
+                placeholder = { Text("e.g. Barbell Bench Press") },
                 textStyle = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
                 singleLine = true
             )
 
-            exercise.sets.forEachIndexed { index, set ->
+            workoutExercise.sets.forEachIndexed { index, set ->
                 SetInputRow(
                     setNumber = index + 1,
                     workoutSet = set,

@@ -6,6 +6,6 @@ data class Workout(
     val name: String = "New Workout",
     val startTime: Long = System.currentTimeMillis(),
     var durationSeconds: Int = 0,
-    val exercises: MutableList<Exercise> = mutableListOf(),
+    val workoutExercises: MutableList<WorkoutExercise> = mutableListOf(),
     val notes: String = ""
 )
