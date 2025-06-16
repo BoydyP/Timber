@@ -14,7 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.bignerdranch.android.timberworkoutlogs.ui.navigation.AppDestinations
+import com.bignerdranch.android.timberworkoutlogs.ui.AppDestinations
 
 data class BottomNavItem(
     val label: String,

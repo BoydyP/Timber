@@ -12,126 +12,54 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bignerdranch.android.timberworkoutlogs.models.WorkoutExercise
 import com.bignerdranch.android.timberworkoutlogs.models.ExerciseSet
-import com.bignerdranch.android.timberworkoutlogs.models.Workout
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.workout.components.ExerciseInputCard
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.workout.components.WorkoutBottomActions
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.workout.components.WorkoutTopAppBar
 import com.bignerdranch.android.timberworkoutlogs.ui.theme.TimberOrange
 import com.bignerdranch.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
-import kotlinx.coroutines.delay
-import java.util.Locale
 import java.util.UUID
 
 @Composable
 fun WorkoutScreen(
-    initialWorkoutName: String = "New Workout",
-    onFinishWorkout: (currentWorkoutData: Workout) -> Unit,
-    onOpenNotes: (currentNotes: String) -> Unit,
-    onDiscardWorkout: () -> Unit,
+    viewModel: WorkoutViewModel,
+    onNavigateBack: () -> Unit,
+    onOpenNotes: () -> Unit,
     onOpenPlateCalculator: () -> Unit
 ) {
-    var workoutName by remember { mutableStateOf(initialWorkoutName) }
-    val workoutExercises = remember { mutableStateListOf<WorkoutExercise>() }
-    var workoutNotes by remember { mutableStateOf("")}
-    var secondsElapsed by remember { mutableStateOf(0) }
+    // State is read from the ViewModel
+    val workoutName by viewModel.workoutName.collectAsStateWithLifecycle()
+    val workoutExercises = viewModel.workoutExercises
+    val timerText by viewModel.timerText.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
-        if (workoutExercises.isEmpty()) {
-            workoutExercises.add(WorkoutExercise(sets = mutableListOf(ExerciseSet())))
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        while (true) {
-            delay(1000)
-            secondsElapsed++
-        }
-    }
-
-    val timerText = remember(secondsElapsed) {
-        val hours = secondsElapsed / 3600
-        val minutes = (secondsElapsed % 3600) / 60
-        val secs = secondsElapsed % 60
-        if (hours > 0) {
-            String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, secs)
-        } else {
-            String.format(Locale.getDefault(), "%02d:%02d", minutes, secs)
-        }
-    }
-
-    val onAddSet = remember { { exerciseId: UUID ->
-        val index = workoutExercises.indexOfFirst { it.id == exerciseId }
-        if (index != -1) {
-            val updatedSets = workoutExercises[index].sets.toMutableList().apply { add(ExerciseSet()) }
-            workoutExercises[index] = workoutExercises[index].copy(sets = updatedSets)
-        }
-    } }
-
-    val onSetChanged = remember { { exerciseId: UUID, setIndex: Int, updatedSet: ExerciseSet ->
-        val index = workoutExercises.indexOfFirst { it.id == exerciseId }
-        if (index != -1) {
-            val updatedSets = workoutExercises[index].sets.toMutableList()
-            if (setIndex >= 0 && setIndex < updatedSets.size) {
-                updatedSets[setIndex] = updatedSet
-                workoutExercises[index] = workoutExercises[index].copy(sets = updatedSets)
-            }
-        }
-    } }
-
-    val onExerciseNameChange = remember { { exerciseId: UUID, newName: String ->
-        val index = workoutExercises.indexOfFirst { it.id == exerciseId }
-        if(index != -1) {
-            workoutExercises[index] = workoutExercises[index].copy(name = newName)
-        }
-    } }
-
-    val onAddWorkoutExercise: () -> Unit = remember { {
-        workoutExercises.add(WorkoutExercise(sets = mutableListOf(ExerciseSet())))
-    } }
-
-    // FIX: Replaced the nested Scaffold with a Column to prevent the double app bar bug.
-    // This Column now manually arranges the screen's components.
     Column(modifier = Modifier.fillMaxSize()) {
         WorkoutTopAppBar(
             title = workoutName,
             timerText = timerText,
-            onFinishWorkout = {
-                val finishedWorkout = Workout(
-                    name = workoutName,
-                    durationSeconds = secondsElapsed,
-                    workoutExercises = workoutExercises.toMutableList(),
-                    notes = workoutNotes
-                )
-                onFinishWorkout(finishedWorkout)
-            }
+            // STEP 3: Connect the onFinishWorkout event to the ViewModel
+            onFinishWorkout = { viewModel.onFinishWorkout(onNavigateBack) }
         )
 
-        // The exercise list now takes up the remaining available space.
         WorkoutExerciseList(
-            modifier = Modifier.weight(1f), // Use weight to fill the space
+            modifier = Modifier.weight(1f),
             workoutExercises = workoutExercises,
-            onAddSet = onAddSet,
-            onSetChanged = onSetChanged,
-            onExerciseNameChange = onExerciseNameChange,
-            onAddExercise = onAddWorkoutExercise
+            // STEP 3: Connect the list events directly to the ViewModel's functions
+            onAddSet = viewModel::onAddSet,
+            onSetChanged = viewModel::onSetChanged,
+            onExerciseNameChange = viewModel::onExerciseNameChange,
+            onAddExercise = viewModel::onAddExercise
         )
 
-        // The bottom actions are placed at the end of the column.
         WorkoutBottomActions(
-            onOpenNotes = { onOpenNotes(workoutNotes) },
-            onDiscardWorkout = onDiscardWorkout,
+            onOpenNotes = onOpenNotes,
+            onDiscardWorkout = { viewModel.onDiscardWorkout(onNavigateBack) },
             onOpenPlateCalculator = onOpenPlateCalculator
         )
     }
@@ -147,17 +75,16 @@ private fun WorkoutExerciseList(
     onAddExercise: () -> Unit
 ) {
     LazyColumn(
-        // FIX: The modifier from the parent now correctly controls the space.
         modifier = modifier.padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp)
     ) {
-        items(items = workoutExercises, key = { it.id }) { exercise ->
+        items(items = workoutExercises, key = { it.id }) { workoutExercise ->
             ExerciseInputCard(
-                workoutExercise = exercise,
-                onAddSet = { onAddSet(exercise.id) },
-                onSetChanged = { setIndex, updatedSet -> onSetChanged(exercise.id, setIndex, updatedSet) },
-                onExerciseNameChange = { newName -> onExerciseNameChange(exercise.id, newName) }
+                workoutExercise = workoutExercise,
+                onAddSet = { onAddSet(workoutExercise.id) },
+                onSetChanged = { setIndex, updatedSet -> onSetChanged(workoutExercise.id, setIndex, updatedSet) },
+                onExerciseNameChange = { newName -> onExerciseNameChange(workoutExercise.id, newName) }
             )
         }
         item {
@@ -181,11 +108,6 @@ private fun WorkoutExerciseList(
 @Composable
 fun WorkoutScreenPreview() {
     TimberWorkoutLogsTheme {
-        WorkoutScreen(
-            onFinishWorkout = {},
-            onOpenNotes = {},
-            onDiscardWorkout = {},
-            onOpenPlateCalculator = {}
-        )
+        // This preview will be broken until we finish the refactor
     }
 }

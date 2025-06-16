@@ -1,4 +1,4 @@
-package com.bignerdranch.android.timberworkoutlogs.ui.navigation
+package com.bignerdranch.android.timberworkoutlogs.ui
 
 import TimberBottomNavigationBar
 import TimberTopAppBar
@@ -7,16 +7,21 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.bignerdranch.android.timberworkoutlogs.TimberApplication
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.HistoryScreen
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.HomeScreen
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.SettingsScreen
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.StatsScreen
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.TemplatesScreen
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.workout.WorkoutScreen
+import com.bignerdranch.android.timberworkoutlogs.ui.screen.workout.WorkoutViewModel
+import com.bignerdranch.android.timberworkoutlogs.ui.screen.workout.WorkoutViewModelFactory
 
 object AppDestinations {
     const val HOME_ROUTE = "home"
@@ -28,7 +33,7 @@ object AppDestinations {
 }
 
 @Composable
-fun TimberApp() {
+fun TimberUi() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -93,11 +98,15 @@ fun TimberApp() {
                 SettingsScreen()
             }
             composable(AppDestinations.WORKOUT_ROUTE) {
+                val application = LocalContext.current.applicationContext as TimberApplication
+                val workoutViewModel: WorkoutViewModel = viewModel(
+                    factory = WorkoutViewModelFactory(application.workoutRepository)
+                )
                 WorkoutScreen(
-                    onFinishWorkout = { navController.popBackStack() },
-                    onOpenNotes = { },
-                    onDiscardWorkout = { navController.popBackStack() },
-                    onOpenPlateCalculator = { }
+                    viewModel = workoutViewModel,
+                    onNavigateBack = { navController.popBackStack() },
+                    onOpenNotes = { /* TODO */ },
+                    onOpenPlateCalculator = { /* TODO */ }
                 )
             }
         }

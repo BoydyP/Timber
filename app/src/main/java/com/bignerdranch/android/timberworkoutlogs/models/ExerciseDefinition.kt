@@ -1,5 +1,7 @@
 package com.bignerdranch.android.timberworkoutlogs.models
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import java.util.UUID
 
 /**
@@ -12,7 +14,8 @@ import java.util.UUID
  * // val category: String (e.g., "Chest", "Legs")
  * // val equipment: String (e.g., "Barbell", "Dumbbell")
  */
+@Entity(tableName = "exercise_definitions")
 data class ExerciseDefinition(
-    val id: UUID = UUID.randomUUID(),
+    @PrimaryKey val id: UUID = UUID.randomUUID(),
     val name: String
 )
