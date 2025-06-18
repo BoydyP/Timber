@@ -24,7 +24,6 @@ data class BottomNavItem(
 )
 
 private val BottomBarDefaultItems = listOf(
-    // The "Stats" item now correctly points to the STATS_ROUTE
     BottomNavItem("Stats", Icons.Outlined.BarChart, "Statistics and analytics", AppDestinations.STATS_ROUTE),
     BottomNavItem("History", Icons.Outlined.History, "Workout history", AppDestinations.HISTORY_ROUTE),
     BottomNavItem("Workout", Icons.Outlined.FitnessCenter, "Workout now", AppDestinations.WORKOUT_ROUTE),

@@ -18,14 +18,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bignerdranch.android.timberworkoutlogs.models.WorkoutExercise
 import com.bignerdranch.android.timberworkoutlogs.models.ExerciseSet
+import java.util.UUID
 
 @Composable
 fun ExerciseInputCard(
@@ -56,7 +59,7 @@ fun ExerciseInputCard(
                     setNumber = index + 1,
                     workoutSet = set,
                     onWeightChange = { newWeightStr ->
-                        val newWeight = newWeightStr.toDoubleOrNull() ?: set.weight
+                        val newWeight = newWeightStr.toIntOrNull() ?: set.weight
                         onSetChanged(index, set.copy(weight = newWeight))
                     },
                     onRepsChange = { newRepsStr ->
@@ -99,16 +102,16 @@ private fun SetInputRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         OutlinedTextField(
-            value = if (workoutSet.weight == 0.0 && workoutSet.reps == 0) "" else workoutSet.weight.toString(),
+            value = if (workoutSet.weight == 0 && workoutSet.reps == 0) "" else workoutSet.weight.toString(),
             onValueChange = onWeightChange,
             label = { Text("Weight") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.weight(1f),
             singleLine = true,
-            placeholder = { Text("kg/lbs") }
+            placeholder = { Text("${workoutSet.unit}") }
         )
         OutlinedTextField(
-            value = if (workoutSet.weight == 0.0 && workoutSet.reps == 0) "" else workoutSet.reps.toString(),
+            value = if (workoutSet.weight == 0 && workoutSet.reps == 0) "" else workoutSet.reps.toString(),
             onValueChange = onRepsChange,
             label = { Text("Reps") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -121,4 +124,33 @@ private fun SetInputRow(
             modifier = Modifier.padding(start = 8.dp)
         )
     }
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // TODO: Switch or toggle for weight unit
+        Switch(
+            checked = false,
+            onCheckedChange = {},
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .fillMaxWidth()
+
+        )
+    }
+}
+
+@Preview
+@Composable
+fun PreviewExerciseCard(){
+    ExerciseInputCard(
+        workoutExercise = WorkoutExercise(
+            id = UUID.randomUUID(),
+            workoutId = 1,
+            name = "Barbell bench press"
+        ),
+        onAddSet = {  },
+        onSetChanged = { setIndex, updatedSet -> {} },
+        onExerciseNameChange = { newName -> {} }
+    )
 }
