@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bignerdranch.android.timberworkoutlogs.models.WorkoutExercise
 import com.bignerdranch.android.timberworkoutlogs.models.ExerciseSet
+import com.bignerdranch.android.timberworkoutlogs.models.WeightUnit
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.workout.components.ExerciseInputCard
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.workout.components.WorkoutBottomActions
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.workout.components.WorkoutTopAppBar
@@ -50,10 +51,10 @@ fun WorkoutScreen(
         WorkoutExerciseList(
             modifier = Modifier.weight(1f),
             workoutExercises = workoutExercises,
-            // STEP 3: Connect the list events directly to the ViewModel's functions
             onAddSet = viewModel::onAddSet,
             onSetChanged = viewModel::onSetChanged,
             onExerciseNameChange = viewModel::onExerciseNameChange,
+            onExerciseUnitChange = viewModel::onExerciseUnitChange,
             onAddExercise = viewModel::onAddExercise
         )
 
@@ -72,6 +73,7 @@ private fun WorkoutExerciseList(
     onAddSet: (UUID) -> Unit,
     onSetChanged: (UUID, Int, ExerciseSet) -> Unit,
     onExerciseNameChange: (UUID, String) -> Unit,
+    onExerciseUnitChange: (UUID, WeightUnit) -> Unit,
     onAddExercise: () -> Unit
 ) {
     LazyColumn(
@@ -84,7 +86,8 @@ private fun WorkoutExerciseList(
                 workoutExercise = workoutExercise,
                 onAddSet = { onAddSet(workoutExercise.id) },
                 onSetChanged = { setIndex, updatedSet -> onSetChanged(workoutExercise.id, setIndex, updatedSet) },
-                onExerciseNameChange = { newName -> onExerciseNameChange(workoutExercise.id, newName) }
+                onExerciseNameChange = { newName -> onExerciseNameChange(workoutExercise.id, newName) },
+                onExerciseUnitChange = { newUnit -> onExerciseUnitChange(workoutExercise.id, newUnit) }
             )
         }
         item {

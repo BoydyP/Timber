@@ -1,8 +1,11 @@
 package com.bignerdranch.android.timberworkoutlogs.database
 
+import android.util.Log
 import com.bignerdranch.android.timberworkoutlogs.models.Workout
 import com.bignerdranch.android.timberworkoutlogs.models.WorkoutExercise
 
+
+private const val TAG = "WorkoutRepository"
 /**
  * Repository that provides a clean API for data access to the rest of the application.
  * It abstracts the data sources (in this case, only Room) from the app's business logic.
@@ -47,6 +50,8 @@ class WorkoutRepository(
      * This function now correctly calls the workoutExerciseDao that was passed into the constructor.
      */
     suspend fun insertWorkoutExercises(exercises: List<WorkoutExercise>) {
+        val tmpLog: WorkoutExercise = exercises[0]
+        Log.d(TAG, "Writing exercises. Exercise[0]: ${tmpLog.name}, ${tmpLog.unit}")
         workoutExerciseDao.insertWorkoutExercises(exercises)
     }
 }

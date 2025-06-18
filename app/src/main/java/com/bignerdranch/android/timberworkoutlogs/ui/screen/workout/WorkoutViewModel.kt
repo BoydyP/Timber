@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.bignerdranch.android.timberworkoutlogs.database.WorkoutRepository
 import com.bignerdranch.android.timberworkoutlogs.models.ExerciseSet
+import com.bignerdranch.android.timberworkoutlogs.models.WeightUnit
 import com.bignerdranch.android.timberworkoutlogs.models.Workout
 import com.bignerdranch.android.timberworkoutlogs.models.WorkoutExercise
 import kotlinx.coroutines.Job
@@ -114,7 +115,12 @@ class WorkoutViewModel(private val workoutRepository: WorkoutRepository) : ViewM
             workoutExercises[index] = workoutExercises[index].copy(name = newName)
         }
     }
-
+    fun onExerciseUnitChange(exerciseId: UUID, newUnit: WeightUnit) {
+        val index = workoutExercises.indexOfFirst { it.id == exerciseId }
+        if (index != -1) {
+            workoutExercises[index] = workoutExercises[index].copy(unit = newUnit)
+        }
+    }
     fun onFinishWorkout(onNavigateBack: () -> Unit) {
         Log.d(TAG, "onFinishWorkout called.")
 

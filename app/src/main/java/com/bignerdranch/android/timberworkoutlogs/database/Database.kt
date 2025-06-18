@@ -11,7 +11,7 @@ import com.bignerdranch.android.timberworkoutlogs.models.ExerciseDefinition
 import com.bignerdranch.android.timberworkoutlogs.models.Workout
 import com.bignerdranch.android.timberworkoutlogs.models.WorkoutExercise
 
-@Database(entities = [ ExerciseDefinition::class, Workout::class, WorkoutExercise::class ], version = 3, exportSchema = false)
+@Database(entities = [ ExerciseDefinition::class, Workout::class, WorkoutExercise::class ], version = 4, exportSchema = false)
 @TypeConverters(UUIDConverter::class, ExerciseSetListConverter::class)
 abstract class AppDatabase : RoomDatabase() {
 
