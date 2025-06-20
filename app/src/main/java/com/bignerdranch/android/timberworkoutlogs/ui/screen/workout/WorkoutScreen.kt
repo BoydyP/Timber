@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
@@ -18,9 +18,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.bignerdranch.android.timberworkoutlogs.models.WorkoutExercise
+import com.bignerdranch.android.timberworkoutlogs.models.ExerciseDefinition
 import com.bignerdranch.android.timberworkoutlogs.models.ExerciseSet
 import com.bignerdranch.android.timberworkoutlogs.models.WeightUnit
+import com.bignerdranch.android.timberworkoutlogs.models.WorkoutExercise
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.workout.components.ExerciseInputCard
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.workout.components.WorkoutBottomActions
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.workout.components.WorkoutTopAppBar
@@ -32,30 +33,31 @@ import java.util.UUID
 fun WorkoutScreen(
     viewModel: WorkoutViewModel,
     onNavigateBack: () -> Unit,
+    onNavigateToSelectExercise: (exerciseIndex: Int) -> Unit,
     onOpenNotes: () -> Unit,
     onOpenPlateCalculator: () -> Unit
 ) {
-    // State is read from the ViewModel
     val workoutName by viewModel.workoutName.collectAsStateWithLifecycle()
     val workoutExercises = viewModel.workoutExercises
+    val exerciseDefinitions = viewModel.exerciseDefinitions
     val timerText by viewModel.timerText.collectAsStateWithLifecycle()
 
     Column(modifier = Modifier.fillMaxSize()) {
         WorkoutTopAppBar(
             title = workoutName,
             timerText = timerText,
-            // STEP 3: Connect the onFinishWorkout event to the ViewModel
             onFinishWorkout = { viewModel.onFinishWorkout(onNavigateBack) }
         )
 
         WorkoutExerciseList(
             modifier = Modifier.weight(1f),
             workoutExercises = workoutExercises,
+            exerciseDefinitions = exerciseDefinitions,
             onAddSet = viewModel::onAddSet,
             onSetChanged = viewModel::onSetChanged,
-            onExerciseNameChange = viewModel::onExerciseNameChange,
             onExerciseUnitChange = viewModel::onExerciseUnitChange,
-            onAddExercise = viewModel::onAddExercise
+            onAddExercise = viewModel::onAddExercise,
+            onNavigateToSelectExercise = onNavigateToSelectExercise
         )
 
         WorkoutBottomActions(
@@ -70,24 +72,26 @@ fun WorkoutScreen(
 private fun WorkoutExerciseList(
     modifier: Modifier = Modifier,
     workoutExercises: List<WorkoutExercise>,
+    exerciseDefinitions: List<ExerciseDefinition?>,
     onAddSet: (UUID) -> Unit,
     onSetChanged: (UUID, Int, ExerciseSet) -> Unit,
-    onExerciseNameChange: (UUID, String) -> Unit,
     onExerciseUnitChange: (UUID, WeightUnit) -> Unit,
-    onAddExercise: () -> Unit
+    onAddExercise: () -> Unit,
+    onNavigateToSelectExercise: (exerciseIndex: Int) -> Unit
 ) {
     LazyColumn(
         modifier = modifier.padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp)
     ) {
-        items(items = workoutExercises, key = { it.id }) { workoutExercise ->
+        itemsIndexed(workoutExercises) { index, workoutExercise ->
             ExerciseInputCard(
+                exerciseDefinition = exerciseDefinitions.getOrNull(index),
                 workoutExercise = workoutExercise,
                 onAddSet = { onAddSet(workoutExercise.id) },
                 onSetChanged = { setIndex, updatedSet -> onSetChanged(workoutExercise.id, setIndex, updatedSet) },
-                onExerciseNameChange = { newName -> onExerciseNameChange(workoutExercise.id, newName) },
-                onExerciseUnitChange = { newUnit -> onExerciseUnitChange(workoutExercise.id, newUnit) }
+                onExerciseUnitChange = { newUnit -> onExerciseUnitChange(workoutExercise.id, newUnit) },
+                onNavigateToSelectExercise = { onNavigateToSelectExercise(index) }
             )
         }
         item {
@@ -111,6 +115,6 @@ private fun WorkoutExerciseList(
 @Composable
 fun WorkoutScreenPreview() {
     TimberWorkoutLogsTheme {
-        // This preview will be broken until we finish the refactor
+        // TODO: Previewing this screen now requires a mocked ViewModel
     }
 }

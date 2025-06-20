@@ -46,11 +46,9 @@ interface WorkoutDao {
      * @return A Flow emitting the specific workout.
      */
 
-    // Get live workout
     @Query("SELECT * FROM workouts WHERE id = :id")
     fun getWorkoutFlow(id: Long): Flow<Workout>
 
-    // Get single snapshot
     @Query("SELECT * FROM workouts WHERE id = :id")
     suspend fun getWorkout(id: Long): Workout?
 

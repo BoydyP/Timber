@@ -15,15 +15,20 @@ import java.util.UUID
             parentColumns = ["id"],
             childColumns = ["workoutId"],
             onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = ExerciseDefinition::class,
+            parentColumns = ["id"],
+            childColumns = ["definitionId"],
+            onDelete = ForeignKey.CASCADE
         )
     ]
 )
 data class WorkoutExercise(
     @PrimaryKey val id: UUID = UUID.randomUUID(),
     val workoutId: Long,
-    val name: String = "",
+    val definitionId: UUID,
     val unit: WeightUnit = WeightUnit.KG,
     @TypeConverters(ExerciseSetListConverter::class)
     val sets: List<ExerciseSet> = listOf()
-    // TODO: Consider how to link back to ExerciseDefinition
 )

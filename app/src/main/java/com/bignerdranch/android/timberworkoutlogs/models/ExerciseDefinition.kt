@@ -2,20 +2,22 @@ package com.bignerdranch.android.timberworkoutlogs.models
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.bignerdranch.android.timberworkoutlogs.util.capitaliseEnum
 import java.util.UUID
 
 /**
- * Represents a single exercise definition in the master list.
- * This is different from an Exercise in a workout log.
- *
- * @param id The unique ID for this exercise definition.
- * @param name The official name of the exercise (e.g., "Barbell Bench Press").
- * // Future properties could include:
- * // val category: String (e.g., "Chest", "Legs")
- * // val equipment: String (e.g., "Barbell", "Dumbbell")
+ * Represents the definition of an exercise in the master list.
  */
 @Entity(tableName = "exercise_definitions")
 data class ExerciseDefinition(
     @PrimaryKey val id: UUID = UUID.randomUUID(),
-    val name: String
-)
+    val name: String,
+    val equipment: ExerciseEquipment
+) {
+    /**
+     * A computed property to get the full, formatted name of the exercise.
+     * This is what will be displayed in the UI. It is not stored in the database.
+     */
+    val computedExerciseName: String
+        get() = "${capitaliseEnum(equipment.name)} $name"
+}

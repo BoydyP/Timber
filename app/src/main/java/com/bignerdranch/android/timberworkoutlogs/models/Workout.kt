@@ -15,7 +15,6 @@ data class Workout(
     var durationSeconds: Int = 0,
     val notes: String = ""
 ) {
-    // Ignore as Room will handle relations
     @Ignore
     var workoutExercises: MutableList<WorkoutExercise> = mutableListOf()
 }

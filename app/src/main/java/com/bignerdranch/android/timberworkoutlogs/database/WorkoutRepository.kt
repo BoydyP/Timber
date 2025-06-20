@@ -51,7 +51,7 @@ class WorkoutRepository(
      */
     suspend fun insertWorkoutExercises(exercises: List<WorkoutExercise>) {
         val tmpLog: WorkoutExercise = exercises[0]
-        Log.d(TAG, "Writing exercises. Exercise[0]: ${tmpLog.name}, ${tmpLog.unit}")
+        Log.d(TAG, "Writing exercises. Exercise[0]: ${tmpLog.definitionId}, ${tmpLog.unit}")
         workoutExerciseDao.insertWorkoutExercises(exercises)
     }
 }

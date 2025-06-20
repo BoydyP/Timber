@@ -5,11 +5,13 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.bignerdranch.android.timberworkoutlogs.database.ExerciseDefinitionRepository
 import com.bignerdranch.android.timberworkoutlogs.database.WorkoutRepository
+import com.bignerdranch.android.timberworkoutlogs.models.ExerciseDefinition
 import com.bignerdranch.android.timberworkoutlogs.models.ExerciseSet
-import com.bignerdranch.android.timberworkoutlogs.models.WeightUnit
 import com.bignerdranch.android.timberworkoutlogs.models.Workout
 import com.bignerdranch.android.timberworkoutlogs.models.WorkoutExercise
+import com.bignerdranch.android.timberworkoutlogs.models.WeightUnit
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +20,10 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 import java.util.UUID
 
-class WorkoutViewModel(private val workoutRepository: WorkoutRepository) : ViewModel() {
+class WorkoutViewModel(
+    private val workoutRepository: WorkoutRepository,
+    private val exerciseDefinitionRepository: ExerciseDefinitionRepository
+) : ViewModel() {
 
     private val TAG = "WorkoutViewModel"
 
@@ -26,6 +31,8 @@ class WorkoutViewModel(private val workoutRepository: WorkoutRepository) : ViewM
     val workoutName = _workoutName.asStateFlow()
 
     val workoutExercises = mutableStateListOf<WorkoutExercise>()
+
+    val exerciseDefinitions = mutableStateListOf<ExerciseDefinition?>()
 
     private val _timerText = MutableStateFlow("00:00")
     val timerText = _timerText.asStateFlow()
@@ -76,24 +83,35 @@ class WorkoutViewModel(private val workoutRepository: WorkoutRepository) : ViewM
         else String.format(Locale.getDefault(), "%02d:%02d", minutes, secs)
     }
 
+    fun onExerciseSelected(exerciseIndex: Int, definitionId: UUID) {
+        viewModelScope.launch {
+            val definition = exerciseDefinitionRepository.getExerciseDefinition(definitionId)
+            if (exerciseIndex >= 0 && exerciseIndex < workoutExercises.size) {
+                exerciseDefinitions[exerciseIndex] = definition
+                workoutExercises[exerciseIndex] = workoutExercises[exerciseIndex].copy(definitionId = definitionId)
+            }
+        }
+    }
+
     fun onAddExercise() {
         currentWorkoutId?.let { id ->
+            val placeholderDefinitionId = UUID.randomUUID()
             workoutExercises.add(
                 WorkoutExercise(
                     workoutId = id,
-                    name = "",
-                    sets = mutableListOf(ExerciseSet())
+                    definitionId = placeholderDefinitionId,
+                    sets = listOf(ExerciseSet())
                 )
             )
-            Log.d(TAG, "Added new exercise to workout ID: $id")
+            exerciseDefinitions.add(null)
+            Log.d(TAG, "Added new empty exercise slot to workout ID: $id")
         } ?: Log.e(TAG, "Cannot add exercise, workoutId is null")
     }
 
     fun onAddSet(exerciseId: UUID) {
         val index = workoutExercises.indexOfFirst { it.id == exerciseId }
         if (index != -1) {
-            val updatedSets =
-                workoutExercises[index].sets.toMutableList().apply { add(ExerciseSet()) }
+            val updatedSets = workoutExercises[index].sets.toMutableList().apply { add(ExerciseSet()) }
             workoutExercises[index] = workoutExercises[index].copy(sets = updatedSets)
         }
     }
@@ -109,18 +127,13 @@ class WorkoutViewModel(private val workoutRepository: WorkoutRepository) : ViewM
         }
     }
 
-    fun onExerciseNameChange(exerciseId: UUID, newName: String) {
-        val index = workoutExercises.indexOfFirst { it.id == exerciseId }
-        if (index != -1) {
-            workoutExercises[index] = workoutExercises[index].copy(name = newName)
-        }
-    }
     fun onExerciseUnitChange(exerciseId: UUID, newUnit: WeightUnit) {
         val index = workoutExercises.indexOfFirst { it.id == exerciseId }
         if (index != -1) {
             workoutExercises[index] = workoutExercises[index].copy(unit = newUnit)
         }
     }
+
     fun onFinishWorkout(onNavigateBack: () -> Unit) {
         Log.d(TAG, "onFinishWorkout called.")
 
@@ -164,7 +177,6 @@ class WorkoutViewModel(private val workoutRepository: WorkoutRepository) : ViewM
         } ?: onNavigateBack()
     }
 
-
     override fun onCleared() {
         super.onCleared()
         Log.d(TAG, "ViewModel cleared, timer job cancelled.")
@@ -172,14 +184,15 @@ class WorkoutViewModel(private val workoutRepository: WorkoutRepository) : ViewM
     }
 }
 
-class WorkoutViewModelFactory(private val repository: WorkoutRepository) :
-    ViewModelProvider.Factory {
+class WorkoutViewModelFactory(
+    private val workoutRepository: WorkoutRepository,
+    private val exerciseDefinitionRepository: ExerciseDefinitionRepository
+) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(WorkoutViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return WorkoutViewModel(repository) as T
+            return WorkoutViewModel(workoutRepository, exerciseDefinitionRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
-

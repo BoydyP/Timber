@@ -1,6 +1,7 @@
 package com.bignerdranch.android.timberworkoutlogs.ui.screen.workout.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
@@ -29,8 +31,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bignerdranch.android.timberworkoutlogs.models.ExerciseDefinition
+import com.bignerdranch.android.timberworkoutlogs.models.ExerciseEquipment
 import com.bignerdranch.android.timberworkoutlogs.models.ExerciseSet
 import com.bignerdranch.android.timberworkoutlogs.models.WeightUnit
 import com.bignerdranch.android.timberworkoutlogs.models.WorkoutExercise
@@ -39,11 +44,12 @@ import java.util.UUID
 
 @Composable
 fun ExerciseInputCard(
+    exerciseDefinition: ExerciseDefinition?,
     workoutExercise: WorkoutExercise,
     onAddSet: () -> Unit,
     onSetChanged: (setIndex: Int, updatedSet: ExerciseSet) -> Unit,
-    onExerciseNameChange: (String) -> Unit,
-    onExerciseUnitChange: (newUnit: WeightUnit) -> Unit, // New callback for unit change
+    onExerciseUnitChange: (newUnit: WeightUnit) -> Unit,
+    onNavigateToSelectExercise: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -52,25 +58,29 @@ fun ExerciseInputCard(
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            OutlinedTextField(
-                value = workoutExercise.name,
-                onValueChange = onExerciseNameChange,
-                label = { Text("Exercise Name") },
-                placeholder = { Text("e.g. Barbell Bench Press") },
-                textStyle = MaterialTheme.typography.titleMedium,
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                singleLine = true
-            )
+                    .clickable(onClick = onNavigateToSelectExercise),
+                shape = MaterialTheme.shapes.medium,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+            ) {
+                Text(
+                    text = exerciseDefinition?.computedExerciseName ?: "Select Exercise...",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+            }
 
-            // The unit switch has been removed from here.
+            Spacer(modifier = Modifier.height(16.dp))
 
             workoutExercise.sets.forEachIndexed { index, set ->
                 SetInputRow(
                     setNumber = index + 1,
                     workoutSet = set,
-                    // Pass the unit down from the parent WorkoutExercise
                     unit = workoutExercise.unit,
                     onWeightChange = { newWeightStr ->
                         val newWeight = newWeightStr.toDoubleOrNull() ?: 0.0
@@ -86,6 +96,7 @@ fun ExerciseInputCard(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -95,29 +106,25 @@ fun ExerciseInputCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "KG",
-                        style = MaterialTheme.typography.bodyMedium,
+                        "KG",
                         fontWeight = if (workoutExercise.unit == WeightUnit.KG) FontWeight.Bold else FontWeight.Normal
                     )
                     Switch(
                         checked = workoutExercise.unit == WeightUnit.LB,
                         onCheckedChange = { isLbs ->
-                            val newUnit = if (isLbs) WeightUnit.LB else WeightUnit.KG
-                            onExerciseUnitChange(newUnit) // Call the new callback
+                            onExerciseUnitChange(if (isLbs) WeightUnit.LB else WeightUnit.KG)
                         },
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
                     Text(
-                        text = "LB",
-                        style = MaterialTheme.typography.bodyMedium,
+                        "LB",
                         fontWeight = if (workoutExercise.unit == WeightUnit.LB) FontWeight.Bold else FontWeight.Normal
                     )
                 }
-                IconButton(
-                    onClick = onAddSet,
-                ) {
+
+                IconButton(onClick = onAddSet) {
                     Icon(
-                        imageVector = Icons.Filled.AddCircle,
+                        Icons.Filled.AddCircle,
                         contentDescription = "Add Set",
                         tint = MaterialTheme.colorScheme.primary
                     )
@@ -131,7 +138,7 @@ fun ExerciseInputCard(
 private fun SetInputRow(
     setNumber: Int,
     workoutSet: ExerciseSet,
-    unit: WeightUnit, // Receive the unit from the parent
+    unit: WeightUnit,
     onWeightChange: (String) -> Unit,
     onRepsChange: (String) -> Unit,
     onDoneChange: (Boolean) -> Unit,
@@ -142,6 +149,12 @@ private fun SetInputRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        Text(
+            text = "$setNumber",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.width(24.dp),
+            textAlign = TextAlign.Center
+        )
         OutlinedTextField(
             value = if (workoutSet.weight == 0.0) "" else workoutSet.weight.toString(),
             onValueChange = onWeightChange,
@@ -149,7 +162,7 @@ private fun SetInputRow(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.weight(1f),
             singleLine = true,
-            suffix = { Text(unit.name) } // Display the unit passed from the parent
+            suffix = { Text(unit.name) }
         )
         OutlinedTextField(
             value = if (workoutSet.reps == 0) "" else workoutSet.reps.toString(),
@@ -171,12 +184,12 @@ private fun SetInputRow(
 @Composable
 fun PreviewExerciseCard() {
     TimberWorkoutLogsTheme {
-        var exercise by remember {
+        var workoutExercise by remember {
             mutableStateOf(
                 WorkoutExercise(
                     id = UUID.randomUUID(),
                     workoutId = 1,
-                    name = "Barbell Bench Press",
+                    definitionId = UUID.randomUUID(),
                     unit = WeightUnit.KG,
                     sets = listOf(
                         ExerciseSet(weight = 100.0, reps = 8, isDone = true),
@@ -185,23 +198,28 @@ fun PreviewExerciseCard() {
                 )
             )
         }
+        val definition = ExerciseDefinition(
+            id = workoutExercise.definitionId,
+            name = "Bench Press",
+            equipment = ExerciseEquipment.BARBELL
+        )
+
         ExerciseInputCard(
-            workoutExercise = exercise,
+            exerciseDefinition = definition,
+            workoutExercise = workoutExercise,
             onAddSet = {
-                val newSets = exercise.sets.toMutableList().apply { add(ExerciseSet()) }
-                exercise = exercise.copy(sets = newSets)
+                val newSets = workoutExercise.sets.toMutableList().apply { add(ExerciseSet()) }
+                workoutExercise = workoutExercise.copy(sets = newSets)
             },
             onSetChanged = { index, updatedSet ->
-                val newSets = exercise.sets.toMutableList()
+                val newSets = workoutExercise.sets.toMutableList()
                 newSets[index] = updatedSet
-                exercise = exercise.copy(sets = newSets)
-            },
-            onExerciseNameChange = { newName ->
-                exercise = exercise.copy(name = newName)
+                workoutExercise = workoutExercise.copy(sets = newSets)
             },
             onExerciseUnitChange = { newUnit ->
-                exercise = exercise.copy(unit = newUnit)
-            }
+                workoutExercise = workoutExercise.copy(unit = newUnit)
+            },
+            onNavigateToSelectExercise = {}
         )
     }
 }

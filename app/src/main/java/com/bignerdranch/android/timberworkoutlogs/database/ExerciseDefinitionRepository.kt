@@ -1,0 +1,24 @@
+package com.bignerdranch.android.timberworkoutlogs.database
+
+import androidx.annotation.WorkerThread
+import com.bignerdranch.android.timberworkoutlogs.models.ExerciseDefinition
+import kotlinx.coroutines.flow.Flow
+import java.util.UUID
+
+/**
+ * Repository for managing ExerciseDefinition data operations.
+ * It abstracts the data source from the rest of the application.
+ */
+class ExerciseDefinitionRepository(private val exerciseDefinitionDao: ExerciseDefinitionDao) {
+
+    val allExerciseDefinitions: Flow<List<ExerciseDefinition>> = exerciseDefinitionDao.getExerciseDefinitions()
+
+    suspend fun getExerciseDefinition(id: UUID): ExerciseDefinition {
+        return exerciseDefinitionDao.getExerciseDefinition(id)
+    }
+
+    @WorkerThread
+    suspend fun insert(exerciseDefinition: ExerciseDefinition) {
+        exerciseDefinitionDao.addExerciseDefinition(exerciseDefinition)
+    }
+}

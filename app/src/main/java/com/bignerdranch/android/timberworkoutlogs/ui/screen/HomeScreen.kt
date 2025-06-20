@@ -34,7 +34,6 @@ fun HomeScreenContent(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        // Welcome text at the top
         Text(
             // TODO: Replace with actual user name from profile/auth
             text = getGreetingByTime(),
@@ -44,7 +43,6 @@ fun HomeScreenContent(modifier: Modifier = Modifier) {
                 .padding(bottom = 6.dp),
         )
 
-        // Top graph placeholder for best lifts
         PlaceholderContent(
             label = "Best Lifts (e.g., Bench Press)",
             modifier = Modifier
@@ -52,7 +50,6 @@ fun HomeScreenContent(modifier: Modifier = Modifier) {
                 .fillMaxWidth()
         )
 
-        // Bottom graph placeholder for weekly volume
         Column(
             modifier = Modifier
                 .weight(1f)

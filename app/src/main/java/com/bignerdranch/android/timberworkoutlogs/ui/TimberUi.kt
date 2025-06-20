@@ -19,9 +19,19 @@ import com.bignerdranch.android.timberworkoutlogs.ui.screen.HomeScreen
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.SettingsScreen
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.StatsScreen
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.TemplatesScreen
+import com.bignerdranch.android.timberworkoutlogs.ui.screen.exercise.CreateExerciseScreen
+import com.bignerdranch.android.timberworkoutlogs.ui.screen.exercise.CreateExerciseViewModel
+import com.bignerdranch.android.timberworkoutlogs.ui.screen.exercise.CreateExerciseViewModelFactory
+import com.bignerdranch.android.timberworkoutlogs.ui.screen.exercise.ExercisesListScreen
+import com.bignerdranch.android.timberworkoutlogs.ui.screen.exercise.ExercisesListViewModel
+import com.bignerdranch.android.timberworkoutlogs.ui.screen.exercise.ExercisesListViewModelFactory
+import com.bignerdranch.android.timberworkoutlogs.ui.screen.exercise.SelectExerciseScreen
+import com.bignerdranch.android.timberworkoutlogs.ui.screen.exercise.SelectExerciseViewModel
+import com.bignerdranch.android.timberworkoutlogs.ui.screen.exercise.SelectExerciseViewModelFactory
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.workout.WorkoutScreen
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.workout.WorkoutViewModel
 import com.bignerdranch.android.timberworkoutlogs.ui.screen.workout.WorkoutViewModelFactory
+import java.util.UUID
 
 object AppDestinations {
     const val HOME_ROUTE = "home"
@@ -30,6 +40,10 @@ object AppDestinations {
     const val WORKOUT_ROUTE = "workout"
     const val TEMPLATES_ROUTE = "templates"
     const val SETTINGS_ROUTE = "settings"
+    const val EXERCISES_LIST_ROUTE = "exercises_list"
+    const val CREATE_EXERCISE_ROUTE = "create_exercise"
+    const val SELECT_EXERCISE_ROUTE = "select_exercise"
+    const val WORKOUT_TEMPLATES_ROUTE = "workout_templates"
 }
 
 @Composable
@@ -37,6 +51,7 @@ fun TimberUi() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val application = LocalContext.current.applicationContext as TimberApplication
 
     val mainScreenRoutes = setOf(
         AppDestinations.HOME_ROUTE,
@@ -44,6 +59,14 @@ fun TimberUi() {
         AppDestinations.HISTORY_ROUTE,
         AppDestinations.TEMPLATES_ROUTE,
         AppDestinations.SETTINGS_ROUTE
+    )
+
+    val fullScreenRoutes = setOf(
+        AppDestinations.WORKOUT_ROUTE,
+        AppDestinations.EXERCISES_LIST_ROUTE,
+        AppDestinations.CREATE_EXERCISE_ROUTE,
+        AppDestinations.SELECT_EXERCISE_ROUTE,
+        AppDestinations.WORKOUT_TEMPLATES_ROUTE,
     )
 
     Scaffold(
@@ -74,9 +97,7 @@ fun TimberUi() {
         NavHost(
             navController = navController,
             startDestination = AppDestinations.HOME_ROUTE,
-            // FIX: Conditionally apply padding. The WorkoutScreen should not have padding,
-            // allowing it to draw over the entire screen area.
-            modifier = if (currentRoute in mainScreenRoutes) {
+            modifier = if (currentRoute !in fullScreenRoutes) {
                 Modifier.padding(innerPadding)
             } else {
                 Modifier
@@ -92,19 +113,68 @@ fun TimberUi() {
                 HistoryScreen()
             }
             composable(AppDestinations.TEMPLATES_ROUTE) {
-                TemplatesScreen()
+                TemplatesScreen(
+                    onNavigateToExercisesList = { navController.navigate(AppDestinations.EXERCISES_LIST_ROUTE) }
+                )
             }
             composable(AppDestinations.SETTINGS_ROUTE) {
                 SettingsScreen()
             }
-            composable(AppDestinations.WORKOUT_ROUTE) {
-                val application = LocalContext.current.applicationContext as TimberApplication
-                val workoutViewModel: WorkoutViewModel = viewModel(
-                    factory = WorkoutViewModelFactory(application.workoutRepository)
+
+            composable(AppDestinations.EXERCISES_LIST_ROUTE) {
+                val viewModel: ExercisesListViewModel = viewModel(factory = ExercisesListViewModelFactory(application.exerciseDefinitionRepository))
+                ExercisesListScreen(
+                    viewModel = viewModel,
+                    onNavigateToCreateExercise = { navController.navigate(AppDestinations.CREATE_EXERCISE_ROUTE) }
                 )
+            }
+
+            composable(AppDestinations.CREATE_EXERCISE_ROUTE) {
+                val viewModel: CreateExerciseViewModel = viewModel(factory = CreateExerciseViewModelFactory(application.exerciseDefinitionRepository))
+                CreateExerciseScreen(
+                    viewModel = viewModel,
+                    onExerciseCreated = { navController.popBackStack() }
+                )
+            }
+
+            composable(AppDestinations.SELECT_EXERCISE_ROUTE) {
+                val viewModel: SelectExerciseViewModel = viewModel(factory = SelectExerciseViewModelFactory(application.exerciseDefinitionRepository))
+                SelectExerciseScreen(
+                    viewModel = viewModel,
+                    onExerciseSelected = { definitionId ->
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set("selected_exercise_id", definitionId.toString())
+                        navController.popBackStack()
+                    },
+                    onNavigateToCreateExercise = { navController.navigate(AppDestinations.CREATE_EXERCISE_ROUTE) },
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(AppDestinations.WORKOUT_ROUTE) { backStackEntry ->
+                val workoutViewModel: WorkoutViewModel = viewModel(
+                    factory = WorkoutViewModelFactory(
+                        application.workoutRepository,
+                        application.exerciseDefinitionRepository
+                    )
+                )
+
+                val selectedId = backStackEntry.savedStateHandle.get<String>("selected_exercise_id")
+                val exerciseIndex = backStackEntry.savedStateHandle.get<Int>("exercise_index")
+                if (selectedId != null && exerciseIndex != null) {
+                    workoutViewModel.onExerciseSelected(exerciseIndex, UUID.fromString(selectedId))
+                    backStackEntry.savedStateHandle.remove<String>("selected_exercise_id")
+                    backStackEntry.savedStateHandle.remove<Int>("exercise_index")
+                }
+
                 WorkoutScreen(
                     viewModel = workoutViewModel,
                     onNavigateBack = { navController.popBackStack() },
+                    onNavigateToSelectExercise = { index ->
+                        navController.currentBackStackEntry?.savedStateHandle?.set("exercise_index", index)
+                        navController.navigate(AppDestinations.SELECT_EXERCISE_ROUTE)
+                    },
                     onOpenNotes = { /* TODO */ },
                     onOpenPlateCalculator = { /* TODO */ }
                 )

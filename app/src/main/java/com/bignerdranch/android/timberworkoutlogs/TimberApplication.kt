@@ -3,6 +3,7 @@ package com.bignerdranch.android.timberworkoutlogs
 import android.app.Application
 import android.util.Log
 import com.bignerdranch.android.timberworkoutlogs.database.AppDatabase
+import com.bignerdranch.android.timberworkoutlogs.database.ExerciseDefinitionRepository
 import com.bignerdranch.android.timberworkoutlogs.database.WorkoutRepository
 
 private const val TAG = "TimberApplication"
@@ -17,5 +18,8 @@ class TimberApplication : Application() {
     val database by lazy { AppDatabase.getDatabase(this) }
     val workoutRepository by lazy {
         WorkoutRepository(database.workoutDao(), database.workoutExerciseDao())
+    }
+    val exerciseDefinitionRepository by lazy {
+        ExerciseDefinitionRepository(database.exerciseDefinitionDao())
     }
 }

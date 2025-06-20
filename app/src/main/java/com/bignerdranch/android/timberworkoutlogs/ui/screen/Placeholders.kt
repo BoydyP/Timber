@@ -18,11 +18,6 @@ fun HistoryScreen(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun TemplatesScreen(modifier: Modifier = Modifier) {
-    PlaceholderScreenContent(name = "Templates Screen", modifier = modifier)
-}
-
-@Composable
 fun SettingsScreen(modifier: Modifier = Modifier) {
     PlaceholderScreenContent(name = "Settings Screen", modifier = modifier)
 }
