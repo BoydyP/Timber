@@ -1,4 +1,4 @@
-package com.bignerdranch.android.timberworkoutlogs
+package com.android.timberworkoutlogs
 
 import org.junit.Test
 

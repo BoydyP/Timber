@@ -9,11 +9,11 @@ plugins {
 
 
 android {
-    namespace = "com.bignerdranch.android.timberworkoutlogs"
+    namespace = "com.android.timberworkoutlogs"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.bignerdranch.android.timberworkoutlogs"
+        applicationId = "com.android.timberworkoutlogs"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
