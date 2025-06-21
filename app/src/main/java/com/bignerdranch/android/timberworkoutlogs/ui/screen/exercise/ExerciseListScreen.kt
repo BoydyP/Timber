@@ -15,10 +15,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.LineWeight
-import androidx.compose.material.icons.filled.SportsGymnastics
-import androidx.compose.material.icons.filled.Webhook
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
@@ -31,12 +27,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bignerdranch.android.timberworkoutlogs.models.ExerciseDefinition
-import com.bignerdranch.android.timberworkoutlogs.models.ExerciseEquipment
 import com.bignerdranch.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
+import com.bignerdranch.android.timberworkoutlogs.util.getIconForEquipment
 
 @Composable
 fun ExercisesListScreen(
@@ -111,18 +106,6 @@ private fun ExerciseDefinitionCard(
                 style = MaterialTheme.typography.titleMedium
             )
         }
-    }
-}
-
-@Composable
-private fun getIconForEquipment(equipment: ExerciseEquipment): ImageVector {
-    return when (equipment) {
-        ExerciseEquipment.BARBELL -> Icons.Default.LineWeight
-        ExerciseEquipment.DUMBBELL -> Icons.Default.FitnessCenter
-        ExerciseEquipment.CABLE -> Icons.Default.Webhook
-        ExerciseEquipment.MACHINE -> Icons.Default.SportsGymnastics
-        ExerciseEquipment.BODYWEIGHT -> Icons.Default.SportsGymnastics
-        ExerciseEquipment.KETTLEBELL -> Icons.Default.FitnessCenter
     }
 }
 

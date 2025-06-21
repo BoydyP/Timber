@@ -38,6 +38,7 @@ object DefaultExercises {
             ExerciseDefinition(name = "Leg Curl", equipment = ExerciseEquipment.MACHINE, muscleGroups = listOf(MuscleGroup.LEGS)),
             ExerciseDefinition(name = "Calf Raise", equipment = ExerciseEquipment.MACHINE, muscleGroups = listOf(MuscleGroup.LEGS)),
             ExerciseDefinition(name = "Calf Raise", equipment = ExerciseEquipment.DUMBBELL, muscleGroups = listOf(MuscleGroup.LEGS)),
+            ExerciseDefinition(name = "Swing", equipment = ExerciseEquipment.KETTLEBELL, muscleGroups = listOf(MuscleGroup.LEGS)),
 
             ExerciseDefinition(name = "Overhead Press", equipment = ExerciseEquipment.BARBELL, muscleGroups = listOf(MuscleGroup.SHOULDERS, MuscleGroup.TRICEPS)),
             ExerciseDefinition(name = "Overhead Press", equipment = ExerciseEquipment.DUMBBELL, muscleGroups = listOf(MuscleGroup.SHOULDERS, MuscleGroup.TRICEPS)),
