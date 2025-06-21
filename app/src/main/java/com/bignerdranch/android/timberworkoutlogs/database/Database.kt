@@ -7,13 +7,14 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.bignerdranch.android.timberworkoutlogs.database.converters.ExerciseEquipmentConverter
 import com.bignerdranch.android.timberworkoutlogs.database.converters.ExerciseSetListConverter
+import com.bignerdranch.android.timberworkoutlogs.database.converters.MuscleGroupListConverter
 import com.bignerdranch.android.timberworkoutlogs.database.converters.UUIDConverter
 import com.bignerdranch.android.timberworkoutlogs.models.ExerciseDefinition
 import com.bignerdranch.android.timberworkoutlogs.models.Workout
 import com.bignerdranch.android.timberworkoutlogs.models.WorkoutExercise
 
-@Database(entities = [ ExerciseDefinition::class, Workout::class, WorkoutExercise::class ], version = 5, exportSchema = false)
-@TypeConverters(UUIDConverter::class, ExerciseSetListConverter::class, ExerciseEquipmentConverter::class)
+@Database(entities = [ ExerciseDefinition::class, Workout::class, WorkoutExercise::class ], version = 6, exportSchema = false)
+@TypeConverters(UUIDConverter::class, ExerciseSetListConverter::class, ExerciseEquipmentConverter::class, MuscleGroupListConverter::class)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun exerciseDefinitionDao(): ExerciseDefinitionDao

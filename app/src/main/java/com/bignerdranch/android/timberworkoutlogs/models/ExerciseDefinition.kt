@@ -12,7 +12,8 @@ import java.util.UUID
 data class ExerciseDefinition(
     @PrimaryKey val id: UUID = UUID.randomUUID(),
     val name: String,
-    val equipment: ExerciseEquipment
+    val equipment: ExerciseEquipment,
+    val muscleGroups: List<MuscleGroup>
 ) {
     /**
      * A computed property to get the full, formatted name of the exercise.

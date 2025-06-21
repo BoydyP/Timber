@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import com.bignerdranch.android.timberworkoutlogs.models.ExerciseDefinition
 import com.bignerdranch.android.timberworkoutlogs.models.ExerciseEquipment
 import com.bignerdranch.android.timberworkoutlogs.models.ExerciseSet
+import com.bignerdranch.android.timberworkoutlogs.models.MuscleGroup
 import com.bignerdranch.android.timberworkoutlogs.models.WeightUnit
 import com.bignerdranch.android.timberworkoutlogs.models.WorkoutExercise
 import com.bignerdranch.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
@@ -201,7 +202,8 @@ fun PreviewExerciseCard() {
         val definition = ExerciseDefinition(
             id = workoutExercise.definitionId,
             name = "Bench Press",
-            equipment = ExerciseEquipment.BARBELL
+            equipment = ExerciseEquipment.BARBELL,
+            muscleGroups = listOf(MuscleGroup.CHEST, MuscleGroup.TRICEPS)
         )
 
         ExerciseInputCard(
