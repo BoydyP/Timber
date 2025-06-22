@@ -22,7 +22,7 @@ import com.android.timberworkoutlogs.models.ExerciseDefinition
 import com.android.timberworkoutlogs.models.ExerciseSet
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.WorkoutExercise
-import com.android.timberworkoutlogs.ui.screen.workout.components.ExerciseInputCard
+import com.android.timberworkoutlogs.ui.screen.exercise.components.ExerciseInputCard
 import com.android.timberworkoutlogs.ui.screen.workout.components.WorkoutBottomActions
 import com.android.timberworkoutlogs.ui.screen.workout.components.WorkoutTopAppBar
 import com.android.timberworkoutlogs.ui.theme.TimberOrange

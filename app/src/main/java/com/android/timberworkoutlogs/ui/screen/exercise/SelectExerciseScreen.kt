@@ -1,7 +1,10 @@
 package com.android.timberworkoutlogs.ui.screen.exercise
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,10 +18,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -26,7 +28,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.android.timberworkoutlogs.models.ExerciseDefinition
+import com.android.timberworkoutlogs.models.ExerciseEquipment
+import com.android.timberworkoutlogs.models.MuscleGroup
+import com.android.timberworkoutlogs.ui.screen.exercise.components.ExerciseDefinitionCard
 import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 import java.util.UUID
 
@@ -47,7 +53,7 @@ fun SelectExerciseScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    TextField(
+                    OutlinedTextField(
                         value = searchText,
                         onValueChange = viewModel::onSearchTextChange,
                         modifier = Modifier.fillMaxWidth(),
@@ -79,11 +85,15 @@ fun SelectExerciseScreen(
                 Text("No exercises found.")
             }
         } else {
-            LazyColumn(modifier = Modifier.padding(innerPadding)) {
+            LazyColumn(
+                modifier = Modifier.padding(innerPadding),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 items(exercises, key = { it.id }) { exercise ->
-                    ExerciseListItem(
+                    ExerciseDefinitionCard(
                         exercise = exercise,
-                        onClick = { onExerciseSelected(exercise.id) }
+                        modifier = Modifier.clickable { onExerciseSelected(exercise.id) }
                     )
                 }
             }
@@ -91,22 +101,19 @@ fun SelectExerciseScreen(
     }
 }
 
-@Composable
-private fun ExerciseListItem(
-    exercise: ExerciseDefinition,
-    onClick: () -> Unit
-) {
-    ListItem(
-        headlineContent = { Text(exercise.computedExerciseName) },
-        modifier = Modifier.clickable(onClick = onClick)
-    )
-}
 
 @Preview(showBackground = true)
 @Composable
-fun SelectExerciseScreenPreview() {
+private fun PreviewSelectExerciseScreen() {
     TimberWorkoutLogsTheme {
-        // TODO: This preview will be basic as it doesn't have a real ViewModel
-        // SelectExerciseScreen(...)
+        val exercise = ExerciseDefinition(
+            id = UUID.randomUUID(),
+            name = "Bench Press",
+            equipment = ExerciseEquipment.BARBELL,
+            muscleGroups = listOf(MuscleGroup.CHEST, MuscleGroup.TRICEPS)
+        )
+        Column {
+            ExerciseDefinitionCard(exercise = exercise, modifier = Modifier.padding(16.dp))
+        }
     }
 }
