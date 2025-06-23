@@ -13,7 +13,8 @@ data class ExerciseDefinition(
     @PrimaryKey val id: UUID = UUID.randomUUID(),
     val name: String,
     val equipment: ExerciseEquipment,
-    val muscleGroups: List<MuscleGroup>
+    val muscleGroups: List<MuscleGroup>,
+    val logType: LogType
 ) {
     /**
      * A computed property to get the full, formatted name of the exercise.

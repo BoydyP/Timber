@@ -7,18 +7,20 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.android.timberworkoutlogs.database.converters.ExerciseEquipmentConverter
 import com.android.timberworkoutlogs.database.converters.ExerciseSetListConverter
+import com.android.timberworkoutlogs.database.converters.LogTypeConverter
 import com.android.timberworkoutlogs.database.converters.MuscleGroupListConverter
 import com.android.timberworkoutlogs.database.converters.UUIDConverter
 import com.android.timberworkoutlogs.models.ExerciseDefinition
 import com.android.timberworkoutlogs.models.Workout
 import com.android.timberworkoutlogs.models.WorkoutExercise
 
-@Database(entities = [ ExerciseDefinition::class, Workout::class, WorkoutExercise::class ], version = 6, exportSchema = false)
+@Database(entities = [ ExerciseDefinition::class, Workout::class, WorkoutExercise::class ], version = 1, exportSchema = false)
 @TypeConverters(
     UUIDConverter::class,
     ExerciseSetListConverter::class,
     ExerciseEquipmentConverter::class,
-    MuscleGroupListConverter::class
+    MuscleGroupListConverter::class,
+    LogTypeConverter::class
 )
 abstract class AppDatabase : RoomDatabase() {
 

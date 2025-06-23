@@ -6,18 +6,26 @@ import androidx.lifecycle.viewModelScope
 import com.android.timberworkoutlogs.database.ExerciseDefinitionRepository
 import com.android.timberworkoutlogs.models.ExerciseDefinition
 import com.android.timberworkoutlogs.models.ExerciseEquipment
+import com.android.timberworkoutlogs.models.LogType
 import com.android.timberworkoutlogs.models.MuscleGroup
 import kotlinx.coroutines.launch
 
 class CreateExerciseViewModel(private val repository: ExerciseDefinitionRepository) : ViewModel() {
 
-    /**
-     * Creates an ExerciseDefinition and saves it to the database via the repository.
-     */
-    fun saveExercise(name: String, equipment: ExerciseEquipment, muscleGroups: List<MuscleGroup>) {
+    fun saveExercise(
+        name: String,
+        equipment: ExerciseEquipment,
+        muscleGroups: List<MuscleGroup>,
+        logType: LogType
+    ) {
         viewModelScope.launch {
-            if (name.isNotBlank()) {
-                val newExercise = ExerciseDefinition(name = name, equipment = equipment, muscleGroups = muscleGroups)
+            if (name.isNotBlank() && muscleGroups.isNotEmpty()) {
+                val newExercise = ExerciseDefinition(
+                    name = name,
+                    equipment = equipment,
+                    muscleGroups = muscleGroups,
+                    logType = logType
+                )
                 repository.insert(newExercise)
             }
         }

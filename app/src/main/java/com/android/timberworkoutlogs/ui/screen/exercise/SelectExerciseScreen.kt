@@ -31,6 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.android.timberworkoutlogs.models.ExerciseDefinition
 import com.android.timberworkoutlogs.models.ExerciseEquipment
+import com.android.timberworkoutlogs.models.LogType
 import com.android.timberworkoutlogs.models.MuscleGroup
 import com.android.timberworkoutlogs.ui.screen.exercise.components.ExerciseDefinitionCard
 import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
@@ -110,6 +111,7 @@ private fun PreviewSelectExerciseScreen() {
             id = UUID.randomUUID(),
             name = "Bench Press",
             equipment = ExerciseEquipment.BARBELL,
+            logType = LogType.WEIGHT_AND_REPS,
             muscleGroups = listOf(MuscleGroup.CHEST, MuscleGroup.TRICEPS)
         )
         Column {

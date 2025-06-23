@@ -31,13 +31,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.android.timberworkoutlogs.models.ExerciseEquipment
+import com.android.timberworkoutlogs.models.LogType
 import com.android.timberworkoutlogs.models.MuscleGroup
 import com.android.timberworkoutlogs.ui.theme.TimberOrange
 import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 import com.android.timberworkoutlogs.util.capitaliseEnum
 import com.android.timberworkoutlogs.util.spaceSeparateEnum
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateExerciseScreen(
     viewModel: CreateExerciseViewModel,
@@ -46,20 +47,23 @@ fun CreateExerciseScreen(
 ) {
     var exerciseName by remember { mutableStateOf("") }
     var selectedEquipment by remember { mutableStateOf(ExerciseEquipment.BARBELL) }
-    var isDropdownExpanded by remember { mutableStateOf(false) }
+    var selectedLogType by remember { mutableStateOf(LogType.WEIGHT_AND_REPS) }
     val selectedMuscleGroups = remember { mutableStateListOf<MuscleGroup>() }
+
+    var isEquipmentDropdownExpanded by remember { mutableStateOf(false) }
+    var isLogTypeDropdownExpanded by remember { mutableStateOf(false) }
 
     Scaffold(modifier = modifier.fillMaxSize()) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(16.dp), // Apply content padding
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
                 text = "Create New Exercise",
                 style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.fillMaxWidth() // Ensure it spans width for start alignment
+                modifier = Modifier.fillMaxWidth()
             )
 
             OutlinedTextField(
@@ -72,8 +76,8 @@ fun CreateExerciseScreen(
             )
 
             ExposedDropdownMenuBox(
-                expanded = isDropdownExpanded,
-                onExpandedChange = { isDropdownExpanded = !isDropdownExpanded },
+                expanded = isEquipmentDropdownExpanded,
+                onExpandedChange = { isEquipmentDropdownExpanded = !isEquipmentDropdownExpanded },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 OutlinedTextField(
@@ -81,21 +85,48 @@ fun CreateExerciseScreen(
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Equipment") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDropdownExpanded) },
-                    modifier = Modifier
-                        .menuAnchor(type = MenuAnchorType.PrimaryEditable)
-                        .fillMaxWidth()
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isEquipmentDropdownExpanded) },
+                    modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryEditable).fillMaxWidth()
                 )
                 ExposedDropdownMenu(
-                    expanded = isDropdownExpanded,
-                    onDismissRequest = { isDropdownExpanded = false }
+                    expanded = isEquipmentDropdownExpanded,
+                    onDismissRequest = { isEquipmentDropdownExpanded = false }
                 ) {
                     ExerciseEquipment.entries.forEach { equipment ->
                         DropdownMenuItem(
                             text = { Text(capitaliseEnum(equipment.name)) },
                             onClick = {
                                 selectedEquipment = equipment
-                                isDropdownExpanded = false
+                                isEquipmentDropdownExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            ExposedDropdownMenuBox(
+                expanded = isLogTypeDropdownExpanded,
+                onExpandedChange = { isLogTypeDropdownExpanded = !isLogTypeDropdownExpanded },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedTextField(
+                    value = capitaliseEnum(spaceSeparateEnum(selectedLogType.name)),
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Log Type") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isLogTypeDropdownExpanded) },
+                    modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryEditable).fillMaxWidth()
+                )
+                ExposedDropdownMenu(
+                    expanded = isLogTypeDropdownExpanded,
+                    onDismissRequest = { isLogTypeDropdownExpanded = false }
+                ) {
+                    LogType.entries.forEach { logType ->
+                        DropdownMenuItem(
+                            text = { Text(capitaliseEnum(spaceSeparateEnum(logType.name))) },
+                            onClick = {
+                                selectedLogType = logType
+                                isLogTypeDropdownExpanded = false
                             }
                         )
                     }
@@ -112,13 +143,10 @@ fun CreateExerciseScreen(
                     FilterChip(
                         selected = isSelected,
                         onClick = {
-                            if (isSelected) {
-                                selectedMuscleGroups.remove(muscleGroup)
-                            } else {
-                                selectedMuscleGroups.add(muscleGroup)
-                            }
+                            if (isSelected) selectedMuscleGroups.remove(muscleGroup)
+                            else selectedMuscleGroups.add(muscleGroup)
                         },
-                        label = { Text(spaceSeparateEnum(capitaliseEnum(muscleGroup.name))) }
+                        label = { Text(capitaliseEnum(spaceSeparateEnum(muscleGroup.name))) }
                     )
                 }
             }
@@ -127,7 +155,7 @@ fun CreateExerciseScreen(
 
             Button(
                 onClick = {
-                    viewModel.saveExercise(exerciseName, selectedEquipment, selectedMuscleGroups)
+                    viewModel.saveExercise(exerciseName, selectedEquipment, selectedMuscleGroups.toList(), selectedLogType)
                     onExerciseCreated()
                 },
                 modifier = Modifier.fillMaxWidth(),

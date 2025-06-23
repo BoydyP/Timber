@@ -24,26 +24,22 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.android.timberworkoutlogs.models.DistanceAndTimeSet
 import com.android.timberworkoutlogs.models.ExerciseDefinition
-import com.android.timberworkoutlogs.models.ExerciseEquipment
 import com.android.timberworkoutlogs.models.ExerciseSet
-import com.android.timberworkoutlogs.models.MuscleGroup
+import com.android.timberworkoutlogs.models.LogType
+import com.android.timberworkoutlogs.models.RepsOnlySet
+import com.android.timberworkoutlogs.models.TimedSet
+import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.WorkoutExercise
-import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 import com.android.timberworkoutlogs.util.getIconForEquipment
-import java.util.UUID
 
 @Composable
 fun ExerciseInputCard(
@@ -95,22 +91,47 @@ fun ExerciseInputCard(
 
             if (exerciseDefinition != null) {
                 workoutExercise.sets.forEachIndexed { index, set ->
-                    SetInputRow(
-                        setNumber = index + 1,
-                        workoutSet = set,
-                        unit = workoutExercise.unit,
-                        onWeightChange = { newWeightStr ->
-                            val newWeight = newWeightStr.toDoubleOrNull() ?: 0.0
-                            onSetChanged(index, set.copy(weight = newWeight))
-                        },
-                        onRepsChange = { newRepsStr ->
-                            val newReps = newRepsStr.toIntOrNull() ?: 0
-                            onSetChanged(index, set.copy(reps = newReps))
-                        },
-                        onDoneChange = { isDone ->
-                            onSetChanged(index, set.copy(isDone = isDone))
-                        }
-                    )
+                    when (set) {
+                        is WeightAndRepsSet -> WeightAndRepsInputRow(
+                            setNumber = index + 1,
+                            workoutSet = set,
+                            unit = workoutExercise.unit,
+                            onWeightChange = { newWeightStr ->
+                                val newWeight = newWeightStr.toDoubleOrNull() ?: 0.0
+                                onSetChanged(index, set.copy(weight = newWeight))
+                            },
+                            onRepsChange = { newRepsStr ->
+                                val newReps = newRepsStr.toIntOrNull() ?: 0
+                                onSetChanged(index, set.copy(reps = newReps))
+                            },
+                            onDoneChange = { isDone ->
+                                onSetChanged(index, set.copy(isDone = isDone))
+                            }
+                        )
+                        is RepsOnlySet -> RepsOnlyInputRow(
+                            setNumber = index + 1,
+                            workoutSet = set,
+                            onRepsChange = { newRepsStr ->
+                                val newReps = newRepsStr.toIntOrNull() ?: 0
+                                onSetChanged(index, set.copy(reps = newReps))
+                            },
+                            onDoneChange = { isDone ->
+                                onSetChanged(index, set.copy(isDone = isDone))
+                            }
+                        )
+                        is TimedSet -> TimedInputRow(
+                            setNumber = index + 1,
+                            workoutSet = set,
+                            onDurationChange = { newDurationStr ->
+                                val newDuration = newDurationStr.toIntOrNull() ?: 0
+                                onSetChanged(index, set.copy(durationSeconds = newDuration))
+                            },
+                            onDoneChange = { isDone ->
+                                onSetChanged(index, set.copy(isDone = isDone))
+                            }
+                        )
+                        is DistanceAndTimeSet -> { /* TODO: Create a row for this type */ }
+                    }
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
@@ -120,14 +141,9 @@ fun ExerciseInputCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (exerciseDefinition != null) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            "KG",
-                            fontWeight = if (workoutExercise.unit == WeightUnit.KG) FontWeight.Bold else FontWeight.Normal
-                        )
+                if (exerciseDefinition?.logType == LogType.WEIGHT_AND_REPS) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("KG", fontWeight = if (workoutExercise.unit == WeightUnit.KG) FontWeight.Bold else FontWeight.Normal)
                         Switch(
                             checked = workoutExercise.unit == WeightUnit.LB,
                             onCheckedChange = { isLbs ->
@@ -135,19 +151,12 @@ fun ExerciseInputCard(
                             },
                             modifier = Modifier.padding(horizontal = 8.dp)
                         )
-                        Text(
-                            "LB",
-                            fontWeight = if (workoutExercise.unit == WeightUnit.LB) FontWeight.Bold else FontWeight.Normal
-                        )
+                        Text("LB", fontWeight = if (workoutExercise.unit == WeightUnit.LB) FontWeight.Bold else FontWeight.Normal)
                     }
                 } else {
                     Spacer(modifier = Modifier.weight(1f))
                 }
-
-                IconButton(
-                    onClick = onAddSet,
-                    enabled = exerciseDefinition != null
-                ) {
+                IconButton(onClick = onAddSet, enabled = exerciseDefinition != null) {
                     Icon(
                         Icons.Filled.AddCircle,
                         contentDescription = "Add Set",
@@ -160,31 +169,21 @@ fun ExerciseInputCard(
 }
 
 @Composable
-private fun SetInputRow(
+private fun WeightAndRepsInputRow(
     setNumber: Int,
-    workoutSet: ExerciseSet,
+    workoutSet: WeightAndRepsSet,
     unit: WeightUnit,
     onWeightChange: (String) -> Unit,
     onRepsChange: (String) -> Unit,
-    onDoneChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    onDoneChange: (Boolean) -> Unit
 ) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            text = "$setNumber",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.width(24.dp),
-            textAlign = TextAlign.Center
-        )
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(text = "$setNumber", style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(24.dp), textAlign = TextAlign.Center)
         OutlinedTextField(
             value = if (workoutSet.weight == 0.0) "" else workoutSet.weight.toString(),
             onValueChange = onWeightChange,
             label = { Text("Weight") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             modifier = Modifier.weight(1f),
             singleLine = true,
             suffix = { Text(unit.name) }
@@ -197,82 +196,168 @@ private fun SetInputRow(
             modifier = Modifier.weight(1f),
             singleLine = true
         )
-        Checkbox(
-            checked = workoutSet.isDone,
-            onCheckedChange = onDoneChange,
-            modifier = Modifier.padding(start = 8.dp)
-        )
+        Checkbox(checked = workoutSet.isDone, onCheckedChange = onDoneChange, modifier = Modifier.padding(start = 8.dp))
     }
 }
 
-@Preview(showBackground = true, name = "Card with Exercise Selected")
 @Composable
-fun PreviewExerciseCard_Selected() {
-    TimberWorkoutLogsTheme {
-        var workoutExercise by remember {
-            mutableStateOf(
-                WorkoutExercise(
-                    id = UUID.randomUUID(),
-                    workoutId = 1,
-                    definitionId = UUID.randomUUID(),
-                    unit = WeightUnit.KG,
-                    sets = listOf(
-                        ExerciseSet(weight = 100.0, reps = 8, isDone = true),
-                        ExerciseSet(weight = 100.0, reps = 5)
-                    )
-                )
-            )
-        }
-        val definition = ExerciseDefinition(
-            id = workoutExercise.definitionId,
-            name = "Bench Press",
-            equipment = ExerciseEquipment.BARBELL,
-            muscleGroups = listOf(MuscleGroup.CHEST, MuscleGroup.TRICEPS)
+private fun RepsOnlyInputRow(
+    setNumber: Int,
+    workoutSet: RepsOnlySet,
+    onRepsChange: (String) -> Unit,
+    onDoneChange: (Boolean) -> Unit
+) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(text = "$setNumber", style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(24.dp), textAlign = TextAlign.Center)
+        OutlinedTextField(
+            value = if (workoutSet.reps == 0) "" else workoutSet.reps.toString(),
+            onValueChange = onRepsChange,
+            label = { Text("Reps") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.weight(1f),
+            singleLine = true
         )
-
-        ExerciseInputCard(
-            exerciseDefinition = definition,
-            workoutExercise = workoutExercise,
-            onAddSet = {
-                val newSets = workoutExercise.sets.toMutableList().apply { add(ExerciseSet()) }
-                workoutExercise = workoutExercise.copy(sets = newSets)
-            },
-            onSetChanged = { index, updatedSet ->
-                val newSets = workoutExercise.sets.toMutableList()
-                newSets[index] = updatedSet
-                workoutExercise = workoutExercise.copy(sets = newSets)
-            },
-            onExerciseUnitChange = { newUnit ->
-                workoutExercise = workoutExercise.copy(unit = newUnit)
-            },
-            onNavigateToSelectExercise = {}
-        )
+        Checkbox(checked = workoutSet.isDone, onCheckedChange = onDoneChange, modifier = Modifier.padding(start = 8.dp))
     }
 }
 
-@Preview(showBackground = true, name = "Card without Exercise Selected")
 @Composable
-fun PreviewExerciseCard_NotSelected() {
-    TimberWorkoutLogsTheme {
-        val workoutExercise by remember {
-            mutableStateOf(
-                WorkoutExercise(
-                    id = UUID.randomUUID(),
-                    workoutId = 1,
-                    definitionId = UUID.randomUUID(),
-                    unit = WeightUnit.KG,
-                    sets = listOf()
-                )
-            )
-        }
-
-        ExerciseInputCard(
-            exerciseDefinition = null,
-            workoutExercise = workoutExercise,
-            onAddSet = {},
-            onSetChanged = { _, _ -> },
-            onExerciseUnitChange = {},
-            onNavigateToSelectExercise = {}
+private fun TimedInputRow(
+    setNumber: Int,
+    workoutSet: TimedSet,
+    onDurationChange: (String) -> Unit,
+    onDoneChange: (Boolean) -> Unit
+) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(text = "$setNumber", style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(24.dp), textAlign = TextAlign.Center)
+        OutlinedTextField(
+            value = if (workoutSet.durationSeconds == 0) "" else workoutSet.durationSeconds.toString(),
+            onValueChange = onDurationChange,
+            label = { Text("Duration") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.weight(1f),
+            singleLine = true,
+            suffix = { Text("sec") }
         )
+        Checkbox(checked = workoutSet.isDone, onCheckedChange = onDoneChange, modifier = Modifier.padding(start = 8.dp))
     }
 }
+
+
+//@Composable
+//private fun SetInputRow(
+//    setNumber: Int,
+//    workoutSet: ExerciseSet,
+//    unit: WeightUnit,
+//    onWeightChange: (String) -> Unit,
+//    onRepsChange: (String) -> Unit,
+//    onDoneChange: (Boolean) -> Unit,
+//    modifier: Modifier = Modifier
+//) {
+//    Row(
+//        modifier = modifier.fillMaxWidth(),
+//        verticalAlignment = Alignment.CenterVertically,
+//        horizontalArrangement = Arrangement.spacedBy(8.dp)
+//    ) {
+//        Text(
+//            text = "$setNumber",
+//            style = MaterialTheme.typography.titleMedium,
+//            modifier = Modifier.width(24.dp),
+//            textAlign = TextAlign.Center
+//        )
+//        OutlinedTextField(
+//            value = if (workoutSet. == 0.0) "" else workoutSet.weight.toString(),
+//            onValueChange = onWeightChange,
+//            label = { Text("Weight") },
+//            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+//            modifier = Modifier.weight(1f),
+//            singleLine = true,
+//            suffix = { Text(unit.name) }
+//        )
+//        OutlinedTextField(
+//            value = if (workoutSet.reps == 0) "" else workoutSet.reps.toString(),
+//            onValueChange = onRepsChange,
+//            label = { Text("Reps") },
+//            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+//            modifier = Modifier.weight(1f),
+//            singleLine = true
+//        )
+//        Checkbox(
+//            checked = workoutSet.isDone,
+//            onCheckedChange = onDoneChange,
+//            modifier = Modifier.padding(start = 8.dp)
+//        )
+//    }
+//}
+//
+//@Preview(showBackground = true, name = "Card with Exercise Selected")
+//@Composable
+//fun PreviewExerciseCard_Selected() {
+//    TimberWorkoutLogsTheme {
+//        var workoutExercise by remember {
+//            mutableStateOf(
+//                WorkoutExercise(
+//                    id = UUID.randomUUID(),
+//                    workoutId = 1,
+//                    definitionId = UUID.randomUUID(),
+//                    unit = WeightUnit.KG,
+//                    sets = listOf(
+//                        ExerciseSet(weight = 100.0, reps = 8, isDone = true),
+//                        ExerciseSet(weight = 100.0, reps = 5)
+//                    )
+//                )
+//            )
+//        }
+//        val definition = ExerciseDefinition(
+//            id = workoutExercise.definitionId,
+//            name = "Bench Press",
+//            equipment = ExerciseEquipment.BARBELL,
+//            muscleGroups = listOf(MuscleGroup.CHEST, MuscleGroup.TRICEPS)
+//        )
+//
+//        ExerciseInputCard(
+//            exerciseDefinition = definition,
+//            workoutExercise = workoutExercise,
+//            onAddSet = {
+//                val newSets = workoutExercise.sets.toMutableList().apply { add(ExerciseSet()) }
+//                workoutExercise = workoutExercise.copy(sets = newSets)
+//            },
+//            onSetChanged = { index, updatedSet ->
+//                val newSets = workoutExercise.sets.toMutableList()
+//                newSets[index] = updatedSet
+//                workoutExercise = workoutExercise.copy(sets = newSets)
+//            },
+//            onExerciseUnitChange = { newUnit ->
+//                workoutExercise = workoutExercise.copy(unit = newUnit)
+//            },
+//            onNavigateToSelectExercise = {}
+//        )
+//    }
+//}
+//
+//@Preview(showBackground = true, name = "Card without Exercise Selected")
+//@Composable
+//fun PreviewExerciseCard_NotSelected() {
+//    TimberWorkoutLogsTheme {
+//        val workoutExercise by remember {
+//            mutableStateOf(
+//                WorkoutExercise(
+//                    id = UUID.randomUUID(),
+//                    workoutId = 1,
+//                    definitionId = UUID.randomUUID(),
+//                    unit = WeightUnit.KG,
+//                    sets = listOf()
+//                )
+//            )
+//        }
+//
+//        ExerciseInputCard(
+//            exerciseDefinition = null,
+//            workoutExercise = workoutExercise,
+//            onAddSet = {},
+//            onSetChanged = { _, _ -> },
+//            onExerciseUnitChange = {},
+//            onNavigateToSelectExercise = {}
+//        )
+//    }
+//}

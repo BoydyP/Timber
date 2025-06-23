@@ -7,11 +7,16 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.android.timberworkoutlogs.database.ExerciseDefinitionRepository
 import com.android.timberworkoutlogs.database.WorkoutRepository
+import com.android.timberworkoutlogs.models.DistanceAndTimeSet
 import com.android.timberworkoutlogs.models.ExerciseDefinition
 import com.android.timberworkoutlogs.models.ExerciseSet
+import com.android.timberworkoutlogs.models.LogType
+import com.android.timberworkoutlogs.models.RepsOnlySet
+import com.android.timberworkoutlogs.models.TimedSet
+import com.android.timberworkoutlogs.models.WeightAndRepsSet
+import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.Workout
 import com.android.timberworkoutlogs.models.WorkoutExercise
-import com.android.timberworkoutlogs.models.WeightUnit
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,7 +36,6 @@ class WorkoutViewModel(
     val workoutName = _workoutName.asStateFlow()
 
     val workoutExercises = mutableStateListOf<WorkoutExercise>()
-
     val exerciseDefinitions = mutableStateListOf<ExerciseDefinition?>()
 
     private val _timerText = MutableStateFlow("00:00")
@@ -73,13 +77,7 @@ class WorkoutViewModel(
         val hours = seconds / 3600
         val minutes = (seconds % 3600) / 60
         val secs = seconds % 60
-        return if (hours > 0) String.format(
-            Locale.getDefault(),
-            "%02d:%02d:%02d",
-            hours,
-            minutes,
-            secs
-        )
+        return if (hours > 0) String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, secs)
         else String.format(Locale.getDefault(), "%02d:%02d", minutes, secs)
     }
 
@@ -87,8 +85,13 @@ class WorkoutViewModel(
         viewModelScope.launch {
             val definition = exerciseDefinitionRepository.getExerciseDefinition(definitionId)
             if (exerciseIndex >= 0 && exerciseIndex < workoutExercises.size) {
+                val initialSet = createDefaultSetForLogType(definition.logType)
+
                 exerciseDefinitions[exerciseIndex] = definition
-                workoutExercises[exerciseIndex] = workoutExercises[exerciseIndex].copy(definitionId = definitionId)
+                workoutExercises[exerciseIndex] = workoutExercises[exerciseIndex].copy(
+                    definitionId = definitionId,
+                    sets = listOf(initialSet)
+                )
             }
         }
     }
@@ -100,7 +103,7 @@ class WorkoutViewModel(
                 WorkoutExercise(
                     workoutId = id,
                     definitionId = placeholderDefinitionId,
-                    sets = listOf(ExerciseSet())
+                    sets = listOf()
                 )
             )
             exerciseDefinitions.add(null)
@@ -109,10 +112,26 @@ class WorkoutViewModel(
     }
 
     fun onAddSet(exerciseId: UUID) {
-        val index = workoutExercises.indexOfFirst { it.id == exerciseId }
-        if (index != -1) {
-            val updatedSets = workoutExercises[index].sets.toMutableList().apply { add(ExerciseSet()) }
-            workoutExercises[index] = workoutExercises[index].copy(sets = updatedSets)
+        val exerciseIndex = workoutExercises.indexOfFirst { it.id == exerciseId }
+        if (exerciseIndex == -1) return
+
+        val definition = exerciseDefinitions.getOrNull(exerciseIndex)
+        if (definition == null) {
+            Log.e(TAG, "Cannot add set, ExerciseDefinition is null for this slot.")
+            return
+        }
+
+        val newSet = createDefaultSetForLogType(definition.logType)
+        val updatedSets = workoutExercises[exerciseIndex].sets.toMutableList().apply { add(newSet) }
+        workoutExercises[exerciseIndex] = workoutExercises[exerciseIndex].copy(sets = updatedSets)
+    }
+
+    private fun createDefaultSetForLogType(logType: LogType): ExerciseSet {
+        return when (logType) {
+            LogType.WEIGHT_AND_REPS -> WeightAndRepsSet()
+            LogType.REPS_ONLY -> RepsOnlySet()
+            LogType.TIME -> TimedSet()
+            LogType.DISTANCE_AND_TIME -> DistanceAndTimeSet()
         }
     }
 
@@ -179,7 +198,6 @@ class WorkoutViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        Log.d(TAG, "ViewModel cleared, timer job cancelled.")
         timerJob?.cancel()
     }
 }
