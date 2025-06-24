@@ -28,6 +28,9 @@ import com.android.timberworkoutlogs.ui.screen.exercise.ExercisesListViewModelFa
 import com.android.timberworkoutlogs.ui.screen.exercise.SelectExerciseScreen
 import com.android.timberworkoutlogs.ui.screen.exercise.SelectExerciseViewModel
 import com.android.timberworkoutlogs.ui.screen.exercise.SelectExerciseViewModelFactory
+import com.android.timberworkoutlogs.ui.screen.workout.WorkoutHistoryScreen
+import com.android.timberworkoutlogs.ui.screen.workout.WorkoutHistoryViewModel
+import com.android.timberworkoutlogs.ui.screen.workout.WorkoutHistoryViewModelFactory
 import com.android.timberworkoutlogs.ui.screen.workout.WorkoutScreen
 import com.android.timberworkoutlogs.ui.screen.workout.WorkoutViewModel
 import com.android.timberworkoutlogs.ui.screen.workout.WorkoutViewModelFactory
@@ -110,7 +113,11 @@ fun TimberUi() {
                 StatsScreen()
             }
             composable(AppDestinations.HISTORY_ROUTE) {
-                HistoryScreen()
+                val viewModel: WorkoutHistoryViewModel = viewModel(factory = WorkoutHistoryViewModelFactory(application.workoutRepository))
+                WorkoutHistoryScreen(
+                    viewModel = viewModel,
+                    onNavigateToWorkout = {}
+                )
             }
             composable(AppDestinations.TEMPLATES_ROUTE) {
                 TemplatesScreen(

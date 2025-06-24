@@ -3,6 +3,8 @@ package com.android.timberworkoutlogs.database
 import android.util.Log
 import com.android.timberworkoutlogs.models.Workout
 import com.android.timberworkoutlogs.models.WorkoutExercise
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 
 private const val TAG = "WorkoutRepository"
@@ -17,8 +19,8 @@ private const val TAG = "WorkoutRepository"
 class WorkoutRepository(
     private val workoutDao: WorkoutDao,
     private val workoutExerciseDao: WorkoutExerciseDao)
-    {
-
+{
+    val allWorkouts: Flow<List<Workout>> = workoutDao.getAllWorkouts()
     /**
      * Inserts a workout into the database via a coroutine.
      * This is a suspend function, so it must be called from a coroutine or another suspend function.
