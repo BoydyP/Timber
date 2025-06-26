@@ -2,6 +2,7 @@ package com.android.timberworkoutlogs.models
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.android.timberworkoutlogs.database.converters.ExerciseSetListConverter
@@ -22,6 +23,10 @@ import java.util.UUID
             childColumns = ["definitionId"],
             onDelete = ForeignKey.CASCADE
         )
+    ],
+    indices = [
+        Index(value = ["workoutId"]),
+        Index(value = ["definitionId"])
     ]
 )
 data class WorkoutExercise(
