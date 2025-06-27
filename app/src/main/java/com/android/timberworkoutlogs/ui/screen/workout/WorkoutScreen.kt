@@ -37,14 +37,13 @@ fun WorkoutScreen(
     onOpenNotes: () -> Unit,
     onOpenPlateCalculator: () -> Unit
 ) {
-    val workoutName by viewModel.workoutName.collectAsStateWithLifecycle()
     val workoutExercises = viewModel.workoutExercises
     val exerciseDefinitions = viewModel.exerciseDefinitions
     val timerText by viewModel.timerText.collectAsStateWithLifecycle()
 
     Column(modifier = Modifier.fillMaxSize()) {
         WorkoutTopAppBar(
-            title = workoutName,
+            title = "Log Workout",
             timerText = timerText,
             onFinishWorkout = { viewModel.onFinishWorkout(onNavigateBack) }
         )

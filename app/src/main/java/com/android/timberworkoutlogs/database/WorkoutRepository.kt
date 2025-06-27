@@ -4,7 +4,6 @@ import android.util.Log
 import com.android.timberworkoutlogs.models.Workout
 import com.android.timberworkoutlogs.models.WorkoutExercise
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 
 
 private const val TAG = "WorkoutRepository"
@@ -52,8 +51,16 @@ class WorkoutRepository(
      * This function now correctly calls the workoutExerciseDao that was passed into the constructor.
      */
     suspend fun insertWorkoutExercises(exercises: List<WorkoutExercise>) {
-        val tmpLog: WorkoutExercise = exercises[0]
-        Log.d(TAG, "Writing exercises. Exercise[0]: ${tmpLog.definitionId}, ${tmpLog.unit}")
-        workoutExerciseDao.insertWorkoutExercises(exercises)
+        if (exercises.isNotEmpty()) {
+            val tmpLog: WorkoutExercise = exercises[0]
+            Log.d(TAG, "Writing exercises. Exercise[0]: ${tmpLog.definitionId}, ${tmpLog.unit}")
+            workoutExerciseDao.insertWorkoutExercises(exercises)
+        } else {
+            Log.d(TAG, "No exercises to write.")
+        }
+    }
+
+    suspend fun getExercisesForWorkout(workoutId: Long): List<WorkoutExercise> {
+        return workoutExerciseDao.getExercisesForWorkout(workoutId)
     }
 }

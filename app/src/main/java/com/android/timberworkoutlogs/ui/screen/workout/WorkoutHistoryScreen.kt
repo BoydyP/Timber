@@ -22,11 +22,11 @@ import com.android.timberworkoutlogs.ui.screen.workout.components.WorkoutItemCar
 @Composable
 fun WorkoutHistoryScreen(
     viewModel: WorkoutHistoryViewModel,
-    onNavigateToWorkout: () -> Unit,
+    onNavigateToWorkout: () -> Unit, // TODO: This might be used to navigate to a workout details screen
     modifier: Modifier = Modifier
 ) {
 
-    val workouts by viewModel.allWorkouts.collectAsState()
+    val workoutDisplayItems by viewModel.allWorkoutDisplayItems.collectAsState()
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -39,10 +39,10 @@ fun WorkoutHistoryScreen(
             Text(
                 text = "Workout History",
                 style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.padding(vertical = 16.dp)
+                modifier = Modifier.padding(vertical = 4.dp)
             )
 
-            if (workouts.isEmpty()) {
+            if (workoutDisplayItems.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -54,8 +54,8 @@ fun WorkoutHistoryScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
-                    items(workouts) { workout ->
-                        WorkoutItemCard(workout = workout)
+                    items(workoutDisplayItems) { displayItem ->
+                        WorkoutItemCard(displayItem = displayItem)
                     }
                 }
             }

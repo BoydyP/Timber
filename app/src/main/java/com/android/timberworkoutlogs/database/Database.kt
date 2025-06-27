@@ -14,7 +14,11 @@ import com.android.timberworkoutlogs.models.ExerciseDefinition
 import com.android.timberworkoutlogs.models.Workout
 import com.android.timberworkoutlogs.models.WorkoutExercise
 
-@Database(entities = [ ExerciseDefinition::class, Workout::class, WorkoutExercise::class ], version = 1, exportSchema = false)
+@Database(
+    entities = [ExerciseDefinition::class, Workout::class, WorkoutExercise::class],
+    version = 2,
+    exportSchema = false
+)
 @TypeConverters(
     UUIDConverter::class,
     ExerciseSetListConverter::class,

@@ -22,18 +22,16 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 import java.util.UUID
 
+private const val TAG = "WorkoutViewModel"
 class WorkoutViewModel(
     private val workoutRepository: WorkoutRepository,
     private val exerciseDefinitionRepository: ExerciseDefinitionRepository
 ) : ViewModel() {
-
-    private val TAG = "WorkoutViewModel"
-
-    private val _workoutName = MutableStateFlow("New Workout")
-    val workoutName = _workoutName.asStateFlow()
 
     val workoutExercises = mutableStateListOf<WorkoutExercise>()
     val exerciseDefinitions = mutableStateListOf<ExerciseDefinition?>()
@@ -53,10 +51,13 @@ class WorkoutViewModel(
 
     private fun startNewWorkoutSession() {
         viewModelScope.launch {
-            val newWorkout = Workout(name = _workoutName.value)
+            val currentTime = System.currentTimeMillis()
+            val sdf = SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault())
+            val workoutNameString = "Workout - ${sdf.format(Date(currentTime))}"
+            val newWorkout = Workout(startTime = currentTime, name = workoutNameString)
             val id = workoutRepository.insertWorkout(newWorkout)
             currentWorkoutId = id
-            Log.d(TAG, "New workout session started with ID: $id")
+            Log.d(TAG, "New workout session started with ID: $id, Name: $workoutNameString")
             onAddExercise()
         }
     }
@@ -158,18 +159,22 @@ class WorkoutViewModel(
 
         currentWorkoutId?.let { id ->
             viewModelScope.launch {
-                val exercisesToSave = workoutExercises.map { it.copy(sets = it.sets.toList()) }
+                val exercisesToSave = workoutExercises.filter { exercise ->
+                    exerciseDefinitions.any { def -> def?.id == exercise.definitionId }
+                }
 
                 Log.d(TAG, "Current workout count is: ${workoutRepository.getAllWorkoutCount()}")
-                if (workoutExercises.isNotEmpty()) {
+                if (exercisesToSave.isNotEmpty()) {
                     workoutRepository.insertWorkoutExercises(exercisesToSave)
-                    Log.d(TAG, "Saved ${workoutExercises.size} exercises for workout ID: $id")
+                    Log.d(TAG, "Saved ${exercisesToSave.size} exercises for workout ID: $id")
                 }
                 val workoutToUpdate = workoutRepository.getWorkout(id)
                 workoutToUpdate?.let { workout ->
-                    workout.durationSeconds = secondsElapsed
-                    // TODO: Get workout notes, if any
-                    workoutRepository.updateWorkout(workout)
+                    val updatedWorkout = workout.copy(
+                        durationSeconds = secondsElapsed
+                        // TODO: Get workout notes, if any
+                    )
+                    workoutRepository.updateWorkout(updatedWorkout)
                     Log.d(TAG, "Updated final duration for workout ID: $id")
                 } ?: Log.e(
                     TAG,
