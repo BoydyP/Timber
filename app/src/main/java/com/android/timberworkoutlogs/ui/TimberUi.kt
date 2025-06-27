@@ -2,6 +2,7 @@ package com.android.timberworkoutlogs.ui
 
 import TimberBottomNavigationBar
 import TimberTopAppBar
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
