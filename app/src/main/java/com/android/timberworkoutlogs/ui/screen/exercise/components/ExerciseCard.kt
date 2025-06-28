@@ -43,6 +43,7 @@ import com.android.timberworkoutlogs.models.TimedSet
 import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.WorkoutExercise
+import com.android.timberworkoutlogs.ui.components.SwipeToDeleteContainer
 import com.android.timberworkoutlogs.util.getIconForEquipment
 
 @Composable
@@ -50,6 +51,7 @@ fun ExerciseInputCard(
     exerciseDefinition: ExerciseDefinition?,
     workoutExercise: WorkoutExercise,
     onAddSet: () -> Unit,
+    onDeleteSet: (ExerciseSet) -> Unit,
     onSetChanged: (setIndex: Int, updatedSet: ExerciseSet) -> Unit,
     onExerciseUnitChange: (newUnit: WeightUnit) -> Unit,
     onNavigateToSelectExercise: () -> Unit,
@@ -95,42 +97,51 @@ fun ExerciseInputCard(
 
             if (exerciseDefinition != null) {
                 workoutExercise.sets.forEachIndexed { index, set ->
-                    when (set) {
-                        is WeightAndRepsSet -> WeightAndRepsInputRow(
-                            setNumber = index + 1,
-                            workoutSet = set,
-                            unit = workoutExercise.unit,
-                            onWeightChange = { newWeight ->
-                                onSetChanged(index, set.copy(weight = newWeight))
-                            },
-                            onRepsChange = { newReps ->
-                                onSetChanged(index, set.copy(reps = newReps))
-                            },
-                            onDoneChange = { isDone ->
-                                onSetChanged(index, set.copy(isDone = isDone))
+                    SwipeToDeleteContainer(
+                        item = set,
+                        onDismiss = onDeleteSet
+                    ) {
+                        when (set) {
+                            is WeightAndRepsSet -> WeightAndRepsInputRow(
+                                setNumber = index + 1,
+                                workoutSet = set,
+                                unit = workoutExercise.unit,
+                                onWeightChange = { newWeight ->
+                                    onSetChanged(index, set.copy(weight = newWeight))
+                                },
+                                onRepsChange = { newReps ->
+                                    onSetChanged(index, set.copy(reps = newReps))
+                                },
+                                onDoneChange = { isDone ->
+                                    onSetChanged(index, set.copy(isDone = isDone))
+                                }
+                            )
+
+                            is RepsOnlySet -> RepsOnlyInputRow(
+                                setNumber = index + 1,
+                                workoutSet = set,
+                                onRepsChange = { newReps ->
+                                    onSetChanged(index, set.copy(reps = newReps))
+                                },
+                                onDoneChange = { isDone ->
+                                    onSetChanged(index, set.copy(isDone = isDone))
+                                }
+                            )
+
+                            is TimedSet -> TimedInputRow(
+                                setNumber = index + 1,
+                                workoutSet = set,
+                                onDurationChange = { newDuration ->
+                                    onSetChanged(index, set.copy(durationSeconds = newDuration))
+                                },
+                                onDoneChange = { isDone ->
+                                    onSetChanged(index, set.copy(isDone = isDone))
+                                }
+                            )
+
+                            is DistanceAndTimeSet -> { /* TODO: Create a row for this type */
                             }
-                        )
-                        is RepsOnlySet -> RepsOnlyInputRow(
-                            setNumber = index + 1,
-                            workoutSet = set,
-                            onRepsChange = { newReps ->
-                                onSetChanged(index, set.copy(reps = newReps))
-                            },
-                            onDoneChange = { isDone ->
-                                onSetChanged(index, set.copy(isDone = isDone))
-                            }
-                        )
-                        is TimedSet -> TimedInputRow(
-                            setNumber = index + 1,
-                            workoutSet = set,
-                            onDurationChange = { newDuration ->
-                                onSetChanged(index, set.copy(durationSeconds = newDuration))
-                            },
-                            onDoneChange = { isDone ->
-                                onSetChanged(index, set.copy(isDone = isDone))
-                            }
-                        )
-                        is DistanceAndTimeSet -> { /* TODO: Create a row for this type */ }
+                        }
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                 }
@@ -251,8 +262,16 @@ private fun TimedInputRow(
 ) {
     var durationText by remember(workoutSet) { mutableStateOf(if (workoutSet.durationSeconds == 0) "" else workoutSet.durationSeconds.toString()) }
 
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(text = "$setNumber", style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(24.dp), textAlign = TextAlign.Center)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "$setNumber",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.width(24.dp),
+            textAlign = TextAlign.Center
+        )
         OutlinedTextField(
             value = durationText,
             onValueChange = { newText ->
@@ -267,6 +286,10 @@ private fun TimedInputRow(
             singleLine = true,
             suffix = { Text("sec") }
         )
-        Checkbox(checked = workoutSet.isDone, onCheckedChange = onDoneChange, modifier = Modifier.padding(start = 8.dp))
+        Checkbox(
+            checked = workoutSet.isDone,
+            onCheckedChange = onDoneChange,
+            modifier = Modifier.padding(start = 8.dp)
+        )
     }
 }

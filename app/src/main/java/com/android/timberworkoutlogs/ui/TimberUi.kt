@@ -30,7 +30,7 @@ import com.android.timberworkoutlogs.ui.screen.TemplatesScreen
 import com.android.timberworkoutlogs.ui.screen.exercise.CreateExerciseScreen
 import com.android.timberworkoutlogs.ui.screen.exercise.CreateExerciseViewModel
 import com.android.timberworkoutlogs.ui.screen.exercise.CreateExerciseViewModelFactory
-import com.android.timberworkoutlogs.ui.screen.exercise.ExercisesListScreen
+import com.android.timberworkoutlogs.ui.screen.exercise.ExerciseListScreen
 import com.android.timberworkoutlogs.ui.screen.exercise.ExercisesListViewModel
 import com.android.timberworkoutlogs.ui.screen.exercise.ExercisesListViewModelFactory
 import com.android.timberworkoutlogs.ui.screen.exercise.SelectExerciseScreen
@@ -166,7 +166,7 @@ fun TimberUi() {
 
             composable(AppDestinations.EXERCISES_LIST_ROUTE) {
                 val viewModel: ExercisesListViewModel = viewModel(factory = ExercisesListViewModelFactory(application.exerciseDefinitionRepository))
-                ExercisesListScreen(
+                ExerciseListScreen(
                     viewModel = viewModel,
                     contentPadding = innerPadding,
                 )

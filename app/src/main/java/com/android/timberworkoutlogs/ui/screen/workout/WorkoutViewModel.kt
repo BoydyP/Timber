@@ -108,6 +108,14 @@ class WorkoutViewModel(
         } ?: Log.e(TAG, "Cannot add exercise, workoutId is null")
     }
 
+    fun deleteExercise(exercise: WorkoutExercise) {
+        val index = workoutExercises.indexOf(exercise)
+        if (index != -1) {
+            workoutExercises.removeAt(index)
+            exerciseDefinitions.removeAt(index)
+        }
+    }
+
     fun onAddSet(exerciseId: UUID) {
         val exerciseIndex = workoutExercises.indexOfFirst { it.id == exerciseId }
         if (exerciseIndex == -1) return
@@ -121,6 +129,16 @@ class WorkoutViewModel(
         val newSet = createDefaultSetForLogType(definition.logType)
         val updatedSets = workoutExercises[exerciseIndex].sets.toMutableList().apply { add(newSet) }
         workoutExercises[exerciseIndex] = workoutExercises[exerciseIndex].copy(sets = updatedSets)
+    }
+
+    fun deleteSet(exerciseId: UUID, set: ExerciseSet) {
+        val exerciseIndex = workoutExercises.indexOfFirst { it.id == exerciseId }
+        if (exerciseIndex != -1) {
+            val currentSets = workoutExercises[exerciseIndex].sets.toMutableList()
+            currentSets.remove(set)
+            workoutExercises[exerciseIndex] =
+                workoutExercises[exerciseIndex].copy(sets = currentSets)
+        }
     }
 
     private fun createDefaultSetForLogType(logType: LogType): ExerciseSet {

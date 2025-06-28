@@ -42,7 +42,7 @@ fun WorkoutHistoryScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp, vertical = 16.dp)
+            .padding(horizontal = 16.dp, vertical = 2.dp)
     ) {
         Text(
             text = "Workout History",

@@ -22,6 +22,7 @@ import com.android.timberworkoutlogs.models.ExerciseDefinition
 import com.android.timberworkoutlogs.models.ExerciseSet
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.WorkoutExercise
+import com.android.timberworkoutlogs.ui.components.SwipeToDeleteContainer
 import com.android.timberworkoutlogs.ui.screen.exercise.components.ExerciseInputCard
 import com.android.timberworkoutlogs.ui.screen.workout.components.WorkoutBottomActions
 import com.android.timberworkoutlogs.ui.screen.workout.components.WorkoutTopAppBar
@@ -53,6 +54,8 @@ fun WorkoutScreen(
             workoutExercises = workoutExercises,
             exerciseDefinitions = exerciseDefinitions,
             onAddSet = viewModel::onAddSet,
+            onDeleteExercise = viewModel::deleteExercise,
+            onDeleteSet = viewModel::deleteSet,
             onSetChanged = viewModel::onSetChanged,
             onExerciseUnitChange = viewModel::onExerciseUnitChange,
             onAddExercise = viewModel::onAddExercise,
@@ -73,6 +76,8 @@ private fun WorkoutExerciseList(
     workoutExercises: List<WorkoutExercise>,
     exerciseDefinitions: List<ExerciseDefinition?>,
     onAddSet: (UUID) -> Unit,
+    onDeleteExercise: (WorkoutExercise) -> Unit,
+    onDeleteSet: (UUID, ExerciseSet) -> Unit,
     onSetChanged: (UUID, Int, ExerciseSet) -> Unit,
     onExerciseUnitChange: (UUID, WeightUnit) -> Unit,
     onAddExercise: () -> Unit,
@@ -83,15 +88,32 @@ private fun WorkoutExerciseList(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp)
     ) {
-        itemsIndexed(workoutExercises) { index, workoutExercise ->
-            ExerciseInputCard(
-                exerciseDefinition = exerciseDefinitions.getOrNull(index),
-                workoutExercise = workoutExercise,
-                onAddSet = { onAddSet(workoutExercise.id) },
-                onSetChanged = { setIndex, updatedSet -> onSetChanged(workoutExercise.id, setIndex, updatedSet) },
-                onExerciseUnitChange = { newUnit -> onExerciseUnitChange(workoutExercise.id, newUnit) },
-                onNavigateToSelectExercise = { onNavigateToSelectExercise(index) }
-            )
+        itemsIndexed(workoutExercises, key = { _, item -> item.id }) { index, workoutExercise ->
+            SwipeToDeleteContainer(
+                item = workoutExercise,
+                onDismiss = onDeleteExercise
+            ) {
+                ExerciseInputCard(
+                    exerciseDefinition = exerciseDefinitions.getOrNull(index),
+                    workoutExercise = workoutExercise,
+                    onAddSet = { onAddSet(workoutExercise.id) },
+                    onDeleteSet = { set -> onDeleteSet(workoutExercise.id, set) },
+                    onSetChanged = { setIndex, updatedSet ->
+                        onSetChanged(
+                            workoutExercise.id,
+                            setIndex,
+                            updatedSet
+                        )
+                    },
+                    onExerciseUnitChange = { newUnit ->
+                        onExerciseUnitChange(
+                            workoutExercise.id,
+                            newUnit
+                        )
+                    },
+                    onNavigateToSelectExercise = { onNavigateToSelectExercise(index) }
+                )
+            }
         }
         item {
             Button(
