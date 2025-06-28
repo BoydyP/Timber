@@ -94,7 +94,6 @@ fun WorkoutHistoryScreenPreview() {
             )
             return flowOf(sampleWorkouts)
         }
-
         override suspend fun insertWorkout(workout: Workout): Long = 0L
         override suspend fun updateWorkout(workout: Workout) {}
         override suspend fun deleteWorkout(workout: Workout) {}
