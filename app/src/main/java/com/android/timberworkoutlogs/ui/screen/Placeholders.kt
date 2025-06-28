@@ -11,33 +11,23 @@ import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun StatsScreen(modifier: Modifier = Modifier) {
-    val context = LocalContext.current
-    PlaceholderScreenContent(name = "Stats Screen", modifier = modifier, onClick = {
-        Toast.makeText(context, "Coming soon", Toast.LENGTH_SHORT).show()
-    })
+    PlaceholderScreenContent(name = "Stats Screen", modifier = modifier)
 }
 
 @Composable
 fun HistoryScreen(modifier: Modifier = Modifier) {
-    val context = LocalContext.current
-    PlaceholderScreenContent(name = "History Screen", modifier = modifier, onClick = {
-        Toast.makeText(context, "Coming soon", Toast.LENGTH_SHORT).show()
-    })
+    PlaceholderScreenContent(name = "History Screen", modifier = modifier)
 }
 
 @Composable
 fun SettingsScreen(modifier: Modifier = Modifier) {
-    val context = LocalContext.current
-    PlaceholderScreenContent(name = "Settings Screen", modifier = modifier, onClick = {
-        Toast.makeText(context, "Coming soon", Toast.LENGTH_SHORT).show()
-    })
+    PlaceholderScreenContent(name = "Settings Screen", modifier = modifier)
 }
 
 @Composable
 private fun PlaceholderScreenContent(
     name: String,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit
 ) {
     val context = LocalContext.current
     Toast.makeText(context, "Coming soon", Toast.LENGTH_SHORT).show()
