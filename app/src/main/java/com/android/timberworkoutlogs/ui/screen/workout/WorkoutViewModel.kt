@@ -22,8 +22,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 import java.util.UUID
 
@@ -52,12 +50,10 @@ class WorkoutViewModel(
     private fun startNewWorkoutSession() {
         viewModelScope.launch {
             val currentTime = System.currentTimeMillis()
-            val sdf = SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault())
-            val workoutNameString = "Workout - ${sdf.format(Date(currentTime))}"
-            val newWorkout = Workout(startTime = currentTime, name = workoutNameString)
+            val newWorkout = Workout(startTime = currentTime)
             val id = workoutRepository.insertWorkout(newWorkout)
             currentWorkoutId = id
-            Log.d(TAG, "New workout session started with ID: $id, Name: $workoutNameString")
+            Log.d(TAG, "New workout session started with ID: $id")
             onAddExercise()
         }
     }

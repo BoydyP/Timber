@@ -10,7 +10,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "workouts")
 data class Workout(
     @PrimaryKey(autoGenerate = true) val id: Long = 0L,
-    val name: String = "New Workout",
+    val name: String = "Workout",
     val startTime: Long = System.currentTimeMillis(),
     var durationSeconds: Int = 0,
     val notes: String = ""

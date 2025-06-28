@@ -21,9 +21,8 @@ class WorkoutHistoryViewModel(
 
     val allWorkoutDisplayItems: StateFlow<List<WorkoutHistoryDisplayItem>> =
         workoutRepository.allWorkouts
-            .map { workouts -> // For each list of workouts
-                workouts.map { workout -> // For each workout in the list
-                    // Fetch exercises and calculate aggregates for this workout
+            .map { workouts ->
+                workouts.map { workout ->
                     val exercises = workoutRepository.getExercisesForWorkout(workout.id)
                     val exerciseCount = exercises.size
                     var totalWeight = 0.0
@@ -35,7 +34,7 @@ class WorkoutHistoryViewModel(
                                 } else {
                                     set.weight
                                 }
-                                totalWeight += weightInKg * set.reps // Consider total volume: weight * reps
+                                totalWeight += weightInKg * set.reps
                             }
                         }
                     }

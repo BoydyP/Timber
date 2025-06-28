@@ -47,7 +47,7 @@ fun WorkoutHistoryScreen(
         Text(
             text = "Workout History",
             style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.padding(vertical = 4.dp)
+            modifier = Modifier.padding(vertical = 16.dp)
         )
 
         if (workoutDisplayItems.isEmpty()) {
