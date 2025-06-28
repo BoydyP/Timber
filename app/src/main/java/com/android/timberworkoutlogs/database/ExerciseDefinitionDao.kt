@@ -1,6 +1,7 @@
 package com.android.timberworkoutlogs.database
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import com.android.timberworkoutlogs.models.ExerciseDefinition
@@ -29,5 +30,9 @@ interface ExerciseDefinitionDao {
     @Insert
     suspend fun addExerciseDefinition(exercise: ExerciseDefinition)
 
-    // TODO: Add functions for update and delete as needed
+    /**
+     * Deletes an exercise definition from the database.
+     */
+    @Delete
+    suspend fun deleteExerciseDefinition(exercise: ExerciseDefinition)
 }

@@ -21,4 +21,9 @@ class ExerciseDefinitionRepository(private val exerciseDefinitionDao: ExerciseDe
     suspend fun insert(exerciseDefinition: ExerciseDefinition) {
         exerciseDefinitionDao.addExerciseDefinition(exerciseDefinition)
     }
+
+    @WorkerThread
+    suspend fun delete(exerciseDefinition: ExerciseDefinition) {
+        exerciseDefinitionDao.deleteExerciseDefinition(exerciseDefinition)
+    }
 }

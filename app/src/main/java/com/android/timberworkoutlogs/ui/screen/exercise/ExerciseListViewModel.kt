@@ -8,8 +8,9 @@ import com.android.timberworkoutlogs.models.ExerciseDefinition
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
-class ExercisesListViewModel(repository: ExerciseDefinitionRepository) : ViewModel() {
+class ExercisesListViewModel(private val repository: ExerciseDefinitionRepository) : ViewModel() {
 
     val allExercises: StateFlow<List<ExerciseDefinition>> = repository.allExerciseDefinitions
         .stateIn(
@@ -17,6 +18,10 @@ class ExercisesListViewModel(repository: ExerciseDefinitionRepository) : ViewMod
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    fun deleteExercise(exercise: ExerciseDefinition) = viewModelScope.launch {
+        repository.delete(exercise)
+    }
 }
 
 class ExercisesListViewModelFactory(private val repository: ExerciseDefinitionRepository) : ViewModelProvider.Factory {
