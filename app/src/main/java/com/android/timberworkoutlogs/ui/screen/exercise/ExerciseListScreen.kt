@@ -3,6 +3,7 @@ package com.android.timberworkoutlogs.ui.screen.exercise
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -82,9 +83,10 @@ fun ExercisesListScreen(
             }
         } else {
             LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
+                    .padding(innerPadding),
             ) {
                 items(exercises, key = { it.id }) { exercise ->
                     val dismissState = rememberSwipeToDismissBoxState(
