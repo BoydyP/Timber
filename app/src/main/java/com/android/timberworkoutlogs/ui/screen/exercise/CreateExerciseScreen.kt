@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,7 +19,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,12 +38,13 @@ import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 import com.android.timberworkoutlogs.util.capitaliseEnum
 import com.android.timberworkoutlogs.util.spaceSeparateEnum
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun CreateExerciseScreen(
     viewModel: CreateExerciseViewModel,
     onExerciseCreated: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     var exerciseName by remember { mutableStateOf("") }
     var selectedEquipment by remember { mutableStateOf(ExerciseEquipment.BARBELL) }
@@ -53,121 +54,130 @@ fun CreateExerciseScreen(
     var isEquipmentDropdownExpanded by remember { mutableStateOf(false) }
     var isLogTypeDropdownExpanded by remember { mutableStateOf(false) }
 
-    Scaffold(modifier = modifier.fillMaxSize()) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(contentPadding)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        OutlinedTextField(
+            value = exerciseName,
+            onValueChange = { exerciseName = it },
+            label = { Text("Exercise Name") },
+            placeholder = { Text("e.g. Bench Press") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        ExposedDropdownMenuBox(
+            expanded = isEquipmentDropdownExpanded,
+            onExpandedChange = { isEquipmentDropdownExpanded = !isEquipmentDropdownExpanded },
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = "Create New Exercise",
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.fillMaxWidth()
-            )
-
             OutlinedTextField(
-                value = exerciseName,
-                onValueChange = { exerciseName = it },
-                label = { Text("Exercise Name") },
-                placeholder = { Text("e.g. Bench Press") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                value = capitaliseEnum(selectedEquipment.name),
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Equipment") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isEquipmentDropdownExpanded) },
+                modifier = Modifier
+                    .menuAnchor(type = MenuAnchorType.PrimaryEditable)
+                    .fillMaxWidth()
             )
-
-            ExposedDropdownMenuBox(
+            ExposedDropdownMenu(
                 expanded = isEquipmentDropdownExpanded,
-                onExpandedChange = { isEquipmentDropdownExpanded = !isEquipmentDropdownExpanded },
-                modifier = Modifier.fillMaxWidth()
+                onDismissRequest = { isEquipmentDropdownExpanded = false }
             ) {
-                OutlinedTextField(
-                    value = capitaliseEnum(selectedEquipment.name),
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Equipment") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isEquipmentDropdownExpanded) },
-                    modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryEditable).fillMaxWidth()
-                )
-                ExposedDropdownMenu(
-                    expanded = isEquipmentDropdownExpanded,
-                    onDismissRequest = { isEquipmentDropdownExpanded = false }
-                ) {
-                    ExerciseEquipment.entries.forEach { equipment ->
-                        DropdownMenuItem(
-                            text = { Text(capitaliseEnum(equipment.name)) },
-                            onClick = {
-                                selectedEquipment = equipment
-                                isEquipmentDropdownExpanded = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            ExposedDropdownMenuBox(
-                expanded = isLogTypeDropdownExpanded,
-                onExpandedChange = { isLogTypeDropdownExpanded = !isLogTypeDropdownExpanded },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                OutlinedTextField(
-                    value = capitaliseEnum(spaceSeparateEnum(selectedLogType.name)),
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Log Type") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isLogTypeDropdownExpanded) },
-                    modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryEditable).fillMaxWidth()
-                )
-                ExposedDropdownMenu(
-                    expanded = isLogTypeDropdownExpanded,
-                    onDismissRequest = { isLogTypeDropdownExpanded = false }
-                ) {
-                    LogType.entries.forEach { logType ->
-                        DropdownMenuItem(
-                            text = { Text(capitaliseEnum(spaceSeparateEnum(logType.name))) },
-                            onClick = {
-                                selectedLogType = logType
-                                isLogTypeDropdownExpanded = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            Text("Muscle Groups", style = MaterialTheme.typography.titleMedium, modifier = Modifier.fillMaxWidth())
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                MuscleGroup.entries.forEach { muscleGroup ->
-                    val isSelected = selectedMuscleGroups.contains(muscleGroup)
-                    FilterChip(
-                        selected = isSelected,
+                ExerciseEquipment.entries.forEach { equipment ->
+                    DropdownMenuItem(
+                        text = { Text(capitaliseEnum(equipment.name)) },
                         onClick = {
-                            if (isSelected) selectedMuscleGroups.remove(muscleGroup)
-                            else selectedMuscleGroups.add(muscleGroup)
-                        },
-                        label = { Text(capitaliseEnum(spaceSeparateEnum(muscleGroup.name))) }
+                            selectedEquipment = equipment
+                            isEquipmentDropdownExpanded = false
+                        }
                     )
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            Button(
-                onClick = {
-                    viewModel.saveExercise(exerciseName, selectedEquipment, selectedMuscleGroups.toList(), selectedLogType)
-                    onExerciseCreated()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = exerciseName.isNotBlank() && selectedMuscleGroups.isNotEmpty(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = TimberOrange,
-                    contentColor = Color.Black
-                ),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 2.dp)
+        ExposedDropdownMenuBox(
+            expanded = isLogTypeDropdownExpanded,
+            onExpandedChange = { isLogTypeDropdownExpanded = !isLogTypeDropdownExpanded },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            OutlinedTextField(
+                value = capitaliseEnum(spaceSeparateEnum(selectedLogType.name)),
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Log Type") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isLogTypeDropdownExpanded) },
+                modifier = Modifier
+                    .menuAnchor(type = MenuAnchorType.PrimaryEditable)
+                    .fillMaxWidth()
+            )
+            ExposedDropdownMenu(
+                expanded = isLogTypeDropdownExpanded,
+                onDismissRequest = { isLogTypeDropdownExpanded = false }
             ) {
-                Text("Save Exercise")
+                LogType.entries.forEach { logType ->
+                    DropdownMenuItem(
+                        text = { Text(capitaliseEnum(spaceSeparateEnum(logType.name))) },
+                        onClick = {
+                            selectedLogType = logType
+                            isLogTypeDropdownExpanded = false
+                        }
+                    )
+                }
             }
+        }
+
+        Text(
+            "Muscle Groups",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.fillMaxWidth()
+        )
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            MuscleGroup.entries.forEach { muscleGroup ->
+                val isSelected = selectedMuscleGroups.contains(muscleGroup)
+                FilterChip(
+                    selected = isSelected,
+                    onClick = {
+                        if (isSelected) selectedMuscleGroups.remove(muscleGroup)
+                        else selectedMuscleGroups.add(muscleGroup)
+                    },
+                    label = { Text(capitaliseEnum(spaceSeparateEnum(muscleGroup.name))) }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Button(
+            onClick = {
+                viewModel.saveExercise(
+                    exerciseName,
+                    selectedEquipment,
+                    selectedMuscleGroups.toList(),
+                    selectedLogType
+                )
+                onExerciseCreated()
+            },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = exerciseName.isNotBlank() && selectedMuscleGroups.isNotEmpty(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = TimberOrange,
+                contentColor = Color.Black
+            ),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = 0.dp,
+                pressedElevation = 2.dp
+            )
+        ) {
+            Text("Save Exercise")
         }
     }
 }

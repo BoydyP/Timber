@@ -2,9 +2,17 @@ package com.android.timberworkoutlogs.ui
 
 import TimberBottomNavigationBar
 import TimberTopAppBar
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -15,7 +23,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.android.timberworkoutlogs.TimberApplication
-import com.android.timberworkoutlogs.ui.screen.HistoryScreen
 import com.android.timberworkoutlogs.ui.screen.HomeScreen
 import com.android.timberworkoutlogs.ui.screen.SettingsScreen
 import com.android.timberworkoutlogs.ui.screen.StatsScreen
@@ -47,9 +54,10 @@ object AppDestinations {
     const val EXERCISES_LIST_ROUTE = "exercises_list"
     const val CREATE_EXERCISE_ROUTE = "create_exercise"
     const val SELECT_EXERCISE_ROUTE = "select_exercise"
-    const val WORKOUT_TEMPLATES_ROUTE = "workout_templates"
+//    const val WORKOUT_TEMPLATES_ROUTE = "workout_templates"
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimberUi() {
     val navController = rememberNavController()
@@ -65,18 +73,40 @@ fun TimberUi() {
         AppDestinations.SETTINGS_ROUTE
     )
 
-    val fullScreenRoutes = setOf(
-        AppDestinations.WORKOUT_ROUTE,
-        AppDestinations.EXERCISES_LIST_ROUTE,
-        AppDestinations.CREATE_EXERCISE_ROUTE,
-        AppDestinations.SELECT_EXERCISE_ROUTE,
-        AppDestinations.WORKOUT_TEMPLATES_ROUTE,
-    )
-
     Scaffold(
         topBar = {
-            if (currentRoute in mainScreenRoutes) {
-                TimberTopAppBar(onLanguageClick = { /* TODO */ })
+            when (currentRoute) {
+                in mainScreenRoutes -> {
+                    TimberTopAppBar(onLanguageClick = { /* TODO */ })
+                }
+
+                AppDestinations.EXERCISES_LIST_ROUTE -> {
+                    TopAppBar(
+                        title = { Text("Exercise Library") },
+                        navigationIcon = {
+                            IconButton(onClick = { navController.navigateUp() }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back"
+                                )
+                            }
+                        }
+                    )
+                }
+
+                AppDestinations.CREATE_EXERCISE_ROUTE -> {
+                    TopAppBar(
+                        title = { Text("Create Exercise") },
+                        navigationIcon = {
+                            IconButton(onClick = { navController.navigateUp() }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back"
+                                )
+                            }
+                        }
+                    )
+                }
             }
         },
         bottomBar = {
@@ -96,44 +126,49 @@ fun TimberUi() {
                     }
                 )
             }
+        },
+        floatingActionButton = {
+            if (currentRoute == AppDestinations.EXERCISES_LIST_ROUTE) {
+                FloatingActionButton(onClick = { navController.navigate(AppDestinations.CREATE_EXERCISE_ROUTE) }) {
+                    Icon(Icons.Filled.Add, contentDescription = "Create new exercise")
+                }
+            }
         }
     ) { innerPadding ->
         NavHost(
             navController = navController,
             startDestination = AppDestinations.HOME_ROUTE,
-            modifier = if (currentRoute !in fullScreenRoutes) {
-                Modifier.padding(innerPadding)
-            } else {
-                Modifier
-            }
+            modifier = Modifier
         ) {
             composable(AppDestinations.HOME_ROUTE) {
-                HomeScreen()
+                HomeScreen(modifier = Modifier.padding(innerPadding))
             }
             composable(AppDestinations.STATS_ROUTE) {
-                StatsScreen()
+                StatsScreen(modifier = Modifier.padding(innerPadding))
             }
             composable(AppDestinations.HISTORY_ROUTE) {
                 val viewModel: WorkoutHistoryViewModel = viewModel(factory = WorkoutHistoryViewModelFactory(application.workoutRepository))
                 WorkoutHistoryScreen(
                     viewModel = viewModel,
-                    onNavigateToWorkout = {}
+                    onNavigateToWorkout = {},
+                    modifier = Modifier.padding(innerPadding)
                 )
             }
             composable(AppDestinations.TEMPLATES_ROUTE) {
                 TemplatesScreen(
-                    onNavigateToExercisesList = { navController.navigate(AppDestinations.EXERCISES_LIST_ROUTE) }
+                    onNavigateToExercisesList = { navController.navigate(AppDestinations.EXERCISES_LIST_ROUTE) },
+                    modifier = Modifier.padding(innerPadding)
                 )
             }
             composable(AppDestinations.SETTINGS_ROUTE) {
-                SettingsScreen()
+                SettingsScreen(modifier = Modifier.padding(innerPadding))
             }
 
             composable(AppDestinations.EXERCISES_LIST_ROUTE) {
                 val viewModel: ExercisesListViewModel = viewModel(factory = ExercisesListViewModelFactory(application.exerciseDefinitionRepository))
                 ExercisesListScreen(
                     viewModel = viewModel,
-                    onNavigateToCreateExercise = { navController.navigate(AppDestinations.CREATE_EXERCISE_ROUTE) }
+                    contentPadding = innerPadding,
                 )
             }
 
@@ -141,7 +176,8 @@ fun TimberUi() {
                 val viewModel: CreateExerciseViewModel = viewModel(factory = CreateExerciseViewModelFactory(application.exerciseDefinitionRepository))
                 CreateExerciseScreen(
                     viewModel = viewModel,
-                    onExerciseCreated = { navController.popBackStack() }
+                    onExerciseCreated = { navController.popBackStack() },
+                    contentPadding = innerPadding
                 )
             }
 
