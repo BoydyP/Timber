@@ -21,12 +21,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.android.timberworkoutlogs.ui.theme.WorkoutComplete
 
 @Composable
 fun WorkoutBottomActions(
     onOpenNotes: () -> Unit,
-    onDiscardWorkout: () -> Unit,
+    onFinishWorkout: () -> Unit,
+    isFinishEnabled: Boolean,
     onOpenPlateCalculator: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -40,7 +43,7 @@ fun WorkoutBottomActions(
         IconButton(onClick = onOpenNotes, modifier = Modifier.size(56.dp)) {
             Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = "Session Notes", modifier = Modifier.size(32.dp))
         }
-        DiscardWorkoutButton(onConfirmDiscard = onDiscardWorkout)
+        CompleteWorkoutButton(onFinishWorkout = onFinishWorkout, isFinishEnabled = isFinishEnabled)
         IconButton(onClick = onOpenPlateCalculator, modifier = Modifier.size(56.dp)) {
             Icon(Icons.Filled.Calculate, contentDescription = "Plate Calculator", modifier = Modifier.size(32.dp))
         }
@@ -48,20 +51,21 @@ fun WorkoutBottomActions(
 }
 
 @Composable
-private fun DiscardWorkoutButton(
-    onConfirmDiscard: () -> Unit,
+private fun CompleteWorkoutButton(
+    onFinishWorkout: () -> Unit,
+    isFinishEnabled: Boolean,
     modifier: Modifier = Modifier
 ) {
     var isConfirming by remember { mutableStateOf(false) }
 
-    val clickedColor = Color(0xFFe86c6c)
+    val clickedColor = WorkoutComplete
     val containerColor = if (isConfirming) clickedColor else Color.Transparent
-    val text = if (isConfirming) "Are you sure?" else "Discard Workout"
+    val text = if (isConfirming) "Are you sure?" else "Complete workout"
 
     TextButton(
         onClick = {
             if (isConfirming) {
-                onConfirmDiscard()
+                onFinishWorkout()
             } else {
                 isConfirming = true
             }
@@ -69,8 +73,18 @@ private fun DiscardWorkoutButton(
         colors = ButtonDefaults.textButtonColors(
             containerColor = containerColor
         ),
-        modifier = modifier
+        modifier = modifier,
+        enabled = isFinishEnabled
     ) {
         Text(text)
     }
+}
+
+@Preview
+@Composable
+private fun PreviewCompleteWorkoutButton() {
+    CompleteWorkoutButton(
+        onFinishWorkout = {},
+        isFinishEnabled = true
+    )
 }

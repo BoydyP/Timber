@@ -47,8 +47,7 @@ fun WorkoutScreen(
         WorkoutTopAppBar(
             title = "Log Workout",
             timerText = timerText,
-            onFinishWorkout = { viewModel.onFinishWorkout(onNavigateBack) },
-            isFinishEnabled = !isWorkoutEmpty
+            onDiscardWorkout = { viewModel.onFinishWorkout(onNavigateBack) },
         )
 
         WorkoutExerciseList(
@@ -66,7 +65,8 @@ fun WorkoutScreen(
 
         WorkoutBottomActions(
             onOpenNotes = onOpenNotes,
-            onDiscardWorkout = { viewModel.onDiscardWorkout(onNavigateBack) },
+            onFinishWorkout = { viewModel.onFinishWorkout(onNavigateBack) },
+            isFinishEnabled = !isWorkoutEmpty,
             onOpenPlateCalculator = onOpenPlateCalculator
         )
     }
