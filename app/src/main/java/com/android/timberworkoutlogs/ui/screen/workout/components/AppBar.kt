@@ -2,10 +2,7 @@ package com.android.timberworkoutlogs.ui.screen.workout.components
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -22,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.android.timberworkoutlogs.ui.theme.WorkoutDiscard
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,8 +35,10 @@ fun WorkoutTopAppBar(
     LaunchedEffect(isConfirming) {
         if (isConfirming) {
             Toast.makeText(context, "Tap once more to confirm discard", Toast.LENGTH_SHORT).show()
-            delay(2000)
-            isConfirming = false
+            delay(3000) // Increased delay to 3 seconds for a better user experience
+            if (isConfirming) { // Check again in case the user confirmed
+                isConfirming = false
+            }
         }
     }
 
@@ -63,11 +61,7 @@ fun WorkoutTopAppBar(
                     }
                 },
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Delete,
-                    contentDescription = "Discard workout",
-                    tint = if (isConfirming) WorkoutDiscard else MaterialTheme.colorScheme.onSurface
-                )
+                AnimatedTrashIcon(isConfirming = isConfirming)
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
