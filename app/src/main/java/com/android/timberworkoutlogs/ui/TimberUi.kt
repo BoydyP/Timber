@@ -77,7 +77,7 @@ fun TimberUi() {
         topBar = {
             when (currentRoute) {
                 in mainScreenRoutes -> {
-                    TimberTopAppBar(onLanguageClick = { /* TODO */ })
+                    TimberTopAppBar(onIconClick = { /* TODO */ })
                 }
 
                 AppDestinations.EXERCISES_LIST_ROUTE -> {
