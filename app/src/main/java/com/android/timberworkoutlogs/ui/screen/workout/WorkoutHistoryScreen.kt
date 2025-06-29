@@ -26,7 +26,7 @@ import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.Workout
 import com.android.timberworkoutlogs.models.WorkoutExercise
-import com.android.timberworkoutlogs.ui.screen.workout.components.WorkoutItemCard
+import com.android.timberworkoutlogs.ui.screen.workout.components.WorkoutHistoryItemCard
 import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -63,7 +63,7 @@ fun WorkoutHistoryScreen(
                 contentPadding = PaddingValues(bottom = 16.dp)
             ) {
                 items(workoutDisplayItems) { displayItem ->
-                    WorkoutItemCard(displayItem = displayItem)
+                    WorkoutHistoryItemCard(displayItem = displayItem)
                 }
             }
         }

@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.android.timberworkoutlogs.database.WorkoutRepository
+import com.android.timberworkoutlogs.models.DistanceAndTimeSet
 import com.android.timberworkoutlogs.models.WorkoutHistoryDisplayItem
 import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.WeightUnit
@@ -26,22 +27,32 @@ class WorkoutHistoryViewModel(
                     val exercises = workoutRepository.getExercisesForWorkout(workout.id)
                     val exerciseCount = exercises.size
                     var totalWeight = 0.0
+                    var totalDistance = 0.0
                     exercises.forEach { exercise ->
                         exercise.sets.forEach { set ->
-                            if (set is WeightAndRepsSet) {
-                                val weightInKg = if (exercise.unit == WeightUnit.LB) {
-                                    set.weight * 0.453592
-                                } else {
-                                    set.weight
+                            when (set) {
+                                is WeightAndRepsSet -> {
+                                    val weightInKg = if (exercise.unit == WeightUnit.LB) {
+                                        set.weight * 0.453592
+                                    } else {
+                                        set.weight
+                                    }
+                                    totalWeight += weightInKg * set.reps
                                 }
-                                totalWeight += weightInKg * set.reps
+
+                                is DistanceAndTimeSet -> {
+                                    totalDistance += set.distance
+                                }
+
+                                else -> {}
                             }
                         }
                     }
                     WorkoutHistoryDisplayItem(
                         workout = workout,
                         exerciseCount = exerciseCount,
-                        totalWeightLifted = totalWeight
+                        totalWeightLifted = totalWeight,
+                        totalDistance = totalDistance
                     )
                 }
             }

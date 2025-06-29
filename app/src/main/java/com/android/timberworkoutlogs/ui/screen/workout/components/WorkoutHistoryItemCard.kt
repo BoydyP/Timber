@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FitnessCenter
+import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.Scale
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.Card
@@ -26,7 +27,7 @@ import com.android.timberworkoutlogs.models.WorkoutHistoryDisplayItem
 import java.text.DecimalFormat
 
 @Composable
-fun WorkoutItemCard(
+fun WorkoutHistoryItemCard(
     displayItem: WorkoutHistoryDisplayItem,
     modifier: Modifier = Modifier
 ) {
@@ -52,7 +53,8 @@ fun WorkoutItemCard(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween // Distributes stats evenly
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 WorkoutStat(
                     icon = Icons.Outlined.Timer,
@@ -72,6 +74,15 @@ fun WorkoutItemCard(
                         icon = Icons.Outlined.Scale,
                         label = "Volume",
                         value = "${df.format(displayItem.totalWeightLifted)} kg"
+                    )
+                }
+
+                if (displayItem.totalDistance > 0) {
+                    val df = DecimalFormat("#.##")
+                    WorkoutStat(
+                        icon = Icons.Outlined.Map,
+                        label = "Distance",
+                        value = "${df.format(displayItem.totalDistance)} km"
                     )
                 }
             }

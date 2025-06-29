@@ -11,27 +11,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.android.timberworkoutlogs.models.DistanceAndTimeSet
@@ -139,157 +131,62 @@ fun ExerciseInputCard(
                                 }
                             )
 
-                            is DistanceAndTimeSet -> { /* TODO: Create a row for this type */
-                            }
+                            is DistanceAndTimeSet -> DistanceAndTimeInputRow(
+                                setNumber = index + 1,
+                                workoutSet = set,
+                                onDistanceChange = { newDistance ->
+                                    onSetChanged(index, set.copy(distance = newDistance))
+                                },
+                                onDurationChange = { newDuration ->
+                                    onSetChanged(index, set.copy(durationSeconds = newDuration))
+                                },
+                                onDoneChange = { isDone ->
+                                    onSetChanged(index, set.copy(isDone = isDone))
+                                }
+                            )
                         }
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
                 }
+                Spacer(modifier = Modifier.height(8.dp))
             }
+        }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (exerciseDefinition?.logType == LogType.WEIGHT_AND_REPS) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("KG", fontWeight = if (workoutExercise.unit == WeightUnit.KG) FontWeight.Bold else FontWeight.Normal)
-                        Switch(
-                            checked = workoutExercise.unit == WeightUnit.LB,
-                            onCheckedChange = { isLbs ->
-                                onExerciseUnitChange(if (isLbs) WeightUnit.LB else WeightUnit.KG)
-                            },
-                            modifier = Modifier.padding(horizontal = 8.dp)
-                        )
-                        Text("LB", fontWeight = if (workoutExercise.unit == WeightUnit.LB) FontWeight.Bold else FontWeight.Normal)
-                    }
-                } else {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-                IconButton(onClick = onAddSet, enabled = exerciseDefinition != null) {
-                    Icon(
-                        Icons.Filled.AddCircle,
-                        contentDescription = "Add Set",
-                        tint = if (exerciseDefinition != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (exerciseDefinition?.logType == LogType.WEIGHT_AND_REPS) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "KG",
+                        fontWeight = if (workoutExercise.unit == WeightUnit.KG) FontWeight.Bold else FontWeight.Normal
+                    )
+                    Switch(
+                        checked = workoutExercise.unit == WeightUnit.LB,
+                        onCheckedChange = { isLbs ->
+                            onExerciseUnitChange(if (isLbs) WeightUnit.LB else WeightUnit.KG)
+                        },
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
+                    Text(
+                        "LB",
+                        fontWeight = if (workoutExercise.unit == WeightUnit.LB) FontWeight.Bold else FontWeight.Normal
                     )
                 }
+            } else {
+                Spacer(modifier = Modifier.weight(1f))
+            }
+            IconButton(onClick = onAddSet, enabled = exerciseDefinition != null) {
+                Icon(
+                    Icons.Filled.AddCircle,
+                    contentDescription = "Add Set",
+                    tint = if (exerciseDefinition != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
+                        alpha = 0.38f
+                    )
+                )
             }
         }
     }
 }
 
-@Composable
-private fun WeightAndRepsInputRow(
-    setNumber: Int,
-    workoutSet: WeightAndRepsSet,
-    unit: WeightUnit,
-    onWeightChange: (Double) -> Unit,
-    onRepsChange: (Int) -> Unit,
-    onDoneChange: (Boolean) -> Unit
-) {
-    var weightText by remember(workoutSet) { mutableStateOf(if (workoutSet.weight == 0.0) "" else workoutSet.weight.toString()) }
-    var repsText by remember(workoutSet) { mutableStateOf(if (workoutSet.reps == 0) "" else workoutSet.reps.toString()) }
-
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(text = "$setNumber", style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(24.dp), textAlign = TextAlign.Center)
-        OutlinedTextField(
-            value = weightText,
-            // Fix for bug BUG-013, invalid input on char '.'
-            onValueChange = { newText ->
-                if (newText.isEmpty() || newText.matches(Regex("""^\d*\.?\d*$"""))) {
-                    weightText = newText
-                    onWeightChange(newText.toDoubleOrNull() ?: 0.0)
-                }
-            },
-            label = { Text("Weight") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            modifier = Modifier.weight(1f),
-            singleLine = true,
-            suffix = { Text(unit.name) }
-        )
-        OutlinedTextField(
-            value = repsText,
-            onValueChange = { newText ->
-                if (newText.isEmpty() || newText.all { it.isDigit() }) {
-                    repsText = newText
-                    onRepsChange(newText.toIntOrNull() ?: 0)
-                }
-            },
-            label = { Text("Reps") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.weight(1f),
-            singleLine = true
-        )
-        Checkbox(checked = workoutSet.isDone, onCheckedChange = onDoneChange, modifier = Modifier.padding(start = 8.dp))
-    }
-}
-
-@Composable
-private fun RepsOnlyInputRow(
-    setNumber: Int,
-    workoutSet: RepsOnlySet,
-    onRepsChange: (Int) -> Unit,
-    onDoneChange: (Boolean) -> Unit
-) {
-    var repsText by remember(workoutSet) { mutableStateOf(if (workoutSet.reps == 0) "" else workoutSet.reps.toString()) }
-
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(text = "$setNumber", style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(24.dp), textAlign = TextAlign.Center)
-        OutlinedTextField(
-            value = repsText,
-            onValueChange = { newText ->
-                if (newText.isEmpty() || newText.all { it.isDigit() }) {
-                    repsText = newText
-                    onRepsChange(newText.toIntOrNull() ?: 0)
-                }
-            },
-            label = { Text("Reps") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.weight(1f),
-            singleLine = true
-        )
-        Checkbox(checked = workoutSet.isDone, onCheckedChange = onDoneChange, modifier = Modifier.padding(start = 8.dp))
-    }
-}
-
-@Composable
-private fun TimedInputRow(
-    setNumber: Int,
-    workoutSet: TimedSet,
-    onDurationChange: (Int) -> Unit,
-    onDoneChange: (Boolean) -> Unit
-) {
-    var durationText by remember(workoutSet) { mutableStateOf(if (workoutSet.durationSeconds == 0) "" else workoutSet.durationSeconds.toString()) }
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            text = "$setNumber",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.width(24.dp),
-            textAlign = TextAlign.Center
-        )
-        OutlinedTextField(
-            value = durationText,
-            onValueChange = { newText ->
-                if (newText.isEmpty() || newText.all { it.isDigit() }) {
-                    durationText = newText
-                    onDurationChange(newText.toIntOrNull() ?: 0)
-                }
-            },
-            label = { Text("Duration") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.weight(1f),
-            singleLine = true,
-            suffix = { Text("sec") }
-        )
-        Checkbox(
-            checked = workoutSet.isDone,
-            onCheckedChange = onDoneChange,
-            modifier = Modifier.padding(start = 8.dp)
-        )
-    }
-}
