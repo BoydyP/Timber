@@ -22,6 +22,7 @@ fun WorkoutTopAppBar(
     title: String,
     timerText: String,
     onFinishWorkout: () -> Unit,
+    isFinishEnabled: Boolean,
     modifier: Modifier = Modifier
 ) {
     TopAppBar(
@@ -30,9 +31,14 @@ fun WorkoutTopAppBar(
             Text(
                 text = timerText,
                 style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.align(Alignment.CenterVertically).padding(end = 8.dp)
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .padding(end = 8.dp)
             )
-            IconButton(onClick = onFinishWorkout) {
+            IconButton(
+                onClick = onFinishWorkout,
+                enabled = isFinishEnabled
+            ) {
                 Icon(
                     imageVector = Icons.Filled.Flag,
                     contentDescription = "Finish Workout"

@@ -2,6 +2,7 @@ package com.android.timberworkoutlogs.ui.screen.workout
 
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -20,7 +21,10 @@ import com.android.timberworkoutlogs.models.WorkoutExercise
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Locale
 import java.util.UUID
@@ -34,6 +38,30 @@ class WorkoutViewModel(
     val workoutExercises = mutableStateListOf<WorkoutExercise>()
     val exerciseDefinitions = mutableStateListOf<ExerciseDefinition?>()
 
+    val isWorkoutEmpty: StateFlow<Boolean> = snapshotFlow {
+        val hasValidExerciseWithData = workoutExercises.indices.any { index ->
+            val definition = exerciseDefinitions.getOrNull(index)
+            val exercise = workoutExercises.getOrNull(index)
+            if (definition == null || exercise == null || exercise.sets.isEmpty()) {
+                false
+            } else {
+                exercise.sets.any { set ->
+                    when (set) {
+                        is WeightAndRepsSet -> set.weight > 0.0 || set.reps > 0
+                        is RepsOnlySet -> set.reps > 0
+                        is TimedSet -> set.durationSeconds > 0
+                        is DistanceAndTimeSet -> set.distance > 0.0 || set.durationSeconds > 0
+                    }
+                }
+            }
+        }
+        !hasValidExerciseWithData
+    }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = true
+        )
     private val _timerText = MutableStateFlow("00:00")
     val timerText = _timerText.asStateFlow()
 

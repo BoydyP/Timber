@@ -41,12 +41,14 @@ fun WorkoutScreen(
     val workoutExercises = viewModel.workoutExercises
     val exerciseDefinitions = viewModel.exerciseDefinitions
     val timerText by viewModel.timerText.collectAsStateWithLifecycle()
+    val isWorkoutEmpty by viewModel.isWorkoutEmpty.collectAsStateWithLifecycle()
 
     Column(modifier = Modifier.fillMaxSize()) {
         WorkoutTopAppBar(
             title = "Log Workout",
             timerText = timerText,
-            onFinishWorkout = { viewModel.onFinishWorkout(onNavigateBack) }
+            onFinishWorkout = { viewModel.onFinishWorkout(onNavigateBack) },
+            isFinishEnabled = !isWorkoutEmpty
         )
 
         WorkoutExerciseList(
