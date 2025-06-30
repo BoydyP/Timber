@@ -157,7 +157,10 @@ fun ExerciseInputCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (exerciseDefinition?.logType == LogType.WEIGHT_AND_REPS) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                ) {
                     Text(
                         "KG",
                         fontWeight = if (workoutExercise.unit == WeightUnit.KG) FontWeight.Bold else FontWeight.Normal
