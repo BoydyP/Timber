@@ -47,7 +47,7 @@ fun WorkoutScreen(
         WorkoutTopAppBar(
             title = "Log Workout",
             timerText = timerText,
-            onDiscardWorkout = { viewModel.onFinishWorkout(onNavigateBack) },
+            onDiscardWorkout = { viewModel.onDiscardWorkout(onNavigateBack) },
         )
 
         WorkoutExerciseList(
