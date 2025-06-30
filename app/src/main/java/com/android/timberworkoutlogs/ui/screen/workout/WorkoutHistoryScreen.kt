@@ -26,6 +26,7 @@ import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.Workout
 import com.android.timberworkoutlogs.models.WorkoutExercise
+import com.android.timberworkoutlogs.ui.components.SwipeToDeleteContainer
 import com.android.timberworkoutlogs.ui.screen.workout.components.WorkoutHistoryItemCard
 import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 import kotlinx.coroutines.flow.Flow
@@ -62,8 +63,16 @@ fun WorkoutHistoryScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(bottom = 16.dp)
             ) {
-                items(workoutDisplayItems) { displayItem ->
-                    WorkoutHistoryItemCard(displayItem = displayItem)
+                items(
+                    items = workoutDisplayItems,
+                    key = { it.workout.id }
+                ) { displayItem ->
+                    SwipeToDeleteContainer(
+                        item = displayItem,
+                        onDismiss = { viewModel.deleteWorkout(it) }
+                    ) {
+                        WorkoutHistoryItemCard(displayItem = displayItem)
+                    }
                 }
             }
         }

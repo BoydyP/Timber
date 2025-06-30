@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 private const val TAG = "WorkoutHistoryViewModel"
 
@@ -61,6 +62,12 @@ class WorkoutHistoryViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    fun deleteWorkout(item: WorkoutHistoryDisplayItem) {
+        viewModelScope.launch {
+            workoutRepository.deleteWorkout(item.workout)
+        }
+    }
 
     init {
         Log.d(TAG, "WorkoutHistoryViewModel initialized")
