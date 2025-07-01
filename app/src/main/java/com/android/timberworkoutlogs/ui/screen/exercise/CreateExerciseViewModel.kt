@@ -1,31 +1,62 @@
 package com.android.timberworkoutlogs.ui.screen.exercise
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.CreationExtras
 import com.android.timberworkoutlogs.database.ExerciseDefinitionRepository
 import com.android.timberworkoutlogs.models.ExerciseDefinition
 import com.android.timberworkoutlogs.models.ExerciseEquipment
 import com.android.timberworkoutlogs.models.LogType
 import com.android.timberworkoutlogs.models.MuscleGroup
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 data class CreateExerciseUiState(
     val name: String = "",
     val equipment: ExerciseEquipment = ExerciseEquipment.BARBELL,
-    val muscleGroups: List<MuscleGroup> = emptyList(),
+    val muscleGroups: Set<MuscleGroup> = emptySet(),
     val logType: LogType = LogType.WEIGHT_AND_REPS,
-    val isSaving: Boolean = false
+    val isSaving: Boolean = false,
+    val isEditing: Boolean = false,
+    val exerciseId: UUID? = null
 )
 
-class CreateExerciseViewModel(private val repository: ExerciseDefinitionRepository) : ViewModel() {
+class CreateExerciseViewModel(
+    private val repository: ExerciseDefinitionRepository,
+    savedStateHandle: SavedStateHandle
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CreateExerciseUiState())
-    val uiState: StateFlow<CreateExerciseUiState> = _uiState.asStateFlow()
+    val uiState = _uiState.asStateFlow()
+
+    init {
+        val exerciseId: String? = savedStateHandle["exerciseId"]
+        if (exerciseId != null) {
+            loadExercise(UUID.fromString(exerciseId))
+        }
+    }
+
+    private fun loadExercise(id: UUID) {
+        viewModelScope.launch {
+            val exercise = repository.getExerciseDefinition(id)
+            _uiState.update {
+                it.copy(
+                    name = exercise.name,
+                    equipment = exercise.equipment,
+                    muscleGroups = exercise.muscleGroups.toSet(),
+                    logType = exercise.logType,
+                    isEditing = true,
+                    exerciseId = exercise.id
+                )
+            }
+        }
+    }
 
     fun onNameChanged(name: String) {
         _uiState.update { it.copy(name = name) }
@@ -33,44 +64,68 @@ class CreateExerciseViewModel(private val repository: ExerciseDefinitionReposito
 
     fun onEquipmentChanged(equipment: ExerciseEquipment) {
         _uiState.update {
-            it.copy(
-                equipment = equipment,
-                logType = if (equipment == ExerciseEquipment.BODYWEIGHT) LogType.REPS_ONLY else it.logType
-            )
+            val newLogType =
+                if (equipment == ExerciseEquipment.BODYWEIGHT) LogType.REPS_ONLY else it.logType
+            it.copy(equipment = equipment, logType = newLogType)
         }
     }
 
-    fun onMuscleGroupsChanged(muscleGroups: List<MuscleGroup>) {
-        _uiState.update { it.copy(muscleGroups = muscleGroups) }
+    fun onMuscleGroupToggled(muscleGroup: MuscleGroup) {
+        _uiState.update { currentState ->
+            val newMuscleGroups = currentState.muscleGroups.toMutableSet()
+            if (newMuscleGroups.contains(muscleGroup)) {
+                newMuscleGroups.remove(muscleGroup)
+            } else {
+                newMuscleGroups.add(muscleGroup)
+            }
+            currentState.copy(muscleGroups = newMuscleGroups)
+        }
     }
 
     fun onLogTypeChanged(logType: LogType) {
         _uiState.update { it.copy(logType = logType) }
     }
 
-    fun saveExercise() {
+    fun saveExercise(onExerciseSaved: () -> Unit) {
         viewModelScope.launch {
             val currentState = _uiState.value
             if (currentState.name.isNotBlank() && currentState.muscleGroups.isNotEmpty()) {
                 _uiState.update { it.copy(isSaving = true) }
-                val newExercise = ExerciseDefinition(
+                val exercise = ExerciseDefinition(
+                    id = currentState.exerciseId ?: UUID.randomUUID(),
                     name = currentState.name,
                     equipment = currentState.equipment,
-                    muscleGroups = currentState.muscleGroups,
+                    muscleGroups = currentState.muscleGroups.toList(),
                     logType = currentState.logType
                 )
-                repository.insert(newExercise)
+                if (currentState.isEditing) {
+                    repository.update(exercise)
+                } else {
+                    repository.insert(exercise)
+                }
+                onExerciseSaved()
             }
         }
     }
-}
 
-class CreateExerciseViewModelFactory(private val repository: ExerciseDefinitionRepository) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(CreateExerciseViewModel::class.java)) {
+    companion object {
+        val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
-            return CreateExerciseViewModel(repository) as T
+            override fun <T : ViewModel> create(
+                modelClass: Class<T>,
+                extras: CreationExtras
+            ): T {
+                // Get the Application object from extras
+                val application =
+                    checkNotNull(extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY]) as com.android.timberworkoutlogs.TimberApplication
+                // Create a SavedStateHandle for this ViewModel from extras
+                val savedStateHandle = extras.createSavedStateHandle()
+
+                return CreateExerciseViewModel(
+                    application.exerciseDefinitionRepository,
+                    savedStateHandle
+                ) as T
+            }
         }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

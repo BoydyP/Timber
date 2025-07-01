@@ -1,5 +1,6 @@
 package com.android.timberworkoutlogs.ui.screen.exercise
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.android.timberworkoutlogs.ui.components.SwipeToDeleteContainer
 import com.android.timberworkoutlogs.ui.screen.exercise.components.ExerciseDefinitionCard
 import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
+import java.util.UUID
 
 /**
  * This screen has been refactored to use the generic SwipeToDeleteContainer,
@@ -27,7 +29,8 @@ import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 fun ExerciseListScreen(
     viewModel: ExercisesListViewModel,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues()
+    contentPadding: PaddingValues = PaddingValues(),
+    onNavigateToEditExercise: (UUID) -> Unit
 ) {
     val exercises by viewModel.allExercises.collectAsState()
 
@@ -58,7 +61,10 @@ fun ExerciseListScreen(
                         viewModel.deleteExercise(it)
                     }
                 ) {
-                    ExerciseDefinitionCard(exercise = exercise)
+                    ExerciseDefinitionCard(
+                        exercise = exercise,
+                        modifier = Modifier.clickable { onNavigateToEditExercise(exercise.id) }
+                    )
                 }
             }
         }

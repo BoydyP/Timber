@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import com.android.timberworkoutlogs.models.ExerciseDefinition
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
@@ -29,6 +30,12 @@ interface ExerciseDefinitionDao {
      */
     @Insert
     suspend fun addExerciseDefinition(exercise: ExerciseDefinition)
+
+    /**
+     * Modify an existing exercise definitoon.
+     */
+    @Update
+    suspend fun modifyExerciseDefinition(exercise: ExerciseDefinition)
 
     /**
      * Deletes an exercise definition from the database.
