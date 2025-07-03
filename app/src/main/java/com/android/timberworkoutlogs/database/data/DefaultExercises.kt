@@ -53,12 +53,15 @@ object DefaultExercises {
             // --- SHOULDERS ---
             ExerciseDefinition(name = "Overhead Press", equipment = ExerciseEquipment.BARBELL, muscleGroups = listOf(MuscleGroup.SHOULDERS, MuscleGroup.TRICEPS), logType = LogType.WEIGHT_AND_REPS),
             ExerciseDefinition(name = "Overhead Press", equipment = ExerciseEquipment.DUMBBELL, muscleGroups = listOf(MuscleGroup.SHOULDERS, MuscleGroup.TRICEPS), logType = LogType.WEIGHT_AND_REPS),
+            ExerciseDefinition(name = "Shoulder Press", equipment = ExerciseEquipment.DUMBBELL, muscleGroups = listOf(MuscleGroup.SHOULDERS, MuscleGroup.TRICEPS), logType = LogType.WEIGHT_AND_REPS),
+            ExerciseDefinition(name = "Arnold Press", equipment = ExerciseEquipment.DUMBBELL, muscleGroups = listOf(MuscleGroup.SHOULDERS, MuscleGroup.TRICEPS), logType = LogType.WEIGHT_AND_REPS),
             ExerciseDefinition(name = "Lateral Raise", equipment = ExerciseEquipment.DUMBBELL, muscleGroups = listOf(MuscleGroup.SHOULDERS), logType = LogType.WEIGHT_AND_REPS),
             ExerciseDefinition(name = "Lateral Raise", equipment = ExerciseEquipment.CABLE, muscleGroups = listOf(MuscleGroup.SHOULDERS), logType = LogType.WEIGHT_AND_REPS),
             ExerciseDefinition(name = "Front Raise", equipment = ExerciseEquipment.DUMBBELL, muscleGroups = listOf(MuscleGroup.SHOULDERS), logType = LogType.WEIGHT_AND_REPS),
             ExerciseDefinition(name = "Shrug", equipment = ExerciseEquipment.BARBELL, muscleGroups = listOf(MuscleGroup.SHOULDERS, MuscleGroup.BACK), logType = LogType.WEIGHT_AND_REPS),
             ExerciseDefinition(name = "Shrug", equipment = ExerciseEquipment.DUMBBELL, muscleGroups = listOf(MuscleGroup.SHOULDERS, MuscleGroup.BACK), logType = LogType.WEIGHT_AND_REPS),
             ExerciseDefinition(name = "Face Pull", equipment = ExerciseEquipment.CABLE, muscleGroups = listOf(MuscleGroup.SHOULDERS, MuscleGroup.BACK), logType = LogType.WEIGHT_AND_REPS),
+
 
             // --- BICEPS ---
             ExerciseDefinition(name = "Bicep Curl", equipment = ExerciseEquipment.BARBELL, muscleGroups = listOf(MuscleGroup.BICEPS), logType = LogType.WEIGHT_AND_REPS),
