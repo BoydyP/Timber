@@ -8,6 +8,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -22,13 +26,10 @@ import com.android.timberworkoutlogs.ui.screen.exercise.components.ExerciseDefin
 import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 import java.util.UUID
 
-/**
- * This screen has been refactored to use the generic SwipeToDeleteContainer,
- * simplifying its code and removing duplicated logic.
- */
 @Composable
 fun ExerciseListScreen(
     viewModel: ExercisesListViewModel,
+    onNavigateToCreateExercise: () -> Unit,
     onNavigateToEditExercise: (UUID) -> Unit,
     onNavigateBack: () -> Unit
 ) {
@@ -36,7 +37,12 @@ fun ExerciseListScreen(
 
     ContextualScaffold(
         title = { Text("Exercise Library") },
-        onNavigateBack = onNavigateBack
+        onNavigateBack = onNavigateBack,
+        floatingActionButton = {
+            FloatingActionButton(onClick = onNavigateToCreateExercise) {
+                Icon(Icons.Filled.Add, contentDescription = "Add Exercise")
+            }
+        }
     ) { innerPadding ->
         if (exercises.isEmpty()) {
             Box(

@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
-import com.android.timberworkoutlogs.ui.TimberUi
+import com.android.timberworkoutlogs.ui.navigation.TimberUi
 import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

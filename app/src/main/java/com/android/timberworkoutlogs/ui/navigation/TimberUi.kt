@@ -1,13 +1,10 @@
-package com.android.timberworkoutlogs.ui
+package com.android.timberworkoutlogs.ui.navigation
 
-import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.android.timberworkoutlogs.TimberApplication
@@ -51,42 +48,18 @@ fun TimberUi() {
     NavHost(
         navController = navController,
         startDestination = AppDestinations.HOME_ROUTE,
-        enterTransition = {
-            slideIntoContainer(
-                AnimatedContentTransitionScope.SlideDirection.Left,
-                tween(300)
-            )
-        },
-        exitTransition = {
-            slideOutOfContainer(
-                AnimatedContentTransitionScope.SlideDirection.Left,
-                tween(300)
-            )
-        },
-        popEnterTransition = {
-            slideIntoContainer(
-                AnimatedContentTransitionScope.SlideDirection.Right,
-                tween(300)
-            )
-        },
-        popExitTransition = {
-            slideOutOfContainer(
-                AnimatedContentTransitionScope.SlideDirection.Right,
-                tween(300)
-            )
-        }
     ) {
-        composable(AppDestinations.HOME_ROUTE) {
+        homeComposable(AppDestinations.HOME_ROUTE) {
             MainLayout(navController = navController) {
                 HomeScreen()
             }
         }
-        composable(AppDestinations.STATS_ROUTE) {
+        homeComposable(AppDestinations.STATS_ROUTE) {
             MainLayout(navController = navController) {
                 StatsScreen()
             }
         }
-        composable(AppDestinations.HISTORY_ROUTE) {
+        homeComposable(AppDestinations.HISTORY_ROUTE) {
             MainLayout(navController = navController) {
                 val application = LocalContext.current.applicationContext as TimberApplication
                 val viewModel: WorkoutHistoryViewModel =
@@ -97,20 +70,20 @@ fun TimberUi() {
                 )
             }
         }
-        composable(AppDestinations.TEMPLATES_ROUTE) {
+        homeComposable(AppDestinations.TEMPLATES_ROUTE) {
             MainLayout(navController = navController) {
                 TemplatesScreen(
                     onNavigateToExercisesList = { navController.navigate(AppDestinations.EXERCISES_LIST_ROUTE) }
                 )
             }
         }
-        composable(AppDestinations.SETTINGS_ROUTE) {
+        homeComposable(AppDestinations.SETTINGS_ROUTE) {
             MainLayout(navController = navController) {
                 SettingsScreen()
             }
         }
 
-        composable(AppDestinations.EXERCISES_LIST_ROUTE) {
+        slideComposable(AppDestinations.EXERCISES_LIST_ROUTE) {
             val application = LocalContext.current.applicationContext as TimberApplication
             val viewModel: ExercisesListViewModel =
                 viewModel(factory = ExercisesListViewModelFactory(application.exerciseDefinitionRepository))
@@ -119,11 +92,12 @@ fun TimberUi() {
                 onNavigateToEditExercise = { exerciseId ->
                     navController.navigate("${AppDestinations.CREATE_EXERCISE_ROUTE}?exerciseId=$exerciseId")
                 },
+                onNavigateToCreateExercise = { navController.navigate(AppDestinations.CREATE_EXERCISE_ROUTE) },
                 onNavigateBack = { navController.popBackStack() }
             )
         }
 
-        composable(
+        slideComposable(
             route = "${AppDestinations.CREATE_EXERCISE_ROUTE}?exerciseId={exerciseId}",
             arguments = listOf(navArgument("exerciseId") {
                 type = NavType.StringType
@@ -139,7 +113,7 @@ fun TimberUi() {
             )
         }
 
-        composable(AppDestinations.SELECT_EXERCISE_ROUTE) {
+        slideComposable(AppDestinations.SELECT_EXERCISE_ROUTE) {
             val application = LocalContext.current.applicationContext as TimberApplication
             val viewModel: SelectExerciseViewModel =
                 viewModel(factory = SelectExerciseViewModelFactory(application.exerciseDefinitionRepository))
@@ -156,7 +130,7 @@ fun TimberUi() {
             )
         }
 
-        composable(AppDestinations.WORKOUT_ROUTE) { backStackEntry ->
+        slideComposable(AppDestinations.WORKOUT_ROUTE) { backStackEntry ->
             val application = LocalContext.current.applicationContext as TimberApplication
             val workoutViewModel: WorkoutViewModel = viewModel(
                 factory = WorkoutViewModelFactory(
