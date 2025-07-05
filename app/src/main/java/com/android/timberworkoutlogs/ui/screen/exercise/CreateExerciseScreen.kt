@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -20,13 +18,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -39,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import com.android.timberworkoutlogs.models.ExerciseEquipment
 import com.android.timberworkoutlogs.models.LogType
 import com.android.timberworkoutlogs.models.MuscleGroup
+import com.android.timberworkoutlogs.ui.elements.ContextualScaffold
 import com.android.timberworkoutlogs.ui.theme.TimberOrange
 import com.android.timberworkoutlogs.util.capitaliseEnum
 import com.android.timberworkoutlogs.util.spaceSeparateEnum
@@ -52,17 +47,9 @@ fun CreateExerciseScreen(
     val uiState by viewModel.uiState.collectAsState()
     val screenTitle = if (uiState.isEditing) "Edit Exercise" else "Create Exercise"
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(screenTitle) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
-        }
+    ContextualScaffold(
+        title = { Text(screenTitle) },
+        onNavigateBack = onNavigateBack
     ) { innerPadding ->
         Column(
             modifier = Modifier

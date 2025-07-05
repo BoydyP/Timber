@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.android.timberworkoutlogs.ui.components.SwipeToDeleteContainer
+import com.android.timberworkoutlogs.ui.elements.ContextualScaffold
 import com.android.timberworkoutlogs.ui.screen.exercise.components.ExerciseDefinitionCard
 import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 import java.util.UUID
@@ -28,43 +29,47 @@ import java.util.UUID
 @Composable
 fun ExerciseListScreen(
     viewModel: ExercisesListViewModel,
-    modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(),
-    onNavigateToEditExercise: (UUID) -> Unit
+    onNavigateToEditExercise: (UUID) -> Unit,
+    onNavigateBack: () -> Unit
 ) {
     val exercises by viewModel.allExercises.collectAsState()
 
-    if (exercises.isEmpty()) {
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(contentPadding),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("No exercises defined yet. Tap the '+' to add one.")
-        }
-    } else {
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(
-                top = contentPadding.calculateTopPadding(),
-                start = 16.dp,
-                end = 16.dp,
-                bottom = contentPadding.calculateBottomPadding() + 80.dp // Extra space for FAB
-            ),
-            modifier = modifier.fillMaxSize()
-        ) {
-            items(exercises, key = { it.id }) { exercise ->
-                SwipeToDeleteContainer(
-                    item = exercise,
-                    onDismiss = {
-                        viewModel.deleteExercise(it)
+    ContextualScaffold(
+        title = { Text("Exercise Library") },
+        onNavigateBack = onNavigateBack
+    ) { innerPadding ->
+        if (exercises.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("No exercises defined yet. Tap the '+' to add one.")
+            }
+        } else {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(
+                    top = innerPadding.calculateTopPadding(),
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = innerPadding.calculateBottomPadding() + 80.dp
+                ),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(exercises, key = { it.id }) { exercise ->
+                    SwipeToDeleteContainer(
+                        item = exercise,
+                        onDismiss = {
+                            viewModel.deleteExercise(it)
+                        }
+                    ) {
+                        ExerciseDefinitionCard(
+                            exercise = exercise,
+                            modifier = Modifier.clickable { onNavigateToEditExercise(exercise.id) }
+                        )
                     }
-                ) {
-                    ExerciseDefinitionCard(
-                        exercise = exercise,
-                        modifier = Modifier.clickable { onNavigateToEditExercise(exercise.id) }
-                    )
                 }
             }
         }

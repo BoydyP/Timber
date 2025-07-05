@@ -1,15 +1,15 @@
 package com.android.timberworkoutlogs.ui.screen.workout
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -43,15 +43,33 @@ fun WorkoutScreen(
     val timerText by viewModel.timerText.collectAsStateWithLifecycle()
     val isWorkoutEmpty by viewModel.isWorkoutEmpty.collectAsStateWithLifecycle()
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        WorkoutTopAppBar(
-            title = "Log Workout",
-            timerText = timerText,
-            onDiscardWorkout = { viewModel.onDiscardWorkout(onNavigateBack) },
-        )
+    BackHandler(enabled = true) {
+        if (isWorkoutEmpty) {
+            viewModel.onDiscardWorkout(onNavigateBack)
+        } else {
+            onNavigateBack()
+        }
+    }
 
+    Scaffold(
+        topBar = {
+            WorkoutTopAppBar(
+                title = "Log Workout",
+                timerText = timerText,
+                onDiscardWorkout = { viewModel.onDiscardWorkout(onNavigateBack) },
+            )
+        },
+        bottomBar = {
+            WorkoutBottomActions(
+                onOpenNotes = onOpenNotes,
+                onFinishWorkout = { viewModel.onFinishWorkout(onNavigateBack) },
+                isFinishEnabled = !isWorkoutEmpty,
+                onOpenPlateCalculator = onOpenPlateCalculator
+            )
+        }
+    ) { innerPadding ->
         WorkoutExerciseList(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.padding(innerPadding),
             workoutExercises = workoutExercises,
             exerciseDefinitions = exerciseDefinitions,
             onAddSet = viewModel::onAddSet,
@@ -61,13 +79,6 @@ fun WorkoutScreen(
             onExerciseUnitChange = viewModel::onExerciseUnitChange,
             onAddExercise = viewModel::onAddExercise,
             onNavigateToSelectExercise = onNavigateToSelectExercise
-        )
-
-        WorkoutBottomActions(
-            onOpenNotes = onOpenNotes,
-            onFinishWorkout = { viewModel.onFinishWorkout(onNavigateBack) },
-            isFinishEnabled = !isWorkoutEmpty,
-            onOpenPlateCalculator = onOpenPlateCalculator
         )
     }
 }

@@ -115,10 +115,8 @@ class CreateExerciseViewModel(
                 modelClass: Class<T>,
                 extras: CreationExtras
             ): T {
-                // Get the Application object from extras
                 val application =
                     checkNotNull(extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY]) as com.android.timberworkoutlogs.TimberApplication
-                // Create a SavedStateHandle for this ViewModel from extras
                 val savedStateHandle = extras.createSavedStateHandle()
 
                 return CreateExerciseViewModel(
