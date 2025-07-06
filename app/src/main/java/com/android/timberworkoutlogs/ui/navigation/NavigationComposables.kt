@@ -11,13 +11,15 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDeepLink
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import kotlin.collections.contains
 
 private val mainScreenRoutes = setOf(
     AppDestinations.HOME_ROUTE,
     AppDestinations.STATS_ROUTE,
     AppDestinations.HISTORY_ROUTE,
     AppDestinations.TEMPLATES_ROUTE,
-    AppDestinations.SETTINGS_ROUTE
+    AppDestinations.SETTINGS_ROUTE,
+    AppDestinations.WORKOUT_ROUTE
 )
 
 fun NavGraphBuilder.homeComposable(
@@ -45,16 +47,18 @@ fun NavGraphBuilder.homeComposable(
             }
         },
         popEnterTransition = {
-            slideIntoContainer(
-                AnimatedContentTransitionScope.SlideDirection.Right,
-                tween(300)
-            )
+            if (initialState.destination.route in mainScreenRoutes) {
+                EnterTransition.None
+            } else {
+                slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300))
+            }
         },
         popExitTransition = {
-            slideOutOfContainer(
-                AnimatedContentTransitionScope.SlideDirection.Left,
-                tween(300)
-            )
+            if (targetState.destination.route in mainScreenRoutes) {
+                ExitTransition.None
+            } else {
+                slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300))
+            }
         },
         content = content
     )
@@ -91,6 +95,45 @@ fun NavGraphBuilder.slideComposable(
         popExitTransition = {
             slideOutOfContainer(
                 AnimatedContentTransitionScope.SlideDirection.Right,
+                tween(300)
+            )
+        },
+        content = content
+    )
+}
+
+
+fun NavGraphBuilder.workoutComposable(
+    route: String,
+    arguments: List<NamedNavArgument> = emptyList(),
+    deepLinks: List<NavDeepLink> = emptyList(),
+    content: @Composable AnimatedContentScope.(NavBackStackEntry) -> Unit
+) {
+    composable(
+        route = route,
+        arguments = arguments,
+        deepLinks = deepLinks,
+        enterTransition = {
+            slideIntoContainer(
+                AnimatedContentTransitionScope.SlideDirection.Up,
+                tween(300)
+            )
+        },
+        exitTransition = {
+            slideOutOfContainer(
+                AnimatedContentTransitionScope.SlideDirection.Down,
+                tween(300)
+            )
+        },
+        popEnterTransition = {
+            slideIntoContainer(
+                AnimatedContentTransitionScope.SlideDirection.Up,
+                tween(300)
+            )
+        },
+        popExitTransition = {
+            slideOutOfContainer(
+                AnimatedContentTransitionScope.SlideDirection.Down,
                 tween(300)
             )
         },

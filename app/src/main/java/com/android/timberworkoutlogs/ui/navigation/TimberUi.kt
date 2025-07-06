@@ -130,7 +130,7 @@ fun TimberUi() {
             )
         }
 
-        slideComposable(AppDestinations.WORKOUT_ROUTE) { backStackEntry ->
+        workoutComposable(AppDestinations.WORKOUT_ROUTE) { backStackEntry ->
             val application = LocalContext.current.applicationContext as TimberApplication
             val workoutViewModel: WorkoutViewModel = viewModel(
                 factory = WorkoutViewModelFactory(
