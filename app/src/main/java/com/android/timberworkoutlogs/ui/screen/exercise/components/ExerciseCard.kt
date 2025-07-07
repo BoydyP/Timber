@@ -186,7 +186,8 @@ fun ExerciseInputCard(
                     contentDescription = "Add Set",
                     tint = if (exerciseDefinition != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
                         alpha = 0.38f
-                    )
+                    ),
+                    modifier = Modifier.size(36.dp)
                 )
             }
         }
