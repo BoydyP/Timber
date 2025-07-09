@@ -1,0 +1,104 @@
+@startuml
+!theme plain
+
+skinparam class {
+    BackgroundColor White
+    ArrowColor Black
+    BorderColor Black
+}
+
+' --- Classes ---
+class Workout {
+  +id: Long
+  +name: String
+  +startTime: Long
+  +durationSeconds: Int
+  +notes: String
+}
+
+class WorkoutExercise {
+  +id: UUID
+  +workoutId: Long
+  +definitionId: UUID
+  +unit: WeightUnit
+  +sets: List<ExerciseSet>
+}
+
+class ExerciseDefinition {
+  +id: UUID
+  +name: String
+  +equipment: ExerciseEquipment
+  +muscleGroups: List<MuscleGroup>
+  +logType: LogType
+}
+
+' --- Sealed Interface and Implementations ---
+interface ExerciseSet <<sealed>>
+class RepsOnlySet {
+  +reps: Int
+  +isDone: Boolean
+}
+class WeightAndRepsSet {
+  +weight: Double
+  +reps: Int
+  +isDone: Boolean
+}
+class TimedSet {
+  +durationSeconds: Int
+  +isDone: Boolean
+}
+class DistanceAndTimeSet {
+  +distance: Double
+  +durationSeconds: Int
+  +isDone: Boolean
+}
+
+' --- Enums ---
+enum WeightUnit {
+  KG
+  LB
+}
+
+enum ExerciseEquipment {
+  BARBELL
+  DUMBBELL
+  CABLE
+  MACHINE
+  BODYWEIGHT
+  KETTLEBELL
+}
+
+enum LogType {
+  WEIGHT_AND_REPS
+  REPS_ONLY
+  TIME
+  DISTANCE_AND_TIME
+}
+
+enum MuscleGroup {
+  CHEST
+  BACK
+  LEGS
+  SHOULDERS
+  BICEPS
+  TRICEPS
+  ABS
+  FULL_BODY
+}
+
+' --- Relationships ---
+Workout "1" *-- "*" WorkoutExercise : contains
+WorkoutExercise "*" -- "1" ExerciseDefinition : is an instance of
+WorkoutExercise "1" *-- "*" ExerciseSet : composed of
+
+ExerciseSet <|-- RepsOnlySet
+ExerciseSet <|-- WeightAndRepsSet
+ExerciseSet <|-- TimedSet
+ExerciseSet <|-- DistanceAndTimeSet
+
+WorkoutExercise -- WeightUnit
+ExerciseDefinition -- ExerciseEquipment
+ExerciseDefinition -- LogType
+ExerciseDefinition -- MuscleGroup
+
+@enduml
