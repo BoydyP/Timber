@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -35,6 +36,7 @@ import com.android.timberworkoutlogs.models.TimedSet
 import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.WorkoutExercise
+import com.android.timberworkoutlogs.models.toStringResource
 import com.android.timberworkoutlogs.ui.components.SwipeToDeleteContainer
 import com.android.timberworkoutlogs.util.getIconForEquipment
 
@@ -162,7 +164,7 @@ fun ExerciseInputCard(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 ) {
                     Text(
-                        "KG",
+                        stringResource(id = workoutExercise.unit.toStringResource()),
                         fontWeight = if (workoutExercise.unit == WeightUnit.KG) FontWeight.Bold else FontWeight.Normal
                     )
                     Switch(
@@ -170,10 +172,11 @@ fun ExerciseInputCard(
                         onCheckedChange = { isLbs ->
                             onExerciseUnitChange(if (isLbs) WeightUnit.LB else WeightUnit.KG)
                         },
-                        modifier = Modifier.padding(horizontal = 8.dp)
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp)
                     )
                     Text(
-                        "LB",
+                        stringResource(id = workoutExercise.unit.toStringResource()),
                         fontWeight = if (workoutExercise.unit == WeightUnit.LB) FontWeight.Bold else FontWeight.Normal
                     )
                 }
@@ -193,4 +196,3 @@ fun ExerciseInputCard(
         }
     }
 }
-

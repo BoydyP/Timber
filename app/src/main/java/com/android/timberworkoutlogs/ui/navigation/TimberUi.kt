@@ -10,7 +10,8 @@ import androidx.navigation.navArgument
 import com.android.timberworkoutlogs.TimberApplication
 import com.android.timberworkoutlogs.ui.elements.MainLayout
 import com.android.timberworkoutlogs.ui.screen.HomeScreen
-import com.android.timberworkoutlogs.ui.screen.SettingsScreen
+import com.android.timberworkoutlogs.ui.screen.settings.SettingsScreen
+import com.android.timberworkoutlogs.ui.screen.settings.SettingsViewModel
 import com.android.timberworkoutlogs.ui.screen.StatsScreen
 import com.android.timberworkoutlogs.ui.screen.TemplatesScreen
 import com.android.timberworkoutlogs.ui.screen.exercise.CreateExerciseScreen
@@ -79,7 +80,8 @@ fun TimberUi() {
         }
         homeComposable(AppDestinations.SETTINGS_ROUTE) {
             MainLayout(navController = navController) {
-                SettingsScreen()
+                val viewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)
+                SettingsScreen(viewModel = viewModel)
             }
         }
 
@@ -135,7 +137,8 @@ fun TimberUi() {
             val workoutViewModel: WorkoutViewModel = viewModel(
                 factory = WorkoutViewModelFactory(
                     application.workoutRepository,
-                    application.exerciseDefinitionRepository
+                    application.exerciseDefinitionRepository,
+                    application.settingsRepository
                 )
             )
 

@@ -9,4 +9,6 @@
     <string name="discard_workout">Discard Workout</string>
     <string name="workout_notes">Workout Notes</string>
     <string name="finish_workout">Finish Workout</string>
+    <string name="unit_kg">KG</string>
+    <string name="unit_lb">LB</string>
 </resources>

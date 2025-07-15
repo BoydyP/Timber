@@ -83,6 +83,9 @@ dependencies {
     implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.material.icons.extended)
 
+    // DataStore
+    implementation(libs.androidx.datastore.preferences)
+
     // Test
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
