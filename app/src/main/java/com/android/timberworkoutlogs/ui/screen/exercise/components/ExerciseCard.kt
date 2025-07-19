@@ -25,10 +25,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.android.timberworkoutlogs.models.DistanceAndTimeSet
 import com.android.timberworkoutlogs.models.ExerciseDefinition
+import com.android.timberworkoutlogs.models.ExerciseEquipment
 import com.android.timberworkoutlogs.models.ExerciseSet
 import com.android.timberworkoutlogs.models.LogType
 import com.android.timberworkoutlogs.models.RepsOnlySet
@@ -38,6 +40,7 @@ import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.WorkoutExercise
 import com.android.timberworkoutlogs.models.toStringResource
 import com.android.timberworkoutlogs.ui.components.SwipeToDeleteContainer
+import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 import com.android.timberworkoutlogs.util.getIconForEquipment
 
 @Composable
@@ -194,5 +197,34 @@ fun ExerciseInputCard(
                 )
             }
         }
+    }
+}
+
+@Preview
+@Composable
+fun ExerciseInputCardPreview() {
+    val exerciseDefinition = ExerciseDefinition(
+        name = "Bench Press",
+        equipment = ExerciseEquipment.BARBELL,
+        muscleGroups = emptyList(),
+        logType = LogType.WEIGHT_AND_REPS
+    )
+    val workoutExercise = WorkoutExercise(
+        workoutId = 1L,
+        definitionId = exerciseDefinition.id,
+        sets = listOf(
+            WeightAndRepsSet(weight = 100.0, reps = 10, isDone = true),
+            WeightAndRepsSet(weight = 100.0, reps = 8, isDone = false)
+        )
+    )
+    TimberWorkoutLogsTheme {
+        ExerciseInputCard(
+            exerciseDefinition = exerciseDefinition,
+            workoutExercise = workoutExercise,
+            onAddSet = {},
+            onDeleteSet = {},
+            onSetChanged = { _, _ -> },
+            onExerciseUnitChange = {},
+            onNavigateToSelectExercise = {})
     }
 }
