@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.hilt.android)
 }
 
 
@@ -58,6 +59,11 @@ configurations.all {
 }
 
 dependencies {
+
+    // Framework
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.android.compiler)
+
 
     // App core
     implementation(libs.androidx.core.ktx)
