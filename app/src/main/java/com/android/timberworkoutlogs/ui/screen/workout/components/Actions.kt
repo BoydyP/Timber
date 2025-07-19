@@ -23,7 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.android.timberworkoutlogs.ui.theme.WorkoutComplete
+import com.android.timberworkoutlogs.ui.theme.TimberTheme
 
 @Composable
 fun WorkoutBottomActions(
@@ -58,7 +58,7 @@ private fun CompleteWorkoutButton(
 ) {
     var isConfirming by remember { mutableStateOf(false) }
 
-    val clickedColor = WorkoutComplete
+    val clickedColor = TimberTheme.customColors.success
     val containerColor = if (isConfirming) clickedColor else Color.Transparent
     val text = if (isConfirming) "Are you sure?" else "Complete workout"
 

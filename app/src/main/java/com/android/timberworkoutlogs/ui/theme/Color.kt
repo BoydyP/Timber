@@ -217,9 +217,15 @@ val surfaceContainerHighestDark = Color(0xFF3B332B)
 //val surfaceContainerHighDarkHighContrast = Color(0xFF423A32)
 //val surfaceContainerHighestDarkHighContrast = Color(0xFF4E453D)
 
+val successLight = Color(0xff30A31C)
+val onSuccessLight = Color(0xFFFFFFFF)
+val successContainerLight = Color(0xFFB1F394)
+val onSuccessContainerLight = Color(0xFF042100)
+val successDark = Color(0xff30A31C)
+val onSuccessDark = Color(0xFF0C3900)
+val successContainerDark = Color(0xFF195201)
+val onSuccessContainerDark = Color(0xFFB1F394)
 val TimberOrange = Color(0xfff0aa49)
-val WorkoutDiscard = Color(0xFFe86c6c)
-val WorkoutComplete = Color(0xffabf049)
 
 
 

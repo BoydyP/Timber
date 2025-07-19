@@ -20,7 +20,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.android.timberworkoutlogs.ui.theme.WorkoutDiscard
 
 @Composable
 fun AnimatedTrashIcon(
@@ -35,7 +34,8 @@ fun AnimatedTrashIcon(
         targetValue = if (isConfirming) -15f else 0f,
         label = "Lid Rotation"
     )
-    val color = if (isConfirming) WorkoutDiscard else MaterialTheme.colorScheme.onSurface
+    val color =
+        if (isConfirming) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
 
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Icon(
