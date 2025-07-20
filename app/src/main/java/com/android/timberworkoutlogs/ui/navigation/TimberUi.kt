@@ -130,7 +130,7 @@ fun TimberUi() {
             }
 
             WorkoutScreen(
-                viewModel = workoutViewModel,
+                workoutViewModel = workoutViewModel,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToSelectExercise = { index ->
                     navController.currentBackStackEntry?.savedStateHandle?.set(

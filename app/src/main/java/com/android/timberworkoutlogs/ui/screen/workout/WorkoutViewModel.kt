@@ -40,7 +40,6 @@ class WorkoutViewModel @Inject constructor(
 
     val workoutExercises = mutableStateListOf<WorkoutExercise>()
     val exerciseDefinitions = mutableStateListOf<ExerciseDefinition?>()
-
     val isWorkoutEmpty: StateFlow<Boolean> = snapshotFlow {
         val hasValidExerciseWithData = workoutExercises.indices.any { index ->
             val definition = exerciseDefinitions.getOrNull(index)
@@ -251,4 +250,3 @@ class WorkoutViewModel @Inject constructor(
         timerJob?.cancel()
     }
 }
-

@@ -1,4 +1,4 @@
-package com.android.timberworkoutlogs.ui.components
+package com.android.timberworkoutlogs.ui.common
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState

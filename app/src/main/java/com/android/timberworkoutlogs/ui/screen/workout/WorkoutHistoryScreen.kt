@@ -26,7 +26,7 @@ import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.Workout
 import com.android.timberworkoutlogs.models.WorkoutExercise
-import com.android.timberworkoutlogs.ui.components.SwipeToDeleteContainer
+import com.android.timberworkoutlogs.ui.common.SwipeToDeleteContainer
 import com.android.timberworkoutlogs.ui.screen.workout.components.WorkoutHistoryItemCard
 import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 import kotlinx.coroutines.flow.Flow

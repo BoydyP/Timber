@@ -39,7 +39,7 @@ import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.WorkoutExercise
 import com.android.timberworkoutlogs.models.toStringResource
-import com.android.timberworkoutlogs.ui.components.SwipeToDeleteContainer
+import com.android.timberworkoutlogs.ui.common.SwipeToDeleteContainer
 import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 import com.android.timberworkoutlogs.util.getIconForEquipment
 

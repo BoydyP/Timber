@@ -18,14 +18,16 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.android.timberworkoutlogs.ui.components.SwipeToDeleteContainer
+import com.android.timberworkoutlogs.ui.common.SwipeToDeleteContainer
 import com.android.timberworkoutlogs.ui.elements.ContextualScaffold
 import com.android.timberworkoutlogs.ui.screen.exercise.components.ExerciseDefinitionCard
 import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 import java.util.UUID
 
+const val TEST_TAG = "exercise_list"
 @Composable
 fun ExerciseListScreen(
     viewModel: ExercisesListViewModel,
@@ -62,7 +64,9 @@ fun ExerciseListScreen(
                     end = 16.dp,
                     bottom = innerPadding.calculateBottomPadding() + 80.dp
                 ),
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag(TEST_TAG)
             ) {
                 items(exercises, key = { it.id }) { exercise ->
                     SwipeToDeleteContainer(

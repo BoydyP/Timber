@@ -22,7 +22,7 @@ import com.android.timberworkoutlogs.models.ExerciseDefinition
 import com.android.timberworkoutlogs.models.ExerciseSet
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.WorkoutExercise
-import com.android.timberworkoutlogs.ui.components.SwipeToDeleteContainer
+import com.android.timberworkoutlogs.ui.common.SwipeToDeleteContainer
 import com.android.timberworkoutlogs.ui.screen.exercise.components.ExerciseInputCard
 import com.android.timberworkoutlogs.ui.screen.workout.components.WorkoutBottomActions
 import com.android.timberworkoutlogs.ui.screen.workout.components.WorkoutTopAppBar
@@ -32,20 +32,20 @@ import java.util.UUID
 
 @Composable
 fun WorkoutScreen(
-    viewModel: WorkoutViewModel,
+    workoutViewModel: WorkoutViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToSelectExercise: (exerciseIndex: Int) -> Unit,
     onOpenNotes: () -> Unit,
     onOpenPlateCalculator: () -> Unit
 ) {
-    val workoutExercises = viewModel.workoutExercises
-    val exerciseDefinitions = viewModel.exerciseDefinitions
-    val timerText by viewModel.timerText.collectAsStateWithLifecycle()
-    val isWorkoutEmpty by viewModel.isWorkoutEmpty.collectAsStateWithLifecycle()
+    val workoutExercises = workoutViewModel.workoutExercises
+    val exerciseDefinitions = workoutViewModel.exerciseDefinitions
+    val timerText by workoutViewModel.timerText.collectAsStateWithLifecycle()
+    val isWorkoutEmpty by workoutViewModel.isWorkoutEmpty.collectAsStateWithLifecycle()
 
     BackHandler(enabled = true) {
         if (isWorkoutEmpty) {
-            viewModel.onDiscardWorkout(onNavigateBack)
+            workoutViewModel.onDiscardWorkout(onNavigateBack)
         } else {
             onNavigateBack()
         }
@@ -56,13 +56,13 @@ fun WorkoutScreen(
             WorkoutTopAppBar(
                 title = "Log Workout",
                 timerText = timerText,
-                onDiscardWorkout = { viewModel.onDiscardWorkout(onNavigateBack) },
+                onDiscardWorkout = { workoutViewModel.onDiscardWorkout(onNavigateBack) },
             )
         },
         bottomBar = {
             WorkoutBottomActions(
                 onOpenNotes = onOpenNotes,
-                onFinishWorkout = { viewModel.onFinishWorkout(onNavigateBack) },
+                onFinishWorkout = { workoutViewModel.onFinishWorkout(onNavigateBack) },
                 isFinishEnabled = !isWorkoutEmpty,
                 onOpenPlateCalculator = onOpenPlateCalculator
             )
@@ -72,12 +72,12 @@ fun WorkoutScreen(
             modifier = Modifier.padding(innerPadding),
             workoutExercises = workoutExercises,
             exerciseDefinitions = exerciseDefinitions,
-            onAddSet = viewModel::onAddSet,
-            onDeleteExercise = viewModel::deleteExercise,
-            onDeleteSet = viewModel::deleteSet,
-            onSetChanged = viewModel::onSetChanged,
-            onExerciseUnitChange = viewModel::onExerciseUnitChange,
-            onAddExercise = viewModel::onAddExercise,
+            onAddSet = workoutViewModel::onAddSet,
+            onDeleteExercise = workoutViewModel::deleteExercise,
+            onDeleteSet = workoutViewModel::deleteSet,
+            onSetChanged = workoutViewModel::onSetChanged,
+            onExerciseUnitChange = workoutViewModel::onExerciseUnitChange,
+            onAddExercise = workoutViewModel::onAddExercise,
             onNavigateToSelectExercise = onNavigateToSelectExercise
         )
     }
