@@ -2,20 +2,19 @@ package com.android.timberworkoutlogs.ui.screen.exercise
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.CreationExtras
 import com.android.timberworkoutlogs.database.ExerciseDefinitionRepository
 import com.android.timberworkoutlogs.models.ExerciseDefinition
 import com.android.timberworkoutlogs.models.ExerciseEquipment
 import com.android.timberworkoutlogs.models.LogType
 import com.android.timberworkoutlogs.models.MuscleGroup
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
+import javax.inject.Inject
 
 data class CreateExerciseUiState(
     val name: String = "",
@@ -27,7 +26,8 @@ data class CreateExerciseUiState(
     val exerciseId: UUID? = null
 )
 
-class CreateExerciseViewModel(
+@HiltViewModel
+class CreateExerciseViewModel @Inject constructor(
     private val repository: ExerciseDefinitionRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -104,25 +104,6 @@ class CreateExerciseViewModel(
                     repository.insert(exercise)
                 }
                 onExerciseSaved()
-            }
-        }
-    }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(
-                modelClass: Class<T>,
-                extras: CreationExtras
-            ): T {
-                val application =
-                    checkNotNull(extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY]) as com.android.timberworkoutlogs.TimberApplication
-                val savedStateHandle = extras.createSavedStateHandle()
-
-                return CreateExerciseViewModel(
-                    application.exerciseDefinitionRepository,
-                    savedStateHandle
-                ) as T
             }
         }
     }

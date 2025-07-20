@@ -2,25 +2,26 @@ package com.android.timberworkoutlogs.ui.screen.workout
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.android.timberworkoutlogs.database.WorkoutRepository
 import com.android.timberworkoutlogs.models.DistanceAndTimeSet
 import com.android.timberworkoutlogs.models.WorkoutHistoryDisplayItem
 import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.WeightUnit
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 private const val TAG = "WorkoutHistoryViewModel"
 
-class WorkoutHistoryViewModel(
+@HiltViewModel
+class WorkoutHistoryViewModel @Inject constructor(
     private val workoutRepository: WorkoutRepository,
 ) : ViewModel() {
-
     val allWorkoutDisplayItems: StateFlow<List<WorkoutHistoryDisplayItem>> =
         workoutRepository.allWorkouts
             .map { workouts ->
@@ -74,14 +75,3 @@ class WorkoutHistoryViewModel(
     }
 }
 
-class WorkoutHistoryViewModelFactory(
-    private val workoutRepository: WorkoutRepository,
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(WorkoutHistoryViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return WorkoutHistoryViewModel(workoutRepository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}

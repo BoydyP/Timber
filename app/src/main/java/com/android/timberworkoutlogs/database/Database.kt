@@ -10,6 +10,7 @@ import com.android.timberworkoutlogs.database.converters.ExerciseSetListConverte
 import com.android.timberworkoutlogs.database.converters.LogTypeConverter
 import com.android.timberworkoutlogs.database.converters.MuscleGroupListConverter
 import com.android.timberworkoutlogs.database.converters.UUIDConverter
+import com.android.timberworkoutlogs.database.converters.WeightUnitConverter
 import com.android.timberworkoutlogs.models.ExerciseDefinition
 import com.android.timberworkoutlogs.models.Workout
 import com.android.timberworkoutlogs.models.WorkoutExercise
@@ -24,8 +25,10 @@ import com.android.timberworkoutlogs.models.WorkoutExercise
     ExerciseSetListConverter::class,
     ExerciseEquipmentConverter::class,
     MuscleGroupListConverter::class,
-    LogTypeConverter::class
+    LogTypeConverter::class,
+    WeightUnitConverter::class
 )
+
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun exerciseDefinitionDao(): ExerciseDefinitionDao

@@ -10,12 +10,13 @@ import com.android.timberworkoutlogs.database.AppDatabase
 import com.android.timberworkoutlogs.database.ExerciseDefinitionRepository
 import com.android.timberworkoutlogs.database.SettingsRepository
 import com.android.timberworkoutlogs.database.WorkoutRepository
+import dagger.hilt.android.HiltAndroidApp
 
 
 private const val TAG = "TimberApplication"
 private const val SETTINGS_PREFERENCES = "settings_preferences"
 
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
     name = SETTINGS_PREFERENCES
 )
 
@@ -23,6 +24,7 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
  * Custom Application class to hold singleton instances for the database and repository.
  * This ensures these objects are created only once per application lifecycle.
  */
+@HiltAndroidApp
 class TimberApplication : Application() {
     init {
         Log.d(TAG, "Initialising TimberApplication backend")
@@ -34,7 +36,6 @@ class TimberApplication : Application() {
     val exerciseDefinitionRepository by lazy {
         ExerciseDefinitionRepository(database.exerciseDefinitionDao())
     }
-
     val settingsRepository by lazy {
         SettingsRepository(dataStore)
     }

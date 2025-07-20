@@ -4,8 +4,6 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import androidx.room.TypeConverters
-import com.android.timberworkoutlogs.database.converters.ExerciseSetListConverter
 import java.util.UUID
 
 @Entity(
@@ -30,10 +28,9 @@ import java.util.UUID
     ]
 )
 data class WorkoutExercise(
-    @PrimaryKey val id: UUID = UUID.randomUUID(),
+    @field:PrimaryKey val id: UUID = UUID.randomUUID(),
     val workoutId: Long,
     val definitionId: UUID,
     val unit: WeightUnit = WeightUnit.KG,
-    @TypeConverters(ExerciseSetListConverter::class)
     val sets: List<ExerciseSet> = listOf()
 )

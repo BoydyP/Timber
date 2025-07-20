@@ -1,16 +1,20 @@
 package com.android.timberworkoutlogs.ui.screen.exercise
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.android.timberworkoutlogs.database.ExerciseDefinitionRepository
 import com.android.timberworkoutlogs.models.ExerciseDefinition
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ExercisesListViewModel(private val repository: ExerciseDefinitionRepository) : ViewModel() {
+@HiltViewModel
+class ExercisesListViewModel @Inject constructor(
+    private val repository: ExerciseDefinitionRepository
+) : ViewModel() {
 
     val allExercises: StateFlow<List<ExerciseDefinition>> = repository.allExerciseDefinitions
         .stateIn(
@@ -21,15 +25,5 @@ class ExercisesListViewModel(private val repository: ExerciseDefinitionRepositor
 
     fun deleteExercise(exercise: ExerciseDefinition) = viewModelScope.launch {
         repository.delete(exercise)
-    }
-}
-
-class ExercisesListViewModelFactory(private val repository: ExerciseDefinitionRepository) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(ExercisesListViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return ExercisesListViewModel(repository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

@@ -1,13 +1,10 @@
 package com.android.timberworkoutlogs.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.android.timberworkoutlogs.TimberApplication
 import com.android.timberworkoutlogs.ui.elements.MainLayout
 import com.android.timberworkoutlogs.ui.screen.HomeScreen
 import com.android.timberworkoutlogs.ui.screen.settings.SettingsScreen
@@ -18,16 +15,13 @@ import com.android.timberworkoutlogs.ui.screen.exercise.CreateExerciseScreen
 import com.android.timberworkoutlogs.ui.screen.exercise.CreateExerciseViewModel
 import com.android.timberworkoutlogs.ui.screen.exercise.ExerciseListScreen
 import com.android.timberworkoutlogs.ui.screen.exercise.ExercisesListViewModel
-import com.android.timberworkoutlogs.ui.screen.exercise.ExercisesListViewModelFactory
 import com.android.timberworkoutlogs.ui.screen.exercise.SelectExerciseScreen
 import com.android.timberworkoutlogs.ui.screen.exercise.SelectExerciseViewModel
-import com.android.timberworkoutlogs.ui.screen.exercise.SelectExerciseViewModelFactory
 import com.android.timberworkoutlogs.ui.screen.workout.WorkoutHistoryScreen
 import com.android.timberworkoutlogs.ui.screen.workout.WorkoutHistoryViewModel
-import com.android.timberworkoutlogs.ui.screen.workout.WorkoutHistoryViewModelFactory
 import com.android.timberworkoutlogs.ui.screen.workout.WorkoutScreen
 import com.android.timberworkoutlogs.ui.screen.workout.WorkoutViewModel
-import com.android.timberworkoutlogs.ui.screen.workout.WorkoutViewModelFactory
+import androidx.hilt.navigation.compose.hiltViewModel
 import java.util.UUID
 
 object AppDestinations {
@@ -62,9 +56,7 @@ fun TimberUi() {
         }
         homeComposable(AppDestinations.HISTORY_ROUTE) {
             MainLayout(navController = navController) {
-                val application = LocalContext.current.applicationContext as TimberApplication
-                val viewModel: WorkoutHistoryViewModel =
-                    viewModel(factory = WorkoutHistoryViewModelFactory(application.workoutRepository))
+                val viewModel: WorkoutHistoryViewModel = hiltViewModel()
                 WorkoutHistoryScreen(
                     viewModel = viewModel,
                     onNavigateToWorkout = {}
@@ -80,15 +72,13 @@ fun TimberUi() {
         }
         homeComposable(AppDestinations.SETTINGS_ROUTE) {
             MainLayout(navController = navController) {
-                val viewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)
+                val viewModel: SettingsViewModel = hiltViewModel()
                 SettingsScreen(viewModel = viewModel)
             }
         }
 
         slideComposable(AppDestinations.EXERCISES_LIST_ROUTE) {
-            val application = LocalContext.current.applicationContext as TimberApplication
-            val viewModel: ExercisesListViewModel =
-                viewModel(factory = ExercisesListViewModelFactory(application.exerciseDefinitionRepository))
+            val viewModel: ExercisesListViewModel = hiltViewModel()
             ExerciseListScreen(
                 viewModel = viewModel,
                 onNavigateToEditExercise = { exerciseId ->
@@ -106,9 +96,7 @@ fun TimberUi() {
                 nullable = true
             })
         ) {
-            val viewModel: CreateExerciseViewModel = viewModel(
-                factory = CreateExerciseViewModel.Factory
-            )
+            val viewModel: CreateExerciseViewModel = hiltViewModel()
             CreateExerciseScreen(
                 viewModel = viewModel,
                 onNavigateBack = { navController.popBackStack() },
@@ -116,9 +104,7 @@ fun TimberUi() {
         }
 
         slideComposable(AppDestinations.SELECT_EXERCISE_ROUTE) {
-            val application = LocalContext.current.applicationContext as TimberApplication
-            val viewModel: SelectExerciseViewModel =
-                viewModel(factory = SelectExerciseViewModelFactory(application.exerciseDefinitionRepository))
+            val viewModel: SelectExerciseViewModel = hiltViewModel()
             SelectExerciseScreen(
                 viewModel = viewModel,
                 onExerciseSelected = { definitionId ->
@@ -133,14 +119,7 @@ fun TimberUi() {
         }
 
         workoutComposable(AppDestinations.WORKOUT_ROUTE) { backStackEntry ->
-            val application = LocalContext.current.applicationContext as TimberApplication
-            val workoutViewModel: WorkoutViewModel = viewModel(
-                factory = WorkoutViewModelFactory(
-                    application.workoutRepository,
-                    application.exerciseDefinitionRepository,
-                    application.settingsRepository
-                )
-            )
+            val workoutViewModel: WorkoutViewModel = hiltViewModel()
 
             val selectedId = backStackEntry.savedStateHandle.get<String>("selected_exercise_id")
             val exerciseIndex = backStackEntry.savedStateHandle.get<Int>("exercise_index")

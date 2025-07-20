@@ -4,10 +4,8 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.android.timberworkoutlogs.database.ExerciseDefinitionRepository
-import com.android.timberworkoutlogs.database.SettingsRepository
 import com.android.timberworkoutlogs.database.WorkoutRepository
 import com.android.timberworkoutlogs.models.DistanceAndTimeSet
 import com.android.timberworkoutlogs.models.ExerciseDefinition
@@ -19,6 +17,7 @@ import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.Workout
 import com.android.timberworkoutlogs.models.WorkoutExercise
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,9 +28,12 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Locale
 import java.util.UUID
+import javax.inject.Inject
 
 private const val TAG = "WorkoutViewModel"
-class WorkoutViewModel(
+
+@HiltViewModel
+class WorkoutViewModel @Inject constructor(
     private val workoutRepository: WorkoutRepository,
     private val exerciseDefinitionRepository: ExerciseDefinitionRepository
 ) : ViewModel() {
@@ -250,16 +252,3 @@ class WorkoutViewModel(
     }
 }
 
-class WorkoutViewModelFactory(
-    private val workoutRepository: WorkoutRepository,
-    private val exerciseDefinitionRepository: ExerciseDefinitionRepository,
-    private val settingsRepository: SettingsRepository
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(WorkoutViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return WorkoutViewModel(workoutRepository, exerciseDefinitionRepository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
