@@ -3,11 +3,11 @@ package com.android.timberworkoutlogs.di
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import com.android.timberworkoutlogs.dataStore
 import com.android.timberworkoutlogs.database.AppDatabase
 import com.android.timberworkoutlogs.database.ExerciseDefinitionRepository
 import com.android.timberworkoutlogs.database.SettingsRepository
 import com.android.timberworkoutlogs.database.WorkoutRepository
+import com.android.timberworkoutlogs.database.dataStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -40,7 +40,6 @@ object AppModule {
     @Provides
     @Singleton
     fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
-        // This is the same setup logic from your Application class
         return context.dataStore
     }
 

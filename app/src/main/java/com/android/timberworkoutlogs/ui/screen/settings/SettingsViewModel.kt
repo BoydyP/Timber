@@ -1,5 +1,6 @@
 package com.android.timberworkoutlogs.ui.screen.settings
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.timberworkoutlogs.database.SettingsRepository
@@ -24,6 +25,7 @@ class SettingsViewModel @Inject constructor(
         )
 
     fun updateWeightUnit(unit: WeightUnit) {
+        Log.d("SettingsViewModel", "Updating weight unit to $unit")
         viewModelScope.launch {
             settingsRepository.setWeightUnit(unit)
         }

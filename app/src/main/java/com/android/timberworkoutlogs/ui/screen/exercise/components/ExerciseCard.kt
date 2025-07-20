@@ -167,7 +167,7 @@ fun ExerciseInputCard(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 ) {
                     Text(
-                        stringResource(id = workoutExercise.unit.toStringResource()),
+                        stringResource(id = WeightUnit.KG.toStringResource()),
                         fontWeight = if (workoutExercise.unit == WeightUnit.KG) FontWeight.Bold else FontWeight.Normal
                     )
                     Switch(
@@ -179,7 +179,7 @@ fun ExerciseInputCard(
                             .padding(horizontal = 8.dp)
                     )
                     Text(
-                        stringResource(id = workoutExercise.unit.toStringResource()),
+                        stringResource(id = WeightUnit.LB.toStringResource()),
                         fontWeight = if (workoutExercise.unit == WeightUnit.LB) FontWeight.Bold else FontWeight.Normal
                     )
                 }

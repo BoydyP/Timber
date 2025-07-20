@@ -1,5 +1,6 @@
 package com.android.timberworkoutlogs.ui.screen.settings
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.material3.HorizontalDivider
@@ -30,7 +31,10 @@ fun SettingsScreen(
         SettingGroup(title = "General") {
             WeightUnitSetting(
                 selectedUnit = selectedUnit,
-                onUnitSelected = { viewModel.updateWeightUnit(it) }
+                onUnitSelected = {
+                    viewModel.updateWeightUnit(it)
+                    Log.d("SettingsScreen", "Weight unit updated to $it")
+                }
             )
             // Future settings like "Theme (Light/Dark/System)" can go here
         }

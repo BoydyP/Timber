@@ -6,6 +6,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.timberworkoutlogs.database.ExerciseDefinitionRepository
+import com.android.timberworkoutlogs.database.SettingsRepository
 import com.android.timberworkoutlogs.database.WorkoutRepository
 import com.android.timberworkoutlogs.models.DistanceAndTimeSet
 import com.android.timberworkoutlogs.models.ExerciseDefinition
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -35,7 +37,8 @@ private const val TAG = "WorkoutViewModel"
 @HiltViewModel
 class WorkoutViewModel @Inject constructor(
     private val workoutRepository: WorkoutRepository,
-    private val exerciseDefinitionRepository: ExerciseDefinitionRepository
+    private val exerciseDefinitionRepository: ExerciseDefinitionRepository,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     val workoutExercises = mutableStateListOf<WorkoutExercise>()
@@ -124,18 +127,22 @@ class WorkoutViewModel @Inject constructor(
     }
 
     fun onAddExercise() {
-        currentWorkoutId?.let { id ->
-            val placeholderDefinitionId = UUID.randomUUID()
-            workoutExercises.add(
-                WorkoutExercise(
-                    workoutId = id,
-                    definitionId = placeholderDefinitionId,
-                    sets = listOf()
+        viewModelScope.launch {
+            currentWorkoutId?.let { id ->
+                val placeholderDefinitionId = UUID.randomUUID()
+                val defaultUnit = settingsRepository.weightUnit.first()
+                workoutExercises.add(
+                    WorkoutExercise(
+                        workoutId = id,
+                        definitionId = placeholderDefinitionId,
+                        sets = listOf(),
+                        unit = defaultUnit
+                    )
                 )
-            )
-            exerciseDefinitions.add(null)
-            Log.d(TAG, "Added new empty exercise slot to workout ID: $id")
-        } ?: Log.e(TAG, "Cannot add exercise, workoutId is null")
+                exerciseDefinitions.add(null)
+                Log.d(TAG, "Added new empty exercise slot to workout ID: $id. Unit is $defaultUnit")
+            } ?: Log.e(TAG, "Cannot add exercise, workoutId is null")
+        }
     }
 
     fun deleteExercise(exercise: WorkoutExercise) {
@@ -191,11 +198,13 @@ class WorkoutViewModel @Inject constructor(
         }
     }
 
+
     fun onExerciseUnitChange(exerciseId: UUID, newUnit: WeightUnit) {
         val index = workoutExercises.indexOfFirst { it.id == exerciseId }
         if (index != -1) {
             workoutExercises[index] = workoutExercises[index].copy(unit = newUnit)
         }
+        Log.d(TAG, "Exercise unit changed to $newUnit for exercise with ID: $exerciseId")
     }
 
     fun onFinishWorkout(onNavigateBack: () -> Unit) {
