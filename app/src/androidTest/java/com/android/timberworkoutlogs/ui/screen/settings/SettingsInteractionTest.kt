@@ -6,35 +6,22 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOn
-import androidx.compose.ui.test.hasAnyAncestor
-import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.preferencesDataStore
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.android.timberworkoutlogs.MainActivity
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.toStringResource
+import com.android.timberworkoutlogs.ui.common.sharedSetUp
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
-import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-private const val TEST_SETTINGS = "test_settings_preferences"
-
-private val Context.testDataStore: DataStore<Preferences> by preferencesDataStore(
-    name = TEST_SETTINGS
-)
 
 @HiltAndroidTest
 @RunWith(AndroidJUnit4::class)
@@ -50,17 +37,9 @@ class SettingsInteractionTest {
     val kgLabel = context.getString(WeightUnit.KG.toStringResource())
     val lbLabel = context.getString(WeightUnit.LB.toStringResource())
 
-    private lateinit var dataStore: DataStore<Preferences>
-
     @Before
     fun setUp() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        dataStore = context.testDataStore
-        runBlocking {
-            dataStore.edit { preferences ->
-                preferences.clear()
-            }
-        }
+        sharedSetUp()
     }
 
     @Test
