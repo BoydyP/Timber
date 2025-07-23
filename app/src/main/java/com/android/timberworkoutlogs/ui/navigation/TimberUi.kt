@@ -1,14 +1,14 @@
 package com.android.timberworkoutlogs.ui.navigation
 
+import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.android.timberworkoutlogs.ui.elements.MainLayout
 import com.android.timberworkoutlogs.ui.screen.HomeScreen
-import com.android.timberworkoutlogs.ui.screen.settings.SettingsScreen
-import com.android.timberworkoutlogs.ui.screen.settings.SettingsViewModel
 import com.android.timberworkoutlogs.ui.screen.StatsScreen
 import com.android.timberworkoutlogs.ui.screen.TemplatesScreen
 import com.android.timberworkoutlogs.ui.screen.exercise.CreateExerciseScreen
@@ -17,11 +17,16 @@ import com.android.timberworkoutlogs.ui.screen.exercise.ExerciseListScreen
 import com.android.timberworkoutlogs.ui.screen.exercise.ExercisesListViewModel
 import com.android.timberworkoutlogs.ui.screen.exercise.SelectExerciseScreen
 import com.android.timberworkoutlogs.ui.screen.exercise.SelectExerciseViewModel
+import com.android.timberworkoutlogs.ui.screen.settings.SettingsScreen
+import com.android.timberworkoutlogs.ui.screen.settings.SettingsViewModel
+import com.android.timberworkoutlogs.ui.screen.templates.CreateTemplateScreen
+import com.android.timberworkoutlogs.ui.screen.templates.CreateTemplateViewModel
+import com.android.timberworkoutlogs.ui.screen.templates.WorkoutTemplatesListScreen
+import com.android.timberworkoutlogs.ui.screen.templates.WorkoutTemplatesViewModel
 import com.android.timberworkoutlogs.ui.screen.workout.WorkoutHistoryScreen
 import com.android.timberworkoutlogs.ui.screen.workout.WorkoutHistoryViewModel
 import com.android.timberworkoutlogs.ui.screen.workout.WorkoutScreen
 import com.android.timberworkoutlogs.ui.screen.workout.WorkoutViewModel
-import androidx.hilt.navigation.compose.hiltViewModel
 import java.util.UUID
 
 object AppDestinations {
@@ -34,6 +39,8 @@ object AppDestinations {
     const val EXERCISES_LIST_ROUTE = "exercises_list"
     const val CREATE_EXERCISE_ROUTE = "create_exercise"
     const val SELECT_EXERCISE_ROUTE = "select_exercise"
+    const val WORKOUT_TEMPLATES_LIST_ROUTE = "workout_templates_list"
+    const val CREATE_TEMPLATE_ROUTE = "create_template"
 }
 
 @Composable
@@ -66,7 +73,14 @@ fun TimberUi() {
         homeComposable(AppDestinations.TEMPLATES_ROUTE) {
             MainLayout(navController = navController) {
                 TemplatesScreen(
-                    onNavigateToExercisesList = { navController.navigate(AppDestinations.EXERCISES_LIST_ROUTE) }
+                    onNavigateToExercisesList = { navController.navigate(AppDestinations.EXERCISES_LIST_ROUTE) },
+                    onNavigateToWorkoutTemplatesList = {
+                        Log.d(
+                            "TimberUiTemplatesLambda",
+                            "Workout click received in onNavigateToWorkoutTemplatesList"
+                        )
+                        navController.navigate(AppDestinations.WORKOUT_TEMPLATES_LIST_ROUTE)
+                    }
                 )
             }
         }
@@ -115,6 +129,49 @@ fun TimberUi() {
                 },
                 onNavigateToCreateExercise = { navController.navigate(AppDestinations.CREATE_EXERCISE_ROUTE) },
                 onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        slideComposable(AppDestinations.WORKOUT_TEMPLATES_LIST_ROUTE) {
+            val viewModel: WorkoutTemplatesViewModel = hiltViewModel()
+            Log.d("TimberUiTemplatesDestination", "Navigating to WorkoutTemplatesListScreen")
+            WorkoutTemplatesListScreen(
+                viewModel = viewModel,
+                onNavigateToCreateTemplate = { navController.navigate(AppDestinations.CREATE_TEMPLATE_ROUTE) },
+                onNavigateToEditTemplate = { templateId ->
+                    navController.navigate("${AppDestinations.CREATE_TEMPLATE_ROUTE}?templateId=$templateId")
+                },
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        slideComposable(
+            route = "${AppDestinations.CREATE_TEMPLATE_ROUTE}?templateId={templateId}",
+            arguments = listOf(navArgument("templateId") {
+                type = NavType.StringType
+                nullable = true
+            })
+        ) { backStackEntry ->
+            val viewModel: CreateTemplateViewModel = hiltViewModel()
+
+            val selectedId = backStackEntry.savedStateHandle.get<String>("selected_exercise_id")
+            val exerciseIndex = backStackEntry.savedStateHandle.get<Int>("exercise_index")
+            if (selectedId != null && exerciseIndex != null) {
+                viewModel.onExerciseSelected(exerciseIndex, UUID.fromString(selectedId))
+                backStackEntry.savedStateHandle.remove<String>("selected_exercise_id")
+                backStackEntry.savedStateHandle.remove<Int>("exercise_index")
+            }
+
+            CreateTemplateScreen(
+                viewModel = viewModel,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToSelectExercise = { index ->
+                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                        "exercise_index",
+                        index
+                    )
+                    navController.navigate(AppDestinations.SELECT_EXERCISE_ROUTE)
+                }
             )
         }
 

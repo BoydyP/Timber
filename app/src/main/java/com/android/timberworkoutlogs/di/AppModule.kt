@@ -7,6 +7,8 @@ import com.android.timberworkoutlogs.database.AppDatabase
 import com.android.timberworkoutlogs.database.ExerciseDefinitionRepository
 import com.android.timberworkoutlogs.database.SettingsRepository
 import com.android.timberworkoutlogs.database.WorkoutRepository
+import com.android.timberworkoutlogs.database.WorkoutTemplateDao
+import com.android.timberworkoutlogs.database.WorkoutTemplateRepository
 import com.android.timberworkoutlogs.database.dataStore
 import dagger.Module
 import dagger.Provides
@@ -23,6 +25,21 @@ object AppModule {
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
         return AppDatabase.getDatabase(context)
+    }
+
+    @Provides
+    fun provideWorkoutTemplateDao(db: AppDatabase): WorkoutTemplateDao {
+        return db.workoutTemplateDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideWorkoutTemplateRepository(db: AppDatabase): WorkoutTemplateRepository {
+        return WorkoutTemplateRepository(
+            db.workoutTemplateDao(),
+            db.workoutDao(),
+            db.workoutExerciseDao(),
+        )
     }
 
     @Provides

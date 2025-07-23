@@ -1,0 +1,24 @@
+package com.android.timberworkoutlogs.ui.screen.templates
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.android.timberworkoutlogs.database.WorkoutTemplateRepository
+import com.android.timberworkoutlogs.models.WorkoutTemplate
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+import javax.inject.Inject
+
+@HiltViewModel
+class WorkoutTemplatesViewModel @Inject constructor(
+    workoutTemplateRepository: WorkoutTemplateRepository
+) : ViewModel() {
+
+    val templates: StateFlow<List<WorkoutTemplate>> = workoutTemplateRepository.getAllTemplates()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+}
