@@ -44,6 +44,9 @@ class WorkoutTemplateRepository(
         workoutTemplateDao.deleteExercisesForTemplate(templateId)
     }
 
+    suspend fun deleteTemplate(template: WorkoutTemplate) {
+        workoutTemplateDao.deleteTemplate(template)
+    }
 
     /**
      * Creates a new Workout and its associated WorkoutExercises from a given template.
@@ -71,7 +74,6 @@ class WorkoutTemplateRepository(
                         is RepsOnlySet -> set.copy(isDone = false)
                         is TimedSet -> set.copy(isDone = false)
                         is DistanceAndTimeSet -> set.copy(isDone = false)
-                        else -> set // Should not happen
                     }
                 }
             )

@@ -8,11 +8,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class WorkoutTemplatesViewModel @Inject constructor(
-    workoutTemplateRepository: WorkoutTemplateRepository
+    private val workoutTemplateRepository: WorkoutTemplateRepository
 ) : ViewModel() {
 
     val templates: StateFlow<List<WorkoutTemplate>> = workoutTemplateRepository.getAllTemplates()
@@ -21,4 +22,10 @@ class WorkoutTemplatesViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    fun deleteTemplate(template: WorkoutTemplate) {
+        viewModelScope.launch {
+            workoutTemplateRepository.deleteTemplate(template)
+        }
+    }
 }

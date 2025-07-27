@@ -25,14 +25,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.android.timberworkoutlogs.models.WorkoutTemplate
+import com.android.timberworkoutlogs.ui.common.SwipeToDeleteContainer
 import com.android.timberworkoutlogs.ui.elements.ContextualScaffold
-import java.util.UUID
 
 @Composable
 fun WorkoutTemplatesListScreen(
     viewModel: WorkoutTemplatesViewModel,
     onNavigateToCreateTemplate: () -> Unit,
-    onNavigateToEditTemplate: (UUID) -> Unit,
     onNavigateBack: () -> Unit
 ) {
     val templates by viewModel.templates.collectAsState()
@@ -67,15 +66,22 @@ fun WorkoutTemplatesListScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(templates, key = { it.id }) { template ->
-                    WorkoutTemplateCard(
-                        template = template,
-                        modifier = Modifier.clickable {
-                            // The model uses Long for ID, but UUID is better for navigation safety
-                            // This will need to be reconciled in the Create/Edit screen's ViewModel
-                            // For now, we don't have a UUID on the template model.
-                            // onNavigateToEditTemplate(template.id)
+                    SwipeToDeleteContainer(
+                        item = template,
+                        onDismiss = {
+                            viewModel.deleteTemplate(it)
                         }
-                    )
+                    ) {
+                        WorkoutTemplateCard(
+                            template = template,
+                            modifier = Modifier.clickable {
+                                // The model uses Long for ID, but UUID is better for navigation safety
+                                // This will need to be reconciled in the Create/Edit screen's ViewModel
+                                // For now, we don't have a UUID on the template model.
+                                // onNavigateToEditTemplate(template.id)
+                            }
+                        )
+                    }
                 }
             }
         }

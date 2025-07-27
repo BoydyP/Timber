@@ -20,7 +20,7 @@ import com.android.timberworkoutlogs.ui.screen.exercise.SelectExerciseViewModel
 import com.android.timberworkoutlogs.ui.screen.settings.SettingsScreen
 import com.android.timberworkoutlogs.ui.screen.settings.SettingsViewModel
 import com.android.timberworkoutlogs.ui.screen.templates.CreateTemplateScreen
-import com.android.timberworkoutlogs.ui.screen.templates.CreateTemplateViewModel
+import com.android.timberworkoutlogs.ui.screen.templates.CreateWorkoutTemplateViewModel
 import com.android.timberworkoutlogs.ui.screen.templates.WorkoutTemplatesListScreen
 import com.android.timberworkoutlogs.ui.screen.templates.WorkoutTemplatesViewModel
 import com.android.timberworkoutlogs.ui.screen.workout.WorkoutHistoryScreen
@@ -138,9 +138,6 @@ fun TimberUi() {
             WorkoutTemplatesListScreen(
                 viewModel = viewModel,
                 onNavigateToCreateTemplate = { navController.navigate(AppDestinations.CREATE_TEMPLATE_ROUTE) },
-                onNavigateToEditTemplate = { templateId ->
-                    navController.navigate("${AppDestinations.CREATE_TEMPLATE_ROUTE}?templateId=$templateId")
-                },
                 onNavigateBack = { navController.popBackStack() }
             )
         }
@@ -152,7 +149,7 @@ fun TimberUi() {
                 nullable = true
             })
         ) { backStackEntry ->
-            val viewModel: CreateTemplateViewModel = hiltViewModel()
+            val viewModel: CreateWorkoutTemplateViewModel = hiltViewModel()
 
             val selectedId = backStackEntry.savedStateHandle.get<String>("selected_exercise_id")
             val exerciseIndex = backStackEntry.savedStateHandle.get<Int>("exercise_index")
