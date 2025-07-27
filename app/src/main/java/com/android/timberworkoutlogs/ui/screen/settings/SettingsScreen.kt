@@ -1,9 +1,9 @@
 package com.android.timberworkoutlogs.ui.screen.settings
 
+import android.os.Build
 import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -19,6 +19,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel
 ) {
     val selectedUnit by viewModel.weightUnit.collectAsState()
+    val useDynamicTheme by viewModel.dynamicTheme.collectAsState()
 
     Column(
         modifier = Modifier
@@ -36,12 +37,11 @@ fun SettingsScreen(
                     Log.d("SettingsScreen", "Weight unit updated to $it")
                 }
             )
-            // Future settings like "Theme (Light/Dark/System)" can go here
+            DynamicThemeSetting(
+                useDynamicTheme = useDynamicTheme,
+                onDynamicThemeChanged = { viewModel.updateDynamicTheme(it) }
+            )
         }
-
-//        SettingGroup(title = "Workout") {
-//            // Future settings like "Default Rest Timer" can go here
-//        }
     }
 }
 
@@ -52,7 +52,7 @@ private fun SettingGroup(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+        HorizontalDivider()
         Spacer(modifier = Modifier.height(8.dp))
         content()
     }
@@ -80,6 +80,28 @@ private fun WeightUnitSetting(
                 selected = selectedUnit == WeightUnit.LB,
                 onClick = { onUnitSelected(WeightUnit.LB) },
                 label = { Text("LB") }
+            )
+        }
+    }
+}
+
+@Composable
+private fun DynamicThemeSetting(
+    useDynamicTheme: Boolean,
+    onDynamicThemeChanged: (Boolean) -> Unit
+) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("Use Dynamic Theme", style = MaterialTheme.typography.bodyLarge)
+            Switch(
+                checked = useDynamicTheme,
+                onCheckedChange = onDynamicThemeChanged
             )
         }
     }

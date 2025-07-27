@@ -3,6 +3,7 @@ package com.android.timberworkoutlogs.database
 import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.android.timberworkoutlogs.models.WeightUnit
@@ -21,10 +22,14 @@ class SettingsRepository(
 
     private object PreferencesKeys {
         val WEIGHT_UNIT = stringPreferencesKey("weight_unit")
+        val DYNAMIC_THEME = booleanPreferencesKey("dynamic_theme")
     }
 
     private val _weightUnit = MutableStateFlow(WeightUnit.KG)
     val weightUnit: StateFlow<WeightUnit> = _weightUnit.asStateFlow()
+
+    private val _dynamicTheme = MutableStateFlow(false)
+    val dynamicTheme: StateFlow<Boolean> = _dynamicTheme.asStateFlow()
 
     private val repositoryScope = CoroutineScope(Dispatchers.IO)
 
@@ -35,6 +40,11 @@ class SettingsRepository(
                 WeightUnit.valueOf(unitName)
             }.first()
             _weightUnit.value = initialUnit
+
+            val initialDynamicTheme = dataStore.data.map { preferences ->
+                preferences[PreferencesKeys.DYNAMIC_THEME] ?: false
+            }.first()
+            _dynamicTheme.value = initialDynamicTheme
         }
     }
 
@@ -43,6 +53,14 @@ class SettingsRepository(
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.WEIGHT_UNIT] = unit.name
             Log.d("SettingsRepository", "Weight unit updated to $unit")
+        }
+    }
+
+    suspend fun setDynamicTheme(enabled: Boolean) {
+        _dynamicTheme.value = enabled
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.DYNAMIC_THEME] = enabled
+            Log.d("SettingsRepository", "Dynamic theme updated to $enabled")
         }
     }
 }

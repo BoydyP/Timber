@@ -29,13 +29,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.android.timberworkoutlogs.models.ExerciseEquipment
 import com.android.timberworkoutlogs.models.LogType
 import com.android.timberworkoutlogs.models.MuscleGroup
 import com.android.timberworkoutlogs.ui.elements.ContextualScaffold
-import com.android.timberworkoutlogs.ui.theme.TimberOrange
 import com.android.timberworkoutlogs.util.capitaliseEnum
 import com.android.timberworkoutlogs.util.spaceSeparateEnum
 
@@ -85,8 +83,8 @@ fun CreateExerciseScreen(
                 enabled = uiState.name.isNotBlank() && uiState.muscleGroups.isNotEmpty() && !uiState.isSaving,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = TimberOrange,
-                    contentColor = Color.Black
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) {
                 if (uiState.isSaving) {

@@ -1,7 +1,9 @@
 package com.android.timberworkoutlogs.ui.theme
 import androidx.compose.ui.graphics.Color
 
-val primaryLight = Color(0xFF815512)
+val TimberOrange = Color(0xfff0aa49)
+
+val primaryLight = TimberOrange
 val onPrimaryLight = Color(0xFFFFFFFF)
 val primaryContainerLight = Color(0xFFFFDDB6)
 val onPrimaryContainerLight = Color(0xFF643F00)
@@ -109,7 +111,7 @@ val surfaceContainerHighestLight = Color(0xFFEDE0D4)
 //val surfaceContainerHighLightHighContrast = Color(0xFFDFD2C7)
 //val surfaceContainerHighestLightHighContrast = Color(0xFFD1C4B9)
 
-val primaryDark = Color(0xFFF7BC70)
+val primaryDark = TimberOrange
 val onPrimaryDark = Color(0xFF462A00)
 val primaryContainerDark = Color(0xFF643F00)
 val onPrimaryContainerDark = Color(0xFFFFDDB6)
@@ -225,7 +227,6 @@ val successDark = Color(0xff30A31C)
 val onSuccessDark = Color(0xFF0C3900)
 val successContainerDark = Color(0xFF195201)
 val onSuccessContainerDark = Color(0xFFB1F394)
-val TimberOrange = Color(0xfff0aa49)
 
 
 

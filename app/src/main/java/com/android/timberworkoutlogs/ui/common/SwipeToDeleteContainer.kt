@@ -89,7 +89,7 @@ fun <T> SwipeToDeleteContainer(
         backgroundContent = {
             val isSwiping = dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart
             val color by animateColorAsState(
-                if (isSwiping) Color.Red.copy(alpha = 0.8f) else Color.Transparent,
+                if (isSwiping) MaterialTheme.colorScheme.error.copy(alpha = 0.8f) else Color.Transparent,
                 label = "background color"
             )
             val scale by animateFloatAsState(
@@ -108,7 +108,7 @@ fun <T> SwipeToDeleteContainer(
                     Icons.Default.Delete,
                     contentDescription = "Delete Icon",
                     modifier = Modifier.scale(scale),
-                    tint = Color.White
+                    tint = MaterialTheme.colorScheme.onError
                 )
             }
         }

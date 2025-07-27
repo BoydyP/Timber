@@ -1,4 +1,5 @@
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -14,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.android.timberworkoutlogs.R
+import com.android.timberworkoutlogs.ui.theme.TimberOrange
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -21,8 +23,6 @@ fun TimberTopAppBar(
     modifier: Modifier = Modifier,
     onIconClick: () -> Unit
 ) {
-    val timberBackgroundColor = Color(0xFFf0aa49)
-
     TopAppBar(
         title = { Text("Timber", style = MaterialTheme.typography.headlineSmall) },
         actions = {
@@ -37,9 +37,9 @@ fun TimberTopAppBar(
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = timberBackgroundColor,
-            titleContentColor = Color.Black,
-            actionIconContentColor = Color.Black
+            containerColor = TimberOrange,
+            titleContentColor = if (isSystemInDarkTheme()) Color.White else Color.Black,
+            actionIconContentColor = MaterialTheme.colorScheme.onPrimary
         ),
         modifier = modifier
     )
