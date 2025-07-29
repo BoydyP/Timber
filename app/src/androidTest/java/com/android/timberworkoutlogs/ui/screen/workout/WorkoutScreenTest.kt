@@ -73,14 +73,17 @@ class WorkoutScreenTest {
         composeTestRule.onNodeWithText("Reps").performTextInput(sets.toString())
         composeTestRule.onNodeWithTag("checkbox_1").performClick()
 
+        composeTestRule.waitForIdle()
         // The Finish button should now be enabled
         composeTestRule.onNodeWithText("Complete workout").assertIsEnabled()
         composeTestRule.onNodeWithText("Complete workout").performClick()
 
+        composeTestRule.waitForIdle()
         // Seeks confirmation
         composeTestRule.onNodeWithText("Are you sure?").assertIsDisplayed()
         composeTestRule.onNodeWithText("Are you sure?").performClick()
 
+        composeTestRule.waitForIdle()
         // Visible in history?
         composeTestRule.onNodeWithText("History").performClick()
         composeTestRule.onNodeWithText("$liftedStr kg").assertIsDisplayed()

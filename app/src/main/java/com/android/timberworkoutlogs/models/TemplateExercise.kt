@@ -28,6 +28,5 @@ data class TemplateExercise(
     @field:PrimaryKey val id: UUID = UUID.randomUUID(),
     val templateId: Long,
     val definitionId: UUID,
-    val unit: WeightUnit = WeightUnit.KG,
     val sets: List<ExerciseSet> = listOf()
 )

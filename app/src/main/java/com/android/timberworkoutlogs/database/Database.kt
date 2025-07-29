@@ -27,7 +27,7 @@ import com.android.timberworkoutlogs.models.WorkoutTemplate
         WorkoutTemplate::class,
         TemplateExercise::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(
@@ -78,6 +78,34 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Create a new table with the desired schema
+                db.execSQL(
+                    """
+                    CREATE TABLE `template_exercises_new` (
+                        `id` TEXT NOT NULL PRIMARY KEY,
+                        `templateId` INTEGER NOT NULL,
+                        `definitionId` TEXT NOT NULL,
+                        `sets` TEXT NOT NULL,
+                        FOREIGN KEY(`templateId`) REFERENCES `workout_templates`(`id`) ON DELETE CASCADE,
+                        FOREIGN KEY(`definitionId`) REFERENCES `exercise_definitions`(`id`) ON DELETE CASCADE
+                    )
+                """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    INSERT INTO `template_exercises_new` (id, templateId, definitionId, sets)
+                    SELECT id, templateId, definitionId, sets FROM `template_exercises`
+                """.trimIndent()
+                )
+                db.execSQL("DROP TABLE `template_exercises`")
+                db.execSQL("ALTER TABLE `template_exercises_new` RENAME TO `template_exercises`")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_template_exercises_templateId` ON `template_exercises` (`templateId`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_template_exercises_definitionId` ON `template_exercises` (`definitionId`)")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -86,7 +114,7 @@ abstract class AppDatabase : RoomDatabase() {
                     "timber_database.db"
                 )
                     .createFromAsset("database/timber_database.db")
-                    .addMigrations(MIGRATION_2_3)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
                     .build()
                 INSTANCE = instance
                 instance

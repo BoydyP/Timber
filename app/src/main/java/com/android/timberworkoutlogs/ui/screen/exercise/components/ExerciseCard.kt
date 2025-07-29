@@ -47,6 +47,7 @@ import com.android.timberworkoutlogs.util.getIconForEquipment
 fun ExerciseInputCard(
     exerciseDefinition: ExerciseDefinition?,
     workoutExercise: WorkoutExercise,
+    unit: WeightUnit,
     onAddSet: () -> Unit,
     onDeleteSet: (ExerciseSet) -> Unit,
     onSetChanged: (setIndex: Int, updatedSet: ExerciseSet) -> Unit,
@@ -225,6 +226,7 @@ fun ExerciseInputCardPreview() {
             onDeleteSet = {},
             onSetChanged = { _, _ -> },
             onExerciseUnitChange = {},
+            unit = WeightUnit.KG,
             onNavigateToSelectExercise = {})
     }
 }

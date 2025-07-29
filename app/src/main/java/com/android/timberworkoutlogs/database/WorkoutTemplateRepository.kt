@@ -66,7 +66,6 @@ class WorkoutTemplateRepository(
             WorkoutExercise(
                 workoutId = newWorkoutId,
                 definitionId = templateExercise.definitionId,
-                unit = templateExercise.unit,
                 // 4. Reset the 'isDone' flag for each set.
                 sets = templateExercise.sets.map { set ->
                     when (set) {

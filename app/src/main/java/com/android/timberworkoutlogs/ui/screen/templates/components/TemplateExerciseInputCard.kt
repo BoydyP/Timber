@@ -31,6 +31,7 @@ import com.android.timberworkoutlogs.models.RepsOnlySet
 import com.android.timberworkoutlogs.models.TemplateExercise
 import com.android.timberworkoutlogs.models.TimedSet
 import com.android.timberworkoutlogs.models.WeightAndRepsSet
+import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.ui.common.SwipeToDeleteContainer
 import com.android.timberworkoutlogs.ui.screen.exercise.components.DistanceAndTimeInputRow
 import com.android.timberworkoutlogs.ui.screen.exercise.components.RepsOnlyInputRow
@@ -42,6 +43,7 @@ import com.android.timberworkoutlogs.util.getIconForEquipment
 fun TemplateExerciseInputCard(
     exerciseDefinition: ExerciseDefinition?,
     templateExercise: TemplateExercise,
+    weightUnit: WeightUnit,
     onAddSet: () -> Unit,
     onDeleteSet: (ExerciseSet) -> Unit,
     onSetChanged: (setIndex: Int, updatedSet: ExerciseSet) -> Unit,
@@ -96,7 +98,7 @@ fun TemplateExerciseInputCard(
                             is WeightAndRepsSet -> WeightAndRepsInputRow(
                                 setNumber = index + 1,
                                 workoutSet = set,
-                                unit = templateExercise.unit,
+                                unit = weightUnit,
                                 onWeightChange = { newWeight ->
                                     onSetChanged(index, set.copy(weight = newWeight))
                                 },
@@ -105,7 +107,8 @@ fun TemplateExerciseInputCard(
                                 },
                                 onDoneChange = { isDone ->
                                     onSetChanged(index, set.copy(isDone = isDone))
-                                }
+                                },
+                                showIsDoneCheckbox = false
                             )
 
                             is RepsOnlySet -> RepsOnlyInputRow(
@@ -116,7 +119,8 @@ fun TemplateExerciseInputCard(
                                 },
                                 onDoneChange = { isDone ->
                                     onSetChanged(index, set.copy(isDone = isDone))
-                                }
+                                },
+                                showIsDoneCheckbox = false
                             )
 
                             is TimedSet -> TimedInputRow(
@@ -127,7 +131,8 @@ fun TemplateExerciseInputCard(
                                 },
                                 onDoneChange = { isDone ->
                                     onSetChanged(index, set.copy(isDone = isDone))
-                                }
+                                },
+                                showIsDoneCheckbox = false
                             )
 
                             is DistanceAndTimeSet -> DistanceAndTimeInputRow(
@@ -141,7 +146,8 @@ fun TemplateExerciseInputCard(
                                 },
                                 onDoneChange = { isDone ->
                                     onSetChanged(index, set.copy(isDone = isDone))
-                                }
+                                },
+                                showIsDoneCheckbox = false
                             )
                         }
                     }

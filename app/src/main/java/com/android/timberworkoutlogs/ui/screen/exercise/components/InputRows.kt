@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -25,6 +26,7 @@ import com.android.timberworkoutlogs.models.RepsOnlySet
 import com.android.timberworkoutlogs.models.TimedSet
 import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.WeightUnit
+import com.android.timberworkoutlogs.models.toStringResource
 
 @Composable
 fun WeightAndRepsInputRow(
@@ -33,7 +35,8 @@ fun WeightAndRepsInputRow(
     unit: WeightUnit,
     onWeightChange: (Double) -> Unit,
     onRepsChange: (Int) -> Unit,
-    onDoneChange: (Boolean) -> Unit
+    onDoneChange: (Boolean) -> Unit,
+    showIsDoneCheckbox: Boolean = true
 ) {
     var weightText by remember(workoutSet) { mutableStateOf(if (workoutSet.weight == 0.0) "" else workoutSet.weight.toString()) }
     var repsText by remember(workoutSet) { mutableStateOf(if (workoutSet.reps == 0) "" else workoutSet.reps.toString()) }
@@ -57,11 +60,10 @@ fun WeightAndRepsInputRow(
                     onWeightChange(newText.toDoubleOrNull() ?: 0.0)
                 }
             },
-            label = { Text("Weight") },
+            label = { Text("Weight (${stringResource(id = unit.toStringResource())})") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             modifier = Modifier.weight(1f),
-            singleLine = true,
-            suffix = { Text(unit.name) }
+            singleLine = true
         )
         OutlinedTextField(
             value = repsText,
@@ -76,13 +78,15 @@ fun WeightAndRepsInputRow(
             modifier = Modifier.weight(1f),
             singleLine = true
         )
-        Checkbox(
-            checked = workoutSet.isDone,
-            onCheckedChange = onDoneChange,
-            modifier = Modifier
-                .padding(start = 8.dp)
-                .testTag("checkbox_$setNumber")
-        )
+        if (showIsDoneCheckbox) {
+            Checkbox(
+                checked = workoutSet.isDone,
+                onCheckedChange = onDoneChange,
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .testTag("checkbox_$setNumber")
+            )
+        }
     }
 }
 
@@ -91,7 +95,8 @@ fun RepsOnlyInputRow(
     setNumber: Int,
     workoutSet: RepsOnlySet,
     onRepsChange: (Int) -> Unit,
-    onDoneChange: (Boolean) -> Unit
+    onDoneChange: (Boolean) -> Unit,
+    showIsDoneCheckbox: Boolean = true
 ) {
     var repsText by remember(workoutSet) { mutableStateOf(if (workoutSet.reps == 0) "" else workoutSet.reps.toString()) }
 
@@ -118,11 +123,13 @@ fun RepsOnlyInputRow(
             modifier = Modifier.weight(1f),
             singleLine = true
         )
-        Checkbox(
-            checked = workoutSet.isDone,
-            onCheckedChange = onDoneChange,
-            modifier = Modifier.padding(start = 8.dp)
-        )
+        if (showIsDoneCheckbox) {
+            Checkbox(
+                checked = workoutSet.isDone,
+                onCheckedChange = onDoneChange,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+        }
     }
 }
 
@@ -131,7 +138,8 @@ fun TimedInputRow(
     setNumber: Int,
     workoutSet: TimedSet,
     onDurationChange: (Int) -> Unit,
-    onDoneChange: (Boolean) -> Unit
+    onDoneChange: (Boolean) -> Unit,
+    showIsDoneCheckbox: Boolean = true
 ) {
     var durationText by remember(workoutSet) { mutableStateOf(if (workoutSet.durationSeconds == 0) "" else workoutSet.durationSeconds.toString()) }
 
@@ -159,11 +167,13 @@ fun TimedInputRow(
             singleLine = true,
             suffix = { Text("sec") }
         )
-        Checkbox(
-            checked = workoutSet.isDone,
-            onCheckedChange = onDoneChange,
-            modifier = Modifier.padding(start = 8.dp)
-        )
+        if (showIsDoneCheckbox) {
+            Checkbox(
+                checked = workoutSet.isDone,
+                onCheckedChange = onDoneChange,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+        }
     }
 }
 
@@ -173,7 +183,8 @@ fun DistanceAndTimeInputRow(
     workoutSet: DistanceAndTimeSet,
     onDistanceChange: (Double) -> Unit,
     onDurationChange: (Int) -> Unit,
-    onDoneChange: (Boolean) -> Unit
+    onDoneChange: (Boolean) -> Unit,
+    showIsDoneCheckbox: Boolean = true
 ) {
     var distanceText by remember(workoutSet) { mutableStateOf(if (workoutSet.distance == 0.0) "" else workoutSet.distance.toString()) }
     var durationText by remember(workoutSet) { mutableStateOf(if (workoutSet.durationSeconds == 0) "" else workoutSet.durationSeconds.toString()) }
@@ -216,10 +227,12 @@ fun DistanceAndTimeInputRow(
             singleLine = true,
             suffix = { Text("sec") }
         )
-        Checkbox(
-            checked = workoutSet.isDone,
-            onCheckedChange = onDoneChange,
-            modifier = Modifier.padding(start = 8.dp)
-        )
+        if (showIsDoneCheckbox) {
+            Checkbox(
+                checked = workoutSet.isDone,
+                onCheckedChange = onDoneChange,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+        }
     }
 }

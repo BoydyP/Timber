@@ -4,9 +4,17 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.timberworkoutlogs.database.ExerciseDefinitionRepository
+import com.android.timberworkoutlogs.database.SettingsRepository
 import com.android.timberworkoutlogs.database.WorkoutTemplateRepository
+import com.android.timberworkoutlogs.models.DistanceAndTimeSet
 import com.android.timberworkoutlogs.models.ExerciseDefinition
+import com.android.timberworkoutlogs.models.ExerciseSet
+import com.android.timberworkoutlogs.models.LogType
+import com.android.timberworkoutlogs.models.RepsOnlySet
 import com.android.timberworkoutlogs.models.TemplateExercise
+import com.android.timberworkoutlogs.models.TimedSet
+import com.android.timberworkoutlogs.models.WeightAndRepsSet
+import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.WorkoutTemplate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,13 +30,15 @@ data class CreateWorkoutTemplateUiState(
     val exerciseDefinitions: Map<UUID, ExerciseDefinition> = emptyMap(),
     val isSaving: Boolean = false,
     val isEditing: Boolean = false,
-    val templateId: Long? = null
+    val templateId: Long? = null,
+    val weightUnit: WeightUnit = WeightUnit.KG
 )
 
 @HiltViewModel
 class CreateWorkoutTemplateViewModel @Inject constructor(
     private val workoutTemplateRepository: WorkoutTemplateRepository,
     private val exerciseDefinitionRepository: ExerciseDefinitionRepository,
+    private val settingsRepository: SettingsRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -41,6 +51,12 @@ class CreateWorkoutTemplateViewModel @Inject constructor(
         if (templateId != null) {
             _uiState.update { it.copy(templateId = templateId, isEditing = true) }
             loadTemplate(templateId)
+        }
+
+        viewModelScope.launch {
+            settingsRepository.weightUnit.collect { unit ->
+                _uiState.update { it.copy(weightUnit = unit) }
+            }
         }
     }
 
@@ -88,10 +104,59 @@ class CreateWorkoutTemplateViewModel @Inject constructor(
     fun addExercise() {
         val newExercise = TemplateExercise(
             templateId = templateId ?: 0L, // Temp ID, will be updated on save
-            definitionId = PLACEHOLDER_DEFINITION_ID,
-            sets = emptyList()
+            definitionId = PLACEHOLDER_DEFINITION_ID
         )
         _uiState.update { it.copy(templateExercises = it.templateExercises + newExercise) }
+    }
+
+    fun removeExercise(exerciseIndex: Int) {
+        _uiState.update {
+            val exercises = it.templateExercises.toMutableList()
+            exercises.removeAt(exerciseIndex)
+            it.copy(templateExercises = exercises)
+        }
+    }
+
+    fun onAddSet(exerciseIndex: Int) {
+        _uiState.update {
+            val exercise = it.templateExercises[exerciseIndex]
+            val definition = it.exerciseDefinitions[exercise.definitionId]
+            val newSet = when (definition?.logType) {
+                LogType.WEIGHT_AND_REPS -> WeightAndRepsSet()
+                LogType.REPS_ONLY -> RepsOnlySet()
+                LogType.TIME -> TimedSet()
+                LogType.DISTANCE_AND_TIME -> DistanceAndTimeSet()
+                null -> WeightAndRepsSet() // Default for placeholder
+            }
+
+            val newExercises = it.templateExercises.toMutableList()
+            val newSets = exercise.sets.toMutableList()
+            newSets.add(newSet)
+            newExercises[exerciseIndex] = exercise.copy(sets = newSets)
+            it.copy(templateExercises = newExercises)
+        }
+    }
+
+    fun onDeleteSet(exerciseIndex: Int, setIndex: Int) {
+        _uiState.update {
+            val newExercises = it.templateExercises.toMutableList()
+            val exercise = newExercises[exerciseIndex]
+            val newSets = exercise.sets.toMutableList()
+            newSets.removeAt(setIndex)
+            newExercises[exerciseIndex] = exercise.copy(sets = newSets)
+            it.copy(templateExercises = newExercises)
+        }
+    }
+
+    fun onSetChanged(exerciseIndex: Int, setIndex: Int, newSet: ExerciseSet) {
+        _uiState.update {
+            val newExercises = it.templateExercises.toMutableList()
+            val exercise = newExercises[exerciseIndex]
+            val newSets = exercise.sets.toMutableList()
+            newSets[setIndex] = newSet
+            newExercises[exerciseIndex] = exercise.copy(sets = newSets)
+            it.copy(templateExercises = newExercises)
+        }
     }
 
     fun saveTemplate(onSuccess: () -> Unit) {
@@ -120,6 +185,17 @@ class CreateWorkoutTemplateViewModel @Inject constructor(
                 workoutTemplateRepository.upsertTemplateExercises(exercisesToSave)
             }
             onSuccess()
+        }
+    }
+
+    fun deleteTemplate() {
+        viewModelScope.launch {
+            val currentState = _uiState.value
+            if (currentState.templateId != null) {
+                val template =
+                    WorkoutTemplate(id = currentState.templateId, name = currentState.name)
+                workoutTemplateRepository.deleteTemplate(template)
+            }
         }
     }
 

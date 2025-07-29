@@ -22,12 +22,16 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.android.timberworkoutlogs.models.ExerciseSet
+import com.android.timberworkoutlogs.ui.common.SwipeToDeleteContainer
 import com.android.timberworkoutlogs.ui.elements.ContextualScaffold
 import com.android.timberworkoutlogs.ui.screen.templates.components.TemplateExerciseInputCard
+import com.android.timberworkoutlogs.ui.theme.TimberOrange
 
 @Composable
 fun CreateTemplateScreen(
-    viewModel: CreateWorkoutTemplateViewModel,
+    viewModel: CreateWorkoutTemplateViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit,
     onNavigateToSelectExercise: (exerciseIndex: Int) -> Unit
 ) {
@@ -41,7 +45,8 @@ fun CreateTemplateScreen(
         Column(modifier = Modifier.padding(innerPadding)) {
             LazyColumn(
                 contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.weight(1f)
             ) {
                 item {
                     OutlinedTextField(
@@ -54,35 +59,58 @@ fun CreateTemplateScreen(
                 }
                 itemsIndexed(uiState.templateExercises) { index, exercise ->
                     val definition = uiState.exerciseDefinitions[exercise.definitionId]
-                    TemplateExerciseInputCard(
-                        exerciseDefinition = definition,
-                        templateExercise = exercise,
-                        onAddSet = { /*TODO*/ },
-                        onDeleteSet = { /*TODO*/ },
-                        onSetChanged = { _, _ -> /*TODO*/ },
-                        onNavigateToSelectExercise = { onNavigateToSelectExercise(index) }
-                    )
+                    SwipeToDeleteContainer(
+                        item = exercise,
+                        onDismiss = { viewModel.removeExercise(index) }
+                    ) {
+                        TemplateExerciseInputCard(
+                            exerciseDefinition = definition,
+                            templateExercise = exercise,
+                            weightUnit = uiState.weightUnit,
+                            onAddSet = { viewModel.onAddSet(index) },
+                            onDeleteSet = { setToDelete: ExerciseSet ->
+                                val setIndex = exercise.sets.indexOf(setToDelete)
+                                if (setIndex != -1) {
+                                    viewModel.onDeleteSet(index, setIndex)
+                                }
+                            },
+                            onSetChanged = { setIndex, newSet ->
+                                viewModel.onSetChanged(
+                                    index,
+                                    setIndex,
+                                    newSet
+                                )
+                            },
+                            onNavigateToSelectExercise = { onNavigateToSelectExercise(index) }
+                        )
+                    }
                 }
                 item {
-                    Button(onClick = { viewModel.addExercise() }) {
+                    Button(onClick = {
+                        val newExerciseIndex = uiState.templateExercises.size
+                        viewModel.addExercise()
+                        viewModel.onAddSet(newExerciseIndex)
+                    }) {
                         Icon(Icons.Filled.Add, contentDescription = "Add Exercise")
                         Text("Add Exercise")
                     }
                 }
-            }
-            Button(
-                onClick = { viewModel.saveTemplate(onSuccess = onNavigateBack) },
-                enabled = uiState.name.isNotBlank() && !uiState.isSaving && uiState.templateExercises.isNotEmpty(),
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            ) {
-                if (uiState.isSaving) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                } else {
-                    Text("Save Template")
+                item {
+                    Button(
+                        onClick = { viewModel.saveTemplate(onSuccess = onNavigateBack) },
+                        enabled = uiState.name.isNotBlank() && !uiState.isSaving && uiState.templateExercises.isNotEmpty(),
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = TimberOrange,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    ) {
+                        if (uiState.isSaving) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        } else {
+                            Text("Save Template")
+                        }
+                    }
                 }
             }
         }

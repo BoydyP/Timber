@@ -124,6 +124,7 @@ private fun WorkoutExerciseList(
                             newUnit
                         )
                     },
+                    unit = workoutExercise.unit,
                     onNavigateToSelectExercise = { onNavigateToSelectExercise(index) }
                 )
             }
