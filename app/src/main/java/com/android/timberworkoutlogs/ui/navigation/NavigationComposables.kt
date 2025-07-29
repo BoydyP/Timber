@@ -19,7 +19,6 @@ private val mainScreenRoutes = setOf(
     AppDestinations.HISTORY_ROUTE,
     AppDestinations.TEMPLATES_ROUTE,
     AppDestinations.SETTINGS_ROUTE,
-    AppDestinations.WORKOUT_ROUTE
 )
 
 fun NavGraphBuilder.homeComposable(
@@ -40,14 +39,20 @@ fun NavGraphBuilder.homeComposable(
             }
         },
         exitTransition = {
-            if (targetState.destination.route in mainScreenRoutes) {
+            if (targetState.destination.route in mainScreenRoutes || targetState.destination.route?.startsWith(
+                    AppDestinations.WORKOUT_ROUTE
+                ) == true
+            ) {
                 ExitTransition.None
             } else {
                 slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300))
             }
         },
         popEnterTransition = {
-            if (initialState.destination.route in mainScreenRoutes) {
+            if (initialState.destination.route in mainScreenRoutes || initialState.destination.route?.startsWith(
+                    AppDestinations.WORKOUT_ROUTE
+                ) == true
+            ) {
                 EnterTransition.None
             } else {
                 slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300))
@@ -114,28 +119,58 @@ fun NavGraphBuilder.workoutComposable(
         arguments = arguments,
         deepLinks = deepLinks,
         enterTransition = {
-            slideIntoContainer(
-                AnimatedContentTransitionScope.SlideDirection.Up,
-                tween(300)
-            )
+            if (initialState.destination.route?.startsWith(AppDestinations.SELECT_EXERCISE_ROUTE) == true) {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    tween(300)
+                )
+            } else {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Up,
+                    tween(300)
+                )
+            }
         },
         exitTransition = {
-            slideOutOfContainer(
-                AnimatedContentTransitionScope.SlideDirection.Down,
-                tween(300)
-            )
+            if (targetState.destination.route in mainScreenRoutes) {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Down,
+                    tween(300)
+                )
+            } else {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    tween(300)
+                )
+            }
         },
         popEnterTransition = {
-            slideIntoContainer(
-                AnimatedContentTransitionScope.SlideDirection.Up,
-                tween(300)
-            )
+            if (initialState.destination.route in mainScreenRoutes) {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Up,
+                    tween(300)
+                )
+            } else if (initialState.destination.route?.startsWith(AppDestinations.SELECT_EXERCISE_ROUTE) == true) {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    tween(300)
+                )
+            } else {
+                EnterTransition.None
+            }
         },
         popExitTransition = {
-            slideOutOfContainer(
-                AnimatedContentTransitionScope.SlideDirection.Down,
-                tween(300)
-            )
+            if (targetState.destination.route in mainScreenRoutes) {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Down,
+                    tween(300)
+                )
+            } else {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    tween(300)
+                )
+            }
         },
         content = content
     )
