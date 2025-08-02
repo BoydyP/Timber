@@ -156,18 +156,21 @@ class WorkoutViewModel @Inject constructor(
     fun onAddSet(exerciseId: UUID) {
         val exerciseIndex = workoutExercises.indexOfFirst { it.id == exerciseId }
         if (exerciseIndex == -1) return
-
         val definition = exerciseDefinitions.getOrNull(exerciseIndex)
         if (definition == null) {
             Log.e(TAG, "Cannot add set, ExerciseDefinition is null for this slot.")
             return
         }
-
-        val newSet = createDefaultSetForLogType(definition.logType)
+        var newSet = createDefaultSetForLogType(definition.logType)
+        if (definition.logType == LogType.WEIGHT_AND_REPS) {
+            val lastSet = workoutExercises[exerciseIndex].sets.lastOrNull()
+            if (lastSet is WeightAndRepsSet) {
+                newSet = lastSet.copy(reps = 0, isDone = false)
+            }
+        }
         val updatedSets = workoutExercises[exerciseIndex].sets.toMutableList().apply { add(newSet) }
         workoutExercises[exerciseIndex] = workoutExercises[exerciseIndex].copy(sets = updatedSets)
     }
-
     fun deleteSet(exerciseId: UUID, set: ExerciseSet) {
         val exerciseIndex = workoutExercises.indexOfFirst { it.id == exerciseId }
         if (exerciseIndex != -1) {
