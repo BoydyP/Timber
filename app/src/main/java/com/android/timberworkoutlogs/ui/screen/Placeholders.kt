@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import com.android.timberworkoutlogs.ui.common.ComingSoonToast
+import com.android.timberworkoutlogs.ui.common.comingSoonToast
 
 @Composable
 fun StatsScreen(modifier: Modifier = Modifier) {
@@ -19,7 +19,7 @@ private fun PlaceholderScreenContent(
     name: String,
     modifier: Modifier = Modifier,
 ) {
-    ComingSoonToast(LocalContext.current)
+    comingSoonToast(LocalContext.current)
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center

@@ -19,16 +19,11 @@ import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.Workout
 import com.android.timberworkoutlogs.models.WorkoutExercise
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 
@@ -38,7 +33,7 @@ private const val TAG = "WorkoutViewModel"
 class WorkoutViewModel @Inject constructor(
     private val workoutRepository: WorkoutRepository,
     private val exerciseDefinitionRepository: ExerciseDefinitionRepository,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
     val workoutExercises = mutableStateListOf<WorkoutExercise>()
@@ -67,17 +62,11 @@ class WorkoutViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = true
         )
-    private val _timerText = MutableStateFlow("00:00")
-    val timerText = _timerText.asStateFlow()
-
     private var currentWorkoutId: Long? = null
-    private var secondsElapsed = 0
-    private var timerJob: Job? = null
 
     init {
         Log.d(TAG, "ViewModel initialized")
         startNewWorkoutSession()
-        startTimer()
     }
 
     private fun startNewWorkoutSession() {
@@ -89,26 +78,6 @@ class WorkoutViewModel @Inject constructor(
             Log.d(TAG, "New workout session started with ID: $id")
             onAddExercise()
         }
-    }
-
-    private fun startTimer() {
-        Log.d(TAG, "Starting timer...")
-        timerJob?.cancel()
-        timerJob = viewModelScope.launch {
-            while (true) {
-                delay(1000)
-                secondsElapsed++
-                _timerText.value = formatTime(secondsElapsed)
-            }
-        }
-    }
-
-    private fun formatTime(seconds: Int): String {
-        val hours = seconds / 3600
-        val minutes = (seconds % 3600) / 60
-        val secs = seconds % 60
-        return if (hours > 0) String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, secs)
-        else String.format(Locale.getDefault(), "%02d:%02d", minutes, secs)
     }
 
     fun onExerciseSelected(exerciseIndex: Int, definitionId: UUID) {
@@ -210,7 +179,7 @@ class WorkoutViewModel @Inject constructor(
         Log.d(TAG, "Exercise unit changed to $newUnit for exercise with ID: $exerciseId")
     }
 
-    fun onFinishWorkout(onNavigateBack: () -> Unit) {
+    fun onFinishWorkout(durationSeconds: Int, onNavigateBack: () -> Unit) {
         Log.d(TAG, "onFinishWorkout called.")
 
         currentWorkoutId?.let { id ->
@@ -227,8 +196,7 @@ class WorkoutViewModel @Inject constructor(
                 val workoutToUpdate = workoutRepository.getWorkout(id)
                 workoutToUpdate?.let { workout ->
                     val updatedWorkout = workout.copy(
-                        durationSeconds = secondsElapsed
-                        // TODO: Get workout notes, if any
+                        durationSeconds = durationSeconds
                     )
                     workoutRepository.updateWorkout(updatedWorkout)
                     Log.d(TAG, "Updated final duration for workout ID: $id")
@@ -255,10 +223,5 @@ class WorkoutViewModel @Inject constructor(
                 onNavigateBack()
             }
         } ?: onNavigateBack()
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        timerJob?.cancel()
     }
 }

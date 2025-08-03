@@ -11,4 +11,10 @@
     <string name="finish_workout">Finish Workout</string>
     <string name="unit_kg">KG</string>
     <string name="unit_lb">LB</string>
+    <string name="timer_service_description">
+        Timer service used for the background persistence of a workout/set duration timer during background activity and sleep.
+        The timer is used for:
+            1) UI information on how long they have been engaged in their current workout
+            2) A metric which is stored in Timber\'s Workouts database, which analysis and analytics can be performed on.
+    </string>
 </resources>
