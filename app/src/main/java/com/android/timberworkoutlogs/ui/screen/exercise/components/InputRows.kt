@@ -21,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.android.timberworkoutlogs.models.DistanceAndTimeSet
 import com.android.timberworkoutlogs.models.RepsOnlySet
 import com.android.timberworkoutlogs.models.TimedSet
@@ -60,7 +61,12 @@ fun WeightAndRepsInputRow(
                     onWeightChange(newText.toDoubleOrNull() ?: 0.0)
                 }
             },
-            label = { Text("Weight (${stringResource(id = unit.toStringResource())})") },
+            label = {
+                Text(
+                    "Weight (${stringResource(id = unit.toStringResource())})",
+                    fontSize = 14.sp
+                )
+            },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             modifier = Modifier.weight(1f),
             singleLine = true
