@@ -32,6 +32,7 @@ import com.android.timberworkoutlogs.ui.elements.ContextualScaffold
 fun WorkoutTemplatesListScreen(
     viewModel: WorkoutTemplatesViewModel,
     onNavigateToCreateTemplate: () -> Unit,
+    onNavigateToEditTemplate: (templateId: Long) -> Unit,
     onNavigateBack: () -> Unit
 ) {
     val templates by viewModel.templates.collectAsState()
@@ -75,10 +76,7 @@ fun WorkoutTemplatesListScreen(
                         WorkoutTemplateCard(
                             template = template,
                             modifier = Modifier.clickable {
-                                // The model uses Long for ID, but UUID is better for navigation safety
-                                // This will need to be reconciled in the Create/Edit screen's ViewModel
-                                // For now, we don't have a UUID on the template model.
-                                // onNavigateToEditTemplate(template.id)
+                                onNavigateToEditTemplate(template.id)
                             }
                         )
                     }

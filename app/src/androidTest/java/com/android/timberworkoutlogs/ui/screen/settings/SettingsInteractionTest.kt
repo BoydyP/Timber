@@ -33,6 +33,7 @@ class SettingsInteractionTest {
     @get:Rule(order = 1)
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
+
     val context: Context = InstrumentationRegistry.getInstrumentation().targetContext
     val kgLabel = context.getString(WeightUnit.KG.toStringResource())
     val lbLabel = context.getString(WeightUnit.LB.toStringResource())

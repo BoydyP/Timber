@@ -1,4 +1,4 @@
-package com.android.timberworkoutlogs
+package com.android.timberworkoutlogs.viewmodel
 
 import android.util.Log
 import com.android.timberworkoutlogs.database.ExerciseDefinitionRepository
@@ -9,6 +9,7 @@ import com.android.timberworkoutlogs.models.ExerciseEquipment
 import com.android.timberworkoutlogs.models.LogType
 import com.android.timberworkoutlogs.models.MuscleGroup
 import com.android.timberworkoutlogs.models.WeightAndRepsSet
+import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.WorkoutExercise
 import com.android.timberworkoutlogs.ui.screen.workout.WorkoutViewModel
 import io.mockk.coEvery
@@ -24,7 +25,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
-import org.junit.Assert.assertEquals
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import java.util.UUID
@@ -49,7 +50,7 @@ class WorkoutViewModelTest {
         exerciseDefinitionRepository = mockk(relaxed = true)
         settingsRepository = mockk(relaxed = true)
 
-        coEvery { settingsRepository.weightUnit } returns MutableStateFlow(com.android.timberworkoutlogs.models.WeightUnit.KG)
+        coEvery { settingsRepository.weightUnit } returns MutableStateFlow(WeightUnit.KG)
         coEvery { workoutRepository.insertWorkout(any()) } returns 1L
 
         viewModel =
@@ -85,10 +86,10 @@ class WorkoutViewModelTest {
         viewModel.exerciseDefinitions.add(definition)
         viewModel.onAddSet(exerciseId)
         val updatedExercise = viewModel.workoutExercises.first { it.id == exerciseId }
-        assertEquals(2, updatedExercise.sets.size)
+        Assert.assertEquals(2, updatedExercise.sets.size)
         val newSet = updatedExercise.sets[1] as WeightAndRepsSet
-        assertEquals(50.0, newSet.weight, 0.0)
-        assertEquals(0, newSet.reps)
-        assertEquals(false, newSet.isDone)
+        Assert.assertEquals(50.0, newSet.weight, 0.0)
+        Assert.assertEquals(0, newSet.reps)
+        Assert.assertEquals(false, newSet.isDone)
     }
 }

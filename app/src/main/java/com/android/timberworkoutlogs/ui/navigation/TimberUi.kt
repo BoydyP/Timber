@@ -3,10 +3,10 @@ package com.android.timberworkoutlogs.ui.navigation
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
-import com.android.timberworkoutlogs.ui.navigation.exercise.exerciseGraph
-import com.android.timberworkoutlogs.ui.navigation.exercise.homeGraph
-import com.android.timberworkoutlogs.ui.navigation.exercise.templateGraph
-import com.android.timberworkoutlogs.ui.navigation.exercise.workoutGraph
+import com.android.timberworkoutlogs.ui.navigation.graphs.exerciseGraph
+import com.android.timberworkoutlogs.ui.navigation.graphs.homeGraph
+import com.android.timberworkoutlogs.ui.navigation.graphs.templateGraph
+import com.android.timberworkoutlogs.ui.navigation.graphs.workoutGraph
 
 object AppDestinations {
     const val HOME_ROUTE = "home"
@@ -18,7 +18,7 @@ object AppDestinations {
     const val EXERCISES_LIST_ROUTE = "exercises_list"
     const val CREATE_EXERCISE_ROUTE = "create_exercise"
     const val SELECT_EXERCISE_ROUTE = "select_exercise"
-    const val WORKOUT_TEMPLATES_LIST_ROUTE = "workout_templates_list"
+    const val TEMPLATES_LIST_ROUTE = "workout_templates_list"
     const val CREATE_TEMPLATE_ROUTE = "create_template"
 }
 

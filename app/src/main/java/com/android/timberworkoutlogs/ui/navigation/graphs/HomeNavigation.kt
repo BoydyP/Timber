@@ -1,4 +1,4 @@
-package com.android.timberworkoutlogs.ui.navigation.exercise
+package com.android.timberworkoutlogs.ui.navigation.graphs
 
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController

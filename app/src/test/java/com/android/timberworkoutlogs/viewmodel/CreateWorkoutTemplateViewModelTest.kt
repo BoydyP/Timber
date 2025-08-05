@@ -1,0 +1,167 @@
+package com.android.timberworkoutlogs.viewmodel
+
+import androidx.lifecycle.SavedStateHandle
+import com.android.timberworkoutlogs.database.ExerciseDefinitionRepository
+import com.android.timberworkoutlogs.database.SettingsRepository
+import com.android.timberworkoutlogs.database.WorkoutTemplateRepository
+import com.android.timberworkoutlogs.fixtures.squatExerciseFixture
+import com.android.timberworkoutlogs.models.ExerciseDefinition
+import com.android.timberworkoutlogs.models.WeightAndRepsSet
+import com.android.timberworkoutlogs.models.WeightUnit
+import com.android.timberworkoutlogs.rules.MainDispatcherRule
+import com.android.timberworkoutlogs.ui.screen.templates.CreateWorkoutTemplateViewModel
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
+import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.runTest
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+
+@ExperimentalCoroutinesApi
+class CreateWorkoutTemplateViewModelTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private lateinit var viewModel: CreateWorkoutTemplateViewModel
+    private lateinit var workoutTemplateRepository: WorkoutTemplateRepository
+    private lateinit var exerciseDefinitionRepository: ExerciseDefinitionRepository
+    private lateinit var settingsRepository: SettingsRepository
+    private lateinit var savedStateHandle: SavedStateHandle
+
+    @Before
+    fun setUp() {
+        workoutTemplateRepository = mockk(relaxed = true)
+        exerciseDefinitionRepository = mockk(relaxed = true)
+        settingsRepository = mockk(relaxed = true)
+        every { settingsRepository.weightUnit } returns MutableStateFlow(WeightUnit.KG)
+    }
+
+    private fun createViewModel(templateId: Long = -1L) {
+        savedStateHandle = SavedStateHandle(mapOf("templateId" to templateId))
+
+        viewModel = CreateWorkoutTemplateViewModel(
+            workoutTemplateRepository,
+            exerciseDefinitionRepository,
+            settingsRepository,
+            savedStateHandle
+        )
+    }
+
+    @Test
+    fun `init with templateId loads template`() = runTest {
+        val templateId = 1L
+        createViewModel(templateId)
+
+        coVerify { workoutTemplateRepository.getTemplateWithExercises(templateId) }
+        assertTrue(viewModel.uiState.value.isEditing)
+        assertEquals(templateId, viewModel.uiState.value.templateId)
+    }
+
+    @Test
+    fun `onNameChanged updates uiState`() {
+        createViewModel()
+        val newName = "Leg Day"
+        viewModel.onNameChanged(newName)
+        assertEquals(newName, viewModel.uiState.value.name)
+    }
+
+    @Test
+    fun `addExercise updates uiState`() {
+        createViewModel()
+        viewModel.addExercise()
+        assertEquals(1, viewModel.uiState.value.templateExercises.size)
+    }
+
+    @Test
+    fun `removeExercise updates uiState`() {
+        createViewModel()
+        viewModel.addExercise()
+        viewModel.removeExercise(0)
+        assertTrue(viewModel.uiState.value.templateExercises.isEmpty())
+    }
+
+    @Test
+    fun `onAddSet updates uiState`() = runTest {
+
+        val definition: ExerciseDefinition = squatExerciseFixture()
+        val definitionId = definition.id
+        coEvery { exerciseDefinitionRepository.getExerciseDefinition(definitionId) } returns definition
+
+        createViewModel()
+        viewModel.addExercise()
+        viewModel.onExerciseSelected(0, definitionId)
+        viewModel.onAddSet(0)
+
+        assertEquals(1, viewModel.uiState.value.templateExercises[0].sets.size)
+    }
+
+    @Test
+    fun `onDeleteSet updates uiState`() = runTest {
+        val definition: ExerciseDefinition = squatExerciseFixture()
+        val definitionId = definition.id
+        coEvery { exerciseDefinitionRepository.getExerciseDefinition(definitionId) } returns definition
+
+        createViewModel()
+        viewModel.addExercise()
+        viewModel.onExerciseSelected(0, definitionId)
+        viewModel.onAddSet(0)
+        viewModel.onDeleteSet(0, 0)
+
+        assertTrue(viewModel.uiState.value.templateExercises[0].sets.isEmpty())
+    }
+
+    @Test
+    fun `onSetChanged updates uiState`() = runTest {
+        val definition: ExerciseDefinition = squatExerciseFixture()
+        val definitionId = definition.id
+        coEvery { exerciseDefinitionRepository.getExerciseDefinition(definitionId) } returns definition
+
+        createViewModel()
+        viewModel.addExercise()
+        viewModel.onExerciseSelected(0, definitionId)
+        viewModel.onAddSet(0)
+
+        val newSet = WeightAndRepsSet(weight = 100.0, reps = 10)
+        viewModel.onSetChanged(0, 0, newSet)
+
+        assertEquals(newSet, viewModel.uiState.value.templateExercises[0].sets[0])
+    }
+
+    @Test
+    fun `saveTemplate new template saves correctly`() = runTest {
+        createViewModel()
+
+        viewModel.onNameChanged("New Workout")
+        viewModel.saveTemplate { }
+
+        coVerify { workoutTemplateRepository.insertTemplate(any()) }
+    }
+
+    @Test
+    fun `saveTemplate existing template updates correctly`() = runTest {
+        val templateId = 1L
+        createViewModel(templateId)
+
+        viewModel.onNameChanged("Updated Workout")
+        viewModel.saveTemplate { }
+
+        coVerify { workoutTemplateRepository.updateTemplate(any()) }
+    }
+
+    @Test
+    fun `deleteTemplate deletes correctly`() = runTest {
+        val templateId = 1L
+        createViewModel(templateId)
+
+        viewModel.deleteTemplate()
+
+        coVerify { workoutTemplateRepository.deleteTemplate(any()) }
+    }
+}

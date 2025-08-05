@@ -1,6 +1,5 @@
-package com.android.timberworkoutlogs.ui.navigation.exercise
+package com.android.timberworkoutlogs.ui.navigation.graphs
 
-import android.util.Log
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
@@ -23,21 +22,19 @@ fun NavGraphBuilder.templateGraph(navController: NavController) {
             TemplatesScreen(
                 onNavigateToExercisesList = { navController.navigate(AppDestinations.EXERCISES_LIST_ROUTE) },
                 onNavigateToWorkoutTemplatesList = {
-                    Log.d(
-                        "TimberUiTemplatesLambda",
-                        "Workout click received in onNavigateToWorkoutTemplatesList"
-                    )
-                    navController.navigate(AppDestinations.WORKOUT_TEMPLATES_LIST_ROUTE)
+                    navController.navigate(AppDestinations.TEMPLATES_LIST_ROUTE)
                 }
             )
         }
     }
-    slideComposable(AppDestinations.WORKOUT_TEMPLATES_LIST_ROUTE) {
+    slideComposable(AppDestinations.TEMPLATES_LIST_ROUTE) {
         val viewModel: WorkoutTemplatesViewModel = hiltViewModel()
-        Log.d("TimberUiTemplatesDestination", "Navigating to WorkoutTemplatesListScreen")
         WorkoutTemplatesListScreen(
             viewModel = viewModel,
             onNavigateToCreateTemplate = { navController.navigate(AppDestinations.CREATE_TEMPLATE_ROUTE) },
+            onNavigateToEditTemplate = { templateId ->
+                navController.navigate("${AppDestinations.CREATE_TEMPLATE_ROUTE}?templateId=$templateId")
+            },
             onNavigateBack = { navController.popBackStack() }
         )
     }
@@ -45,8 +42,8 @@ fun NavGraphBuilder.templateGraph(navController: NavController) {
     slideComposable(
         route = "${AppDestinations.CREATE_TEMPLATE_ROUTE}?templateId={templateId}",
         arguments = listOf(navArgument("templateId") {
-            type = NavType.StringType
-            nullable = true
+            type = NavType.LongType
+            defaultValue = -1L // Use -1 as the default value for "create" mode
         })
     ) { backStackEntry ->
         val viewModel: CreateWorkoutTemplateViewModel = hiltViewModel()

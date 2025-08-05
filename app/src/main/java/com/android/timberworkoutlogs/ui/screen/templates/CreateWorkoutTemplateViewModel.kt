@@ -45,10 +45,10 @@ class CreateWorkoutTemplateViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(CreateWorkoutTemplateUiState())
     val uiState = _uiState.asStateFlow()
 
-    private val templateId: Long? = savedStateHandle.get<String>("templateId")?.toLongOrNull()
+    private val templateId: Long = savedStateHandle.get<Long>("templateId") ?: -1L
 
     init {
-        if (templateId != null) {
+        if (templateId != -1L) {
             _uiState.update { it.copy(templateId = templateId, isEditing = true) }
             loadTemplate(templateId)
         }
@@ -103,7 +103,7 @@ class CreateWorkoutTemplateViewModel @Inject constructor(
 
     fun addExercise() {
         val newExercise = TemplateExercise(
-            templateId = templateId ?: 0L, // Temp ID, will be updated on save
+            templateId = if (templateId != -1L) templateId else 0L,
             definitionId = PLACEHOLDER_DEFINITION_ID
         )
         _uiState.update { it.copy(templateExercises = it.templateExercises + newExercise) }
@@ -126,7 +126,7 @@ class CreateWorkoutTemplateViewModel @Inject constructor(
                 LogType.REPS_ONLY -> RepsOnlySet()
                 LogType.TIME -> TimedSet()
                 LogType.DISTANCE_AND_TIME -> DistanceAndTimeSet()
-                null -> WeightAndRepsSet() // Default for placeholder
+                null -> WeightAndRepsSet()
             }
 
             val newExercises = it.templateExercises.toMutableList()
@@ -168,7 +168,7 @@ class CreateWorkoutTemplateViewModel @Inject constructor(
                 it.definitionId != PLACEHOLDER_DEFINITION_ID
             }
 
-            if (currentState.templateId == null) {
+            if (templateId == -1L) {
                 // Create new template
                 val newTemplate = WorkoutTemplate(name = currentState.name)
                 val newId = workoutTemplateRepository.insertTemplate(newTemplate)
@@ -177,11 +177,11 @@ class CreateWorkoutTemplateViewModel @Inject constructor(
             } else {
                 // Update existing template
                 val updatedTemplate =
-                    WorkoutTemplate(id = currentState.templateId, name = currentState.name)
+                    WorkoutTemplate(id = templateId, name = currentState.name)
                 workoutTemplateRepository.updateTemplate(updatedTemplate)
                 val exercisesToSave =
-                    exercisesWithDefinitions.map { it.copy(templateId = currentState.templateId) }
-                workoutTemplateRepository.deleteExercisesForTemplate(currentState.templateId)
+                    exercisesWithDefinitions.map { it.copy(templateId = templateId) }
+                workoutTemplateRepository.deleteExercisesForTemplate(templateId)
                 workoutTemplateRepository.upsertTemplateExercises(exercisesToSave)
             }
             onSuccess()
@@ -190,10 +190,9 @@ class CreateWorkoutTemplateViewModel @Inject constructor(
 
     fun deleteTemplate() {
         viewModelScope.launch {
-            val currentState = _uiState.value
-            if (currentState.templateId != null) {
+            if (templateId != -1L) {
                 val template =
-                    WorkoutTemplate(id = currentState.templateId, name = currentState.name)
+                    WorkoutTemplate(id = templateId, name = _uiState.value.name)
                 workoutTemplateRepository.deleteTemplate(template)
             }
         }
