@@ -22,7 +22,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "com.android.timberworkoutlogs.HiltTestRunner"
+        testInstrumentationRunner = "com.android.timberworkoutlogs.HiltKaspressoRunner"
     }
 
     buildTypes {
@@ -105,6 +105,7 @@ dependencies {
     androidTestImplementation(libs.mockk.android)
     androidTestImplementation(libs.mockk.agent)
     androidTestImplementation(libs.hilt.android.testing)
+    androidTestImplementation(libs.kaspresso)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 

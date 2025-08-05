@@ -1,5 +1,6 @@
 package com.android.timberworkoutlogs.ui.screen.exercise
 
+import android.Manifest
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasText
@@ -8,16 +9,19 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
+import androidx.test.rule.GrantPermissionRule
 import com.android.timberworkoutlogs.MainActivity
+import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import androidx.compose.ui.test.performScrollToNode
 
 @HiltAndroidTest
-class ExerciseCreationFlowTest {
+class ExerciseCreationFlowTest : TestCase() {
 
     @get:Rule(order = 0)
     var hiltRule = HiltAndroidRule(this)
@@ -25,45 +29,48 @@ class ExerciseCreationFlowTest {
     @get:Rule(order = 1)
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
+    @get:Rule(order = 2)
+    val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
+        Manifest.permission.POST_NOTIFICATIONS
+    )
+
+    @Before
+    fun setUp() {
+        hiltRule.inject()
+    }
+
     @Test
-    fun createExercise_endToEnd() {
-        // Navigate to Templates -> Exercises
-        composeTestRule.onNodeWithText("Templates").performClick()
+    fun createExercise_endToEnd() = run {
+        step("Navigate to create exercise screen") {
+            composeTestRule.onNodeWithText("Templates").performClick()
+            composeTestRule.onNodeWithText("Manage Exercises").performClick()
+            composeTestRule.onNodeWithContentDescription("Add Exercise").performClick()
+        }
 
-        composeTestRule.onNodeWithText("Manage Exercises").performClick()
+        step("Verify Save is disabled initially") {
+            composeTestRule.onNodeWithText("Save Exercise").assertIsNotEnabled()
+        }
 
-        // Click create exercise
-        composeTestRule.onNodeWithContentDescription("Add Exercise").performClick()
+        step("Fill in exercise details") {
+            val exerciseName = "Non-existent Press"
+            composeTestRule.onNodeWithText("Exercise Name").performTextInput(exerciseName)
+            composeTestRule.onNodeWithText("Save Exercise").assertIsNotEnabled()
 
-        // Verify Save is disabled initially
-        composeTestRule.onNodeWithText("Save Exercise").assertIsNotEnabled()
+            val equipment = "Barbell"
+            composeTestRule.onNodeWithText(equipment).performClick()
+            composeTestRule.onNodeWithText("Save Exercise").assertIsNotEnabled()
 
-        // Fill in the name of the exercise
-        val exerciseName = "Non-existent Press"
-        composeTestRule.onNodeWithText("Exercise Name").performTextInput(exerciseName)
+            composeTestRule.onNodeWithText("Chest").performClick()
+        }
 
-        // Verify Save is still disabled
-        composeTestRule.onNodeWithText("Save Exercise").assertIsNotEnabled()
+        step("Save the exercise and verify it's in the list") {
+            composeTestRule.onNodeWithText("Save Exercise").performClick()
 
-        // Select equipment
-        val equipment = "Barbell"
-        composeTestRule.onNodeWithText("Barbell").performClick()
-
-        // Verify Save is still disabled
-        composeTestRule.onNodeWithText("Save Exercise").assertIsNotEnabled()
-
-        // Select a primary muscle
-        composeTestRule.onNodeWithText("Chest").performClick()
-
-        // Save the exercise - it should be enabled now
-        composeTestRule.onNodeWithText("Save Exercise").performClick()
-
-        // Verify that we are back on the list screen and the new exercise is displayed
-        // with the correct prefix
-        val expectedExerciseName = "$equipment $exerciseName"
-        val listMatcher = composeTestRule.onNodeWithTag(TEST_TAG)
-        val itemMatcher = hasText(expectedExerciseName)
-        listMatcher.performScrollToNode(itemMatcher)
-        composeTestRule.onNode(itemMatcher).assertIsDisplayed()
+            val expectedExerciseName = "Barbell Non-existent Press"
+            val listMatcher = composeTestRule.onNodeWithTag(TEST_TAG)
+            val itemMatcher = hasText(expectedExerciseName)
+            listMatcher.performScrollToNode(itemMatcher)
+            composeTestRule.onNode(itemMatcher).assertIsDisplayed()
+        }
     }
 }

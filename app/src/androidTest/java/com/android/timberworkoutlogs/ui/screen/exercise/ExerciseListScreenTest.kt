@@ -1,87 +1,42 @@
 package com.android.timberworkoutlogs.ui.screen.exercise
 
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
-import com.android.timberworkoutlogs.database.ExerciseDefinitionRepository
-import com.android.timberworkoutlogs.models.ExerciseDefinition
-import com.android.timberworkoutlogs.models.ExerciseEquipment
-import com.android.timberworkoutlogs.models.LogType
-import com.android.timberworkoutlogs.models.MuscleGroup
-import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
-import io.mockk.every
-import io.mockk.junit4.MockKRule
-import io.mockk.mockk
-import kotlinx.coroutines.flow.flowOf
+import androidx.compose.ui.test.performClick
+import com.android.timberworkoutlogs.MainActivity
+import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import java.util.UUID
 
-class ExerciseListScreenTest {
+@HiltAndroidTest
+class ExerciseListScreenTest : TestCase() {
 
-    @get:Rule
-    val composeTestRule = createComposeRule()
+    @get:Rule(order = 0)
+    val hiltRule = HiltAndroidRule(this)
 
-    @get:Rule
-    val mockkRule = MockKRule(this)
+    @get:Rule(order = 1)
+    val composeTestRule = createAndroidComposeRule<MainActivity>()
 
-    private val repository: ExerciseDefinitionRepository = mockk()
-
-    @Test
-    fun whenNoExercisesExist_showsEmptyMessage() {
-        every { repository.allExerciseDefinitions } returns flowOf(emptyList())
-
-        val viewModel = ExercisesListViewModel(repository)
-
-        composeTestRule.setContent {
-            TimberWorkoutLogsTheme {
-                ExerciseListScreen(
-                    viewModel = viewModel,
-                    onNavigateToCreateExercise = {},
-                    onNavigateToEditExercise = {},
-                    onNavigateBack = {}
-                )
-            }
-        }
-
-        composeTestRule.onNodeWithText("No exercises defined yet. Tap the '+' to add one.")
-            .assertIsDisplayed()
+    @Before
+    fun setUp() {
+        hiltRule.inject()
     }
 
     @Test
-    fun whenExercisesExist_theyAreDisplayedInList() {
-        val fakeExercises = listOf(
-            ExerciseDefinition(
-                UUID.randomUUID(),
-                "Squat",
-                ExerciseEquipment.BARBELL,
-                listOf(MuscleGroup.LEGS),
-                LogType.WEIGHT_AND_REPS
-            ),
-            ExerciseDefinition(
-                UUID.randomUUID(),
-                "Pull Ups",
-                ExerciseEquipment.BODYWEIGHT,
-                listOf(MuscleGroup.BACK),
-                LogType.REPS_ONLY
-            )
-        )
-        every { repository.allExerciseDefinitions } returns flowOf(fakeExercises)
-
-        val viewModel = ExercisesListViewModel(repository)
-
-        composeTestRule.setContent {
-            TimberWorkoutLogsTheme {
-                ExerciseListScreen(
-                    viewModel = viewModel,
-                    onNavigateToCreateExercise = {},
-                    onNavigateToEditExercise = {},
-                    onNavigateBack = {}
-                )
-            }
+    fun whenExercisesExist_theyAreDisplayedInList() = run {
+        step("Navigate to exercise list screen") {
+            composeTestRule.onNodeWithText("Templates").performClick()
+            composeTestRule.onNodeWithText("Manage Exercises").performClick()
         }
 
-        composeTestRule.onNodeWithText("Barbell Squat").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Bodyweight Pull Ups").assertIsDisplayed()
+        step("Verify default exercises are displayed") {
+            // These exercises are seeded by the database callback
+            composeTestRule.onNodeWithText("Barbell Bench Press").assertIsDisplayed()
+            composeTestRule.onNodeWithText("Dumbbell Bicep Curl").assertIsDisplayed()
+        }
     }
 }

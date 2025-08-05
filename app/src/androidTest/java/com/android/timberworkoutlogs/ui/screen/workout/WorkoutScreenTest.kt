@@ -1,6 +1,5 @@
 package com.android.timberworkoutlogs.ui.screen.workout
 
-import android.util.Log
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -12,8 +11,9 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
+import androidx.test.rule.GrantPermissionRule
 import com.android.timberworkoutlogs.MainActivity
-import com.android.timberworkoutlogs.ui.common.sharedSetUp
+import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Before
@@ -22,7 +22,7 @@ import org.junit.Test
 
 
 @HiltAndroidTest
-class WorkoutScreenTest {
+class WorkoutScreenTest : TestCase() {
 
     @get:Rule(order = 0)
     var hiltRule = HiltAndroidRule(this)
@@ -30,82 +30,90 @@ class WorkoutScreenTest {
     @get:Rule(order = 1)
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
+    @get:Rule(order = 2)
+    val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
+        android.Manifest.permission.POST_NOTIFICATIONS
+    )
+
     private fun navigateToWorkoutScreen() {
         composeTestRule.onNodeWithText("Workout").performClick()
     }
 
-
     @Before
     fun setUp() {
-        sharedSetUp()
+        hiltRule.inject()
     }
 
     @Test
-    fun initialState_isCorrect() {
-        navigateToWorkoutScreen()
+    fun initialState_isCorrect() = run {
+        step("Navigate to workout screen") {
+            navigateToWorkoutScreen()
+        }
 
-        composeTestRule.onNodeWithText("Complete workout").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Complete workout").assertIsNotEnabled()
+        step("Check initial state") {
+            composeTestRule.onNodeWithText("Complete workout").assertIsDisplayed()
+            composeTestRule.onNodeWithText("Complete workout").assertIsNotEnabled()
 
-        composeTestRule.onNodeWithText("Select Exercise...").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Add Exercise").assertIsDisplayed()
+            composeTestRule.onNodeWithText("Select Exercise...").assertIsDisplayed()
+            composeTestRule.onNodeWithText("Add Exercise").assertIsDisplayed()
+        }
     }
 
     @Test
-    fun workout_screen_end_to_end() {
-        // 1. Navigate to Settings - Janky, reset to KG
-        composeTestRule.onNodeWithText("Settings").performClick()
+    fun workout_screen_end_to_end() = run {
+        val weightUnit = "KG"
+        step("Navigate to Settings and set weight unit to KG") {
+            composeTestRule.onNodeWithText("Settings").performClick()
+            composeTestRule.onNodeWithText(weightUnit).performClick()
+            composeTestRule.onNodeWithText(weightUnit).assertIsSelected()
+        }
 
-        // 2. Find the Switch associated with "Weight Unit" and click it
-        composeTestRule.onNodeWithText("KG").performClick()
-        composeTestRule.onNodeWithText("KG").assertIsSelected()
+        step("Navigate to workout screen and add an exercise") {
+            navigateToWorkoutScreen()
+            composeTestRule.onNodeWithText("Select Exercise...").performClick()
 
-        navigateToWorkoutScreen()
-        composeTestRule.onNodeWithText("Select Exercise...").performClick()
+            val weight = 123
+            val sets = 5
 
-        val weight = 123
-        val sets = 5
-        val liftedStr = (weight * sets).toString()
+            composeTestRule.onNodeWithText("Barbell Bench Press").performClick()
+            composeTestRule.onNodeWithText("Weight ($weightUnit)")
+                .performTextInput(weight.toString())
+            composeTestRule.onNodeWithText("Reps").performTextInput(sets.toString())
+            composeTestRule.onNodeWithTag("checkbox_1").performClick()
+        }
 
-        // After adding an exercise, the "Select Exercise" prompt should appear
-        composeTestRule.onNodeWithText("Barbell Bench Press").performClick()
-        composeTestRule.onNodeWithText("Weight").performTextInput(weight.toString())
-        composeTestRule.onNodeWithText("Reps").performTextInput(sets.toString())
-        composeTestRule.onNodeWithTag("checkbox_1").performClick()
+        step("Complete the workout and verify history") {
+            composeTestRule.waitForIdle()
+            composeTestRule.onNodeWithText("Complete workout").assertIsEnabled()
+            composeTestRule.onNodeWithText("Complete workout").performClick()
 
-        composeTestRule.waitForIdle()
-        // The Finish button should now be enabled
-        composeTestRule.onNodeWithText("Complete workout").assertIsEnabled()
-        composeTestRule.onNodeWithText("Complete workout").performClick()
+            composeTestRule.waitForIdle()
+            composeTestRule.onNodeWithText("Are you sure?").assertIsDisplayed()
+            composeTestRule.onNodeWithText("Are you sure?").performClick()
 
-        composeTestRule.waitForIdle()
-        // Seeks confirmation
-        composeTestRule.onNodeWithText("Are you sure?").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Are you sure?").performClick()
-
-        composeTestRule.waitForIdle()
-        // Visible in history?
-        composeTestRule.onNodeWithText("History").performClick()
-        composeTestRule.onNodeWithText("$liftedStr kg").assertIsDisplayed()
-        Log.d("TAG", "workout_screen_end_to_end: $liftedStr")
+            composeTestRule.waitForIdle()
+            composeTestRule.onNodeWithText("History").performClick()
+            composeTestRule.onNodeWithText("${(123 * 5)} kg").assertIsDisplayed()
+        }
     }
 
     @Test
-    fun deleteExercise_restoresInitialState() {
-        navigateToWorkoutScreen()
+    fun deleteExercise_restoresInitialState() = run {
+        step("Navigate to workout screen and add an exercise") {
+            navigateToWorkoutScreen()
+            composeTestRule.onNodeWithText("Select Exercise...").assertIsDisplayed()
+            composeTestRule.onNodeWithText("Complete workout").assertIsNotEnabled()
+        }
 
-        // Add an exercise first
-        composeTestRule.onNodeWithText("Select Exercise...").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Complete workout").assertIsNotEnabled()
+        step("Swipe exercise to delete") {
+            composeTestRule.onNodeWithText("Select Exercise...").performTouchInput { swipeLeft() }
+            composeTestRule.onNodeWithText("Delete").performClick()
+        }
 
-        // Now, swipe the exercise card to delete it
-        composeTestRule.onNodeWithText("Select Exercise...").performTouchInput { swipeLeft() }
-        composeTestRule.onNodeWithText("Delete").performClick()
-
-        // The card should be gone and the initial state restored
-        composeTestRule.onNodeWithText("Select Exercise...").assertDoesNotExist()
-        composeTestRule.onNodeWithText("Complete workout").assertIsNotEnabled()
-        composeTestRule.onNodeWithText("Add Exercise").assertIsEnabled()
-
+        step("Verify initial state is restored") {
+            composeTestRule.onNodeWithText("Select Exercise...").assertDoesNotExist()
+            composeTestRule.onNodeWithText("Complete workout").assertIsNotEnabled()
+            composeTestRule.onNodeWithText("Add Exercise").assertIsEnabled()
+        }
     }
 }

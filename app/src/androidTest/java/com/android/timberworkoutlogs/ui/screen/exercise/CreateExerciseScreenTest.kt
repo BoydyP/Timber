@@ -2,88 +2,75 @@ package com.android.timberworkoutlogs.ui.screen.exercise
 
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
-import androidx.lifecycle.SavedStateHandle
-import com.android.timberworkoutlogs.database.ExerciseDefinitionRepository
-import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
-import io.mockk.mockk
+import com.android.timberworkoutlogs.MainActivity
+import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-class CreateExerciseScreenTest {
+@HiltAndroidTest
+class CreateExerciseScreenTest : TestCase() {
 
-    @get:Rule
-    val composeTestRule = createComposeRule()
+    @get:Rule(order = 0)
+    val hiltRule = HiltAndroidRule(this)
 
-    private val repository: ExerciseDefinitionRepository = mockk(relaxed = true)
+    @get:Rule(order = 1)
+    val composeTestRule = createAndroidComposeRule<MainActivity>()
 
-    @Test
-    fun saveButton_isDisabled_whenNameIsBlank() {
-        val viewModel = CreateExerciseViewModel(repository, SavedStateHandle())
-
-        composeTestRule.setContent {
-            TimberWorkoutLogsTheme {
-                CreateExerciseScreen(
-                    viewModel = viewModel,
-                    onNavigateBack = {}
-                )
-            }
-        }
-
-        // Initially, the button should be disabled because no muscle groups are selected
-        composeTestRule.onNodeWithText("Save Exercise").assertIsNotEnabled()
-
-        // Select a muscle group
-        composeTestRule.onNodeWithText("Chest").performClick()
-
-
-        // Still should be disabled because the name is blank
-        composeTestRule.onNodeWithText("Save Exercise").assertIsNotEnabled()
+    @Before
+    fun setUp() {
+        hiltRule.inject()
+        // Navigate to the screen
+        composeTestRule.onNodeWithText("Templates").performClick()
+        composeTestRule.onNodeWithText("Manage Exercises").performClick()
+        composeTestRule.onNodeWithContentDescription("Add Exercise").performClick()
     }
 
     @Test
-    fun saveButton_isDisabled_whenNoMuscleGroupsSelected() {
-        val viewModel = CreateExerciseViewModel(repository, SavedStateHandle())
-
-        composeTestRule.setContent {
-            TimberWorkoutLogsTheme {
-                CreateExerciseScreen(
-                    viewModel = viewModel,
-                    onNavigateBack = {}
-                )
-            }
+    fun saveButton_isDisabled_whenNameIsBlank() = run {
+        step("Check save button is disabled initially") {
+            composeTestRule.onNodeWithText("Save Exercise").assertIsNotEnabled()
         }
 
-        // Enter a name
-        composeTestRule.onNodeWithText("Exercise Name").performTextInput("Good Mornings")
+        step("Select a muscle group") {
+            composeTestRule.onNodeWithText("Chest").performClick()
+        }
 
-        // Button should still be disabled because no muscle groups are selected
-        composeTestRule.onNodeWithText("Save Exercise").assertIsNotEnabled()
+        step("Check save button is still disabled") {
+            composeTestRule.onNodeWithText("Save Exercise").assertIsNotEnabled()
+        }
     }
 
     @Test
-    fun saveButton_isEnabled_whenNameAndMuscleGroupsArePresent() {
-        val viewModel = CreateExerciseViewModel(repository, SavedStateHandle())
-
-        composeTestRule.setContent {
-            TimberWorkoutLogsTheme {
-                CreateExerciseScreen(
-                    viewModel = viewModel,
-                    onNavigateBack = {}
-                )
-            }
+    fun saveButton_isDisabled_whenNoMuscleGroupsSelected() = run {
+        step("Enter an exercise name") {
+            composeTestRule.onNodeWithText("Exercise Name").performTextInput("Good Mornings")
         }
 
-        // Enter a name
-        composeTestRule.onNodeWithText("Exercise Name").performTextInput("Bicep Curls")
+        step("Check save button is disabled") {
+            composeTestRule.onNodeWithText("Save Exercise").assertIsNotEnabled()
+        }
+    }
 
-        // Select a muscle group
-        composeTestRule.onNodeWithText("Biceps").performClick()
+    @Test
+    fun saveButton_isEnabled_whenNameAndMuscleGroupsArePresent() = run {
+        step("Enter an exercise name") {
+            composeTestRule.onNodeWithText("Exercise Name").performTextInput("Bicep Curls")
+        }
 
-        // Now the button should be enabled
-        composeTestRule.onNodeWithText("Save Exercise").assertIsEnabled()
+        step("Select a muscle group") {
+            composeTestRule.onNodeWithText("Biceps").performClick()
+        }
+
+        step("Check save button is enabled") {
+            composeTestRule.onNodeWithText("Save Exercise").assertIsEnabled()
+        }
     }
 }

@@ -5,7 +5,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.android.timberworkoutlogs.MainActivity
-import com.android.timberworkoutlogs.ui.navigation.TimberUi
+import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Before
@@ -13,31 +13,30 @@ import org.junit.Rule
 import org.junit.Test
 
 @HiltAndroidTest
-class SettingsScreenTest {
+class SettingsScreenTest : TestCase() {
     @get:Rule(order = 0)
     var hiltRule = HiltAndroidRule(this)
 
     @get:Rule(order = 1)
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
-    private fun navigateToSettingsScreen() {
-        composeTestRule.onNodeWithText("Settings").performClick()
+    @Before
+    fun setUp() {
+        hiltRule.inject()
     }
 
     @Test
-    fun changeWeightUnit_isSuccessful() {
-        navigateToSettingsScreen()
+    fun changeWeightUnit_isSuccessful() = run {
+        step("Navigate to settings screen") {
+            composeTestRule.onNodeWithText("Settings").performClick()
+        }
 
-        // Click LB to change unit
-        composeTestRule.onNodeWithText("KG").performClick()
+        step("Change weight unit to LB") {
+            composeTestRule.onNodeWithText("KG").performClick()
+            composeTestRule.onNodeWithText("KG").assertIsSelected()
 
-        // Default should be KG
-        composeTestRule.onNodeWithText("KG").assertIsSelected()
-
-        // Click LB to change unit
-        composeTestRule.onNodeWithText("LB").performClick()
-
-        // Verify LB is now selected
-        composeTestRule.onNodeWithText("LB").assertIsSelected()
+            composeTestRule.onNodeWithText("LB").performClick()
+            composeTestRule.onNodeWithText("LB").assertIsSelected()
+        }
     }
 }
