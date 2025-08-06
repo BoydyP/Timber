@@ -9,6 +9,7 @@ import androidx.room.Transaction
 import androidx.room.Update
 import com.android.timberworkoutlogs.models.TemplateExercise
 import com.android.timberworkoutlogs.models.WorkoutTemplate
+import com.android.timberworkoutlogs.models.WorkoutTemplateWithExerciseCount
 import com.android.timberworkoutlogs.models.WorkoutTemplateWithExercises
 import kotlinx.coroutines.flow.Flow
 
@@ -30,8 +31,8 @@ interface WorkoutTemplateDao {
     @Query("DELETE FROM template_exercises WHERE templateId = :templateId")
     suspend fun deleteExercisesForTemplate(templateId: Long)
 
-    @Query("SELECT * FROM workout_templates")
-    fun getAllTemplates(): Flow<List<WorkoutTemplate>>
+    @Query("SELECT wt.*, (SELECT COUNT(*) FROM template_exercises WHERE templateId = wt.id) as exerciseCount FROM workout_templates wt")
+    fun getAllTemplatesWithExerciseCount(): Flow<List<WorkoutTemplateWithExerciseCount>>
 
     @Transaction
     @Query("SELECT * FROM workout_templates")

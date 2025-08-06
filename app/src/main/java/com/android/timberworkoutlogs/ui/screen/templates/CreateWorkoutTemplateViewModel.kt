@@ -121,12 +121,19 @@ class CreateWorkoutTemplateViewModel @Inject constructor(
         _uiState.update {
             val exercise = it.templateExercises[exerciseIndex]
             val definition = it.exerciseDefinitions[exercise.definitionId]
-            val newSet = when (definition?.logType) {
+            var newSet: ExerciseSet = when (definition?.logType) {
                 LogType.WEIGHT_AND_REPS -> WeightAndRepsSet()
                 LogType.REPS_ONLY -> RepsOnlySet()
                 LogType.TIME -> TimedSet()
                 LogType.DISTANCE_AND_TIME -> DistanceAndTimeSet()
                 null -> WeightAndRepsSet()
+            }
+
+            if (definition?.logType == LogType.WEIGHT_AND_REPS) {
+                val lastSet = it.templateExercises[exerciseIndex].sets.lastOrNull()
+                if (lastSet is WeightAndRepsSet) {
+                    newSet = lastSet.copy(reps = 0, isDone = false)
+                }
             }
 
             val newExercises = it.templateExercises.toMutableList()

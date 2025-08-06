@@ -8,6 +8,7 @@ import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.Workout
 import com.android.timberworkoutlogs.models.WorkoutExercise
 import com.android.timberworkoutlogs.models.WorkoutTemplate
+import com.android.timberworkoutlogs.models.WorkoutTemplateWithExerciseCount
 import com.android.timberworkoutlogs.models.WorkoutTemplateWithExercises
 import kotlinx.coroutines.flow.Flow
 
@@ -16,16 +17,13 @@ class WorkoutTemplateRepository(
     private val workoutDao: WorkoutDao,
     private val workoutExerciseDao: WorkoutExerciseDao,
 ) {
-    fun getTemplatesWithExercises(): Flow<List<WorkoutTemplateWithExercises>> {
-        return workoutTemplateDao.getTemplatesWithExercises()
-    }
 
     suspend fun getTemplateWithExercises(templateId: Long): WorkoutTemplateWithExercises {
         return workoutTemplateDao.getTemplateWithExercises(templateId)
     }
 
-    fun getAllTemplates(): Flow<List<WorkoutTemplate>> {
-        return workoutTemplateDao.getAllTemplates()
+    fun getAllTemplatesWithExerciseCount(): Flow<List<WorkoutTemplateWithExerciseCount>> {
+        return workoutTemplateDao.getAllTemplatesWithExerciseCount()
     }
 
     suspend fun insertTemplate(template: WorkoutTemplate): Long {

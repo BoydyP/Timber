@@ -5,13 +5,18 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
@@ -24,7 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.android.timberworkoutlogs.models.WorkoutTemplate
+import com.android.timberworkoutlogs.models.WorkoutTemplateWithExerciseCount
 import com.android.timberworkoutlogs.ui.common.SwipeToDeleteContainer
 import com.android.timberworkoutlogs.ui.elements.ContextualScaffold
 
@@ -66,17 +71,17 @@ fun WorkoutTemplatesListScreen(
                 ),
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(templates, key = { it.id }) { template ->
+                items(templates, key = { it.workoutTemplate.id }) { templateItem ->
                     SwipeToDeleteContainer(
-                        item = template,
+                        item = templateItem.workoutTemplate,
                         onDismiss = {
                             viewModel.deleteTemplate(it)
                         }
                     ) {
                         WorkoutTemplateCard(
-                            template = template,
+                            template = templateItem,
                             modifier = Modifier.clickable {
-                                onNavigateToEditTemplate(template.id)
+                                onNavigateToEditTemplate(templateItem.workoutTemplate.id)
                             }
                         )
                     }
@@ -88,16 +93,35 @@ fun WorkoutTemplatesListScreen(
 
 @Composable
 private fun WorkoutTemplateCard(
-    template: WorkoutTemplate,
+    template: WorkoutTemplateWithExerciseCount,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = template.name, style = MaterialTheme.typography.titleMedium)
-            // Can add more details here later, like number of exercises
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.FitnessCenter,
+                contentDescription = "Exercise icon",
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text(
+                    text = template.workoutTemplate.name,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = "${template.exerciseCount} exercises",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         }
     }
 }
