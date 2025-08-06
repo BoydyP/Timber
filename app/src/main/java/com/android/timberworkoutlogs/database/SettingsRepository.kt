@@ -42,7 +42,7 @@ class SettingsRepository(
             _weightUnit.value = initialUnit
 
             val initialDynamicTheme = dataStore.data.map { preferences ->
-                preferences[PreferencesKeys.DYNAMIC_THEME] ?: false
+                preferences[PreferencesKeys.DYNAMIC_THEME] ?: true
             }.first()
             _dynamicTheme.value = initialDynamicTheme
         }
