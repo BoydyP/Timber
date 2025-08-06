@@ -10,10 +10,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -33,7 +36,8 @@ import com.android.timberworkoutlogs.ui.theme.TimberOrange
 fun CreateTemplateScreen(
     viewModel: CreateWorkoutTemplateViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit,
-    onNavigateToSelectExercise: (exerciseIndex: Int) -> Unit
+    onNavigateToSelectExercise: (exerciseIndex: Int) -> Unit,
+    onStartWorkout: (workoutId: Long) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val screenTitle = if (uiState.isEditing) "Edit Template" else "Create Template"
@@ -41,6 +45,18 @@ fun CreateTemplateScreen(
     ContextualScaffold(
         title = { Text(screenTitle) },
         onNavigateBack = onNavigateBack,
+        actions = {
+            if (uiState.isEditing) {
+                IconButton(
+                    onClick = { viewModel.startWorkout(onStartWorkout) },
+                    colors = IconButtonDefaults.iconButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = "Start Workout")
+                }
+            }
+        }
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
             LazyColumn(

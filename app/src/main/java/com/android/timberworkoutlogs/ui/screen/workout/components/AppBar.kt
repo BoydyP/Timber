@@ -2,7 +2,10 @@ package com.android.timberworkoutlogs.ui.screen.workout.components
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,6 +30,7 @@ fun WorkoutTopAppBar(
     title: String,
     timerText: String,
     onDiscardWorkout: () -> Unit,
+    onImportFromTemplate: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var isConfirming by remember { mutableStateOf(false) }
@@ -45,6 +49,9 @@ fun WorkoutTopAppBar(
     TopAppBar(
         title = { Text(title, fontWeight = FontWeight.Bold) },
         actions = {
+            IconButton(onClick = onImportFromTemplate) {
+                Icon(Icons.Default.Add, contentDescription = "Import from Template")
+            }
             Text(
                 text = timerText,
                 style = MaterialTheme.typography.bodyLarge,

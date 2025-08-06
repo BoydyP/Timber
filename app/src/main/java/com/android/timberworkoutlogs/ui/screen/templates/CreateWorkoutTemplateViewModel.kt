@@ -205,6 +205,15 @@ class CreateWorkoutTemplateViewModel @Inject constructor(
         }
     }
 
+    fun startWorkout(onSuccess: (workoutId: Long) -> Unit) {
+        viewModelScope.launch {
+            if (templateId != -1L) {
+                val newWorkoutId = workoutTemplateRepository.createWorkoutFromTemplate(templateId)
+                onSuccess(newWorkoutId)
+            }
+        }
+    }
+
     companion object {
         private val PLACEHOLDER_DEFINITION_ID =
             UUID.fromString("00000000-0000-0000-0000-000000000000")

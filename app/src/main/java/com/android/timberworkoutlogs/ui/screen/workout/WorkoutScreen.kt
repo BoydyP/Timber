@@ -12,17 +12,22 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -51,6 +56,7 @@ import com.android.timberworkoutlogs.ui.theme.TimberOrange
 import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 import java.util.UUID
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkoutScreen(
     workoutViewModel: WorkoutViewModel,
@@ -62,6 +68,7 @@ fun WorkoutScreen(
     val workoutExercises = workoutViewModel.workoutExercises
     val exerciseDefinitions = workoutViewModel.exerciseDefinitions
     val isWorkoutEmpty by workoutViewModel.isWorkoutEmpty.collectAsStateWithLifecycle()
+    val templates by workoutViewModel.templates.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var timerService by remember { mutableStateOf<TimerService?>(null) }
     val timerText by timerService?.timerText?.collectAsState("") ?: remember { mutableStateOf("") }
@@ -83,6 +90,8 @@ fun WorkoutScreen(
             hasNotificationPermission = isGranted
         }
     )
+    var showTemplateSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
 
     val serviceConnection = remember {
         object : ServiceConnection {
@@ -137,6 +146,7 @@ fun WorkoutScreen(
                     timerService?.stopTimer()
                     workoutViewModel.onDiscardWorkout(onNavigateBack)
                 },
+                onImportFromTemplate = { showTemplateSheet = true }
             )
         },
         bottomBar = {
@@ -164,6 +174,28 @@ fun WorkoutScreen(
             onAddExercise = workoutViewModel::onAddExercise,
             onNavigateToSelectExercise = onNavigateToSelectExercise
         )
+    }
+
+    if (showTemplateSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showTemplateSheet = false },
+            sheetState = sheetState
+        ) {
+            LazyColumn {
+                items(templates) { template ->
+                    Text(
+                        text = template.workoutTemplate.name,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                workoutViewModel.importExercisesFromTemplate(template.workoutTemplate.id)
+                                showTemplateSheet = false
+                            }
+                            .padding(16.dp)
+                    )
+                }
+            }
+        }
     }
 }
 

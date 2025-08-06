@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.android.timberworkoutlogs.database.ExerciseDefinitionRepository
 import com.android.timberworkoutlogs.database.SettingsRepository
 import com.android.timberworkoutlogs.database.WorkoutRepository
+import com.android.timberworkoutlogs.database.WorkoutTemplateRepository
 import com.android.timberworkoutlogs.models.DistanceAndTimeSet
 import com.android.timberworkoutlogs.models.ExerciseDefinition
 import com.android.timberworkoutlogs.models.ExerciseSet
@@ -18,6 +19,7 @@ import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.Workout
 import com.android.timberworkoutlogs.models.WorkoutExercise
+import com.android.timberworkoutlogs.models.WorkoutTemplateWithExerciseCount
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -32,6 +34,7 @@ private const val TAG = "WorkoutViewModel"
 @HiltViewModel
 class WorkoutViewModel @Inject constructor(
     private val workoutRepository: WorkoutRepository,
+    private val workoutTemplateRepository: WorkoutTemplateRepository,
     private val exerciseDefinitionRepository: ExerciseDefinitionRepository,
     private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
@@ -63,6 +66,13 @@ class WorkoutViewModel @Inject constructor(
             initialValue = true
         )
     private var currentWorkoutId: Long? = null
+    val templates: StateFlow<List<WorkoutTemplateWithExerciseCount>> =
+        workoutTemplateRepository.getAllTemplatesWithExerciseCount()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList()
+            )
 
     init {
         Log.d(TAG, "ViewModel initialized")
@@ -223,5 +233,30 @@ class WorkoutViewModel @Inject constructor(
                 onNavigateBack()
             }
         } ?: onNavigateBack()
+    }
+
+    fun importExercisesFromTemplate(templateId: Long) {
+        viewModelScope.launch {
+            val templateWithExercises =
+                workoutTemplateRepository.getTemplateWithExercises(templateId)
+            // Remove the placeholder exercise
+            if (workoutExercises.size == 1 && exerciseDefinitions.firstOrNull() == null) {
+                workoutExercises.clear()
+                exerciseDefinitions.clear()
+            }
+
+            templateWithExercises.exercises.forEach { templateExercise ->
+                val definition =
+                    exerciseDefinitionRepository.getExerciseDefinition(templateExercise.definitionId)
+                val newWorkoutExercise = WorkoutExercise(
+                    workoutId = currentWorkoutId!!,
+                    definitionId = templateExercise.definitionId,
+                    sets = templateExercise.sets,
+                    unit = settingsRepository.weightUnit.first()
+                )
+                workoutExercises.add(newWorkoutExercise)
+                exerciseDefinitions.add(definition)
+            }
+        }
     }
 }

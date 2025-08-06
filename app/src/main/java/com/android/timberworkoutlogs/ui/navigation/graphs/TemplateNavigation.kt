@@ -3,6 +3,7 @@ package com.android.timberworkoutlogs.ui.navigation.graphs
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavOptions
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.android.timberworkoutlogs.ui.elements.MainLayout
@@ -65,6 +66,12 @@ fun NavGraphBuilder.templateGraph(navController: NavController) {
                     index
                 )
                 navController.navigate(AppDestinations.SELECT_EXERCISE_ROUTE)
+            },
+            onStartWorkout = { workoutId ->
+                navController.navigate(
+                    "${AppDestinations.WORKOUT_ROUTE}?workoutId=$workoutId",
+                    navOptions = NavOptions.Builder().setExitAnim(0).build()
+                )
             }
         )
     }
