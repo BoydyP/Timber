@@ -15,6 +15,12 @@ object DefaultExercises {
             ExerciseDefinition(name = "Incline Bench Press", equipment = ExerciseEquipment.DUMBBELL, muscleGroups = listOf(MuscleGroup.CHEST, MuscleGroup.SHOULDERS), logType = LogType.WEIGHT_AND_REPS),
             ExerciseDefinition(name = "Fly", equipment = ExerciseEquipment.DUMBBELL, muscleGroups = listOf(MuscleGroup.CHEST), logType = LogType.WEIGHT_AND_REPS),
             ExerciseDefinition(name = "Fly", equipment = ExerciseEquipment.CABLE, muscleGroups = listOf(MuscleGroup.CHEST), logType = LogType.WEIGHT_AND_REPS),
+            ExerciseDefinition(
+                name = "Fly",
+                equipment = ExerciseEquipment.MACHINE,
+                muscleGroups = listOf(MuscleGroup.CHEST),
+                logType = LogType.WEIGHT_AND_REPS
+            ),
             ExerciseDefinition(name = "Chest Press", equipment = ExerciseEquipment.MACHINE, muscleGroups = listOf(MuscleGroup.CHEST), logType = LogType.WEIGHT_AND_REPS),
             ExerciseDefinition(name = "Push Up", equipment = ExerciseEquipment.BODYWEIGHT, muscleGroups = listOf(MuscleGroup.CHEST, MuscleGroup.TRICEPS), logType = LogType.REPS_ONLY),
             ExerciseDefinition(name = "Dip", equipment = ExerciseEquipment.BODYWEIGHT, muscleGroups = listOf(MuscleGroup.CHEST, MuscleGroup.TRICEPS), logType = LogType.REPS_ONLY),
@@ -69,6 +75,12 @@ object DefaultExercises {
             ExerciseDefinition(name = "Close Grip Bench Press", equipment = ExerciseEquipment.BARBELL, muscleGroups = listOf(MuscleGroup.TRICEPS, MuscleGroup.CHEST), logType = LogType.WEIGHT_AND_REPS),
 
             // --- CARDIO & ABS ---
+            ExerciseDefinition(
+                name = "Cycling",
+                equipment = ExerciseEquipment.MACHINE,
+                muscleGroups = listOf(MuscleGroup.LEGS),
+                logType = LogType.DISTANCE_AND_TIME
+            ),
             ExerciseDefinition(name = "Treadmill Run", equipment = ExerciseEquipment.MACHINE, muscleGroups = listOf(MuscleGroup.FULL_BODY), logType = LogType.DISTANCE_AND_TIME),
             ExerciseDefinition(name = "Plank", equipment = ExerciseEquipment.BODYWEIGHT, muscleGroups = listOf(MuscleGroup.ABS), logType = LogType.TIME),
             ExerciseDefinition(name = "Crunch", equipment = ExerciseEquipment.BODYWEIGHT, muscleGroups = listOf(MuscleGroup.ABS), logType = LogType.REPS_ONLY)
