@@ -4,6 +4,7 @@ import android.util.Log
 import com.android.timberworkoutlogs.database.ExerciseDefinitionRepository
 import com.android.timberworkoutlogs.database.SettingsRepository
 import com.android.timberworkoutlogs.database.WorkoutRepository
+import com.android.timberworkoutlogs.database.WorkoutTemplateRepository
 import com.android.timberworkoutlogs.models.ExerciseDefinition
 import com.android.timberworkoutlogs.models.ExerciseEquipment
 import com.android.timberworkoutlogs.models.LogType
@@ -34,6 +35,7 @@ import java.util.UUID
 class WorkoutViewModelTest {
 
     private lateinit var workoutRepository: WorkoutRepository
+    private lateinit var workoutTemplateRepository: WorkoutTemplateRepository
     private lateinit var exerciseDefinitionRepository: ExerciseDefinitionRepository
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var viewModel: WorkoutViewModel
@@ -47,6 +49,7 @@ class WorkoutViewModelTest {
         every { Log.d(any(), any()) } returns 0
 
         workoutRepository = mockk(relaxed = true)
+        workoutTemplateRepository = mockk(relaxed = true)
         exerciseDefinitionRepository = mockk(relaxed = true)
         settingsRepository = mockk(relaxed = true)
 
@@ -54,7 +57,12 @@ class WorkoutViewModelTest {
         coEvery { workoutRepository.insertWorkout(any()) } returns 1L
 
         viewModel =
-            WorkoutViewModel(workoutRepository, exerciseDefinitionRepository, settingsRepository)
+            WorkoutViewModel(
+                workoutRepository,
+                workoutTemplateRepository,
+                exerciseDefinitionRepository,
+                settingsRepository
+            )
     }
 
     @After
