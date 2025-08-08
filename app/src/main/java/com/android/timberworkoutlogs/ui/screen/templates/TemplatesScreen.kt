@@ -1,4 +1,4 @@
-package com.android.timberworkoutlogs.ui.screen
+package com.android.timberworkoutlogs.ui.screen.templates
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
