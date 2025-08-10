@@ -98,10 +98,17 @@ fun NavGraphBuilder.slideComposable(
     },
     popEnterTransition: (@JvmSuppressWildcards
     AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition?)? = {
-        slideIntoContainer(
-            AnimatedContentTransitionScope.SlideDirection.Right,
-            tween(300)
-        )
+        if (initialState.destination.route == AppDestinations.WORKOUT_ROUTE && targetState.destination.route?.startsWith(
+                AppDestinations.CREATE_TEMPLATE_ROUTE
+            ) == true
+        ) {
+            EnterTransition.None
+        } else {
+            slideIntoContainer(
+                AnimatedContentTransitionScope.SlideDirection.Right,
+                tween(300)
+            )
+        }
     },
     popExitTransition: (@JvmSuppressWildcards
     AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition?)? = {
