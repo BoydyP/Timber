@@ -26,6 +26,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -39,9 +40,15 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.timberworkoutlogs.models.ExerciseDefinition
+import com.android.timberworkoutlogs.models.ExerciseEquipment
 import com.android.timberworkoutlogs.models.ExerciseSet
+import com.android.timberworkoutlogs.models.LogType
+import com.android.timberworkoutlogs.models.MuscleGroup
+import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.WorkoutExercise
+import com.android.timberworkoutlogs.models.WorkoutTemplate
+import com.android.timberworkoutlogs.models.WorkoutTemplateWithExerciseCount
 import com.android.timberworkoutlogs.ui.common.SwipeToDeleteContainer
 import com.android.timberworkoutlogs.ui.screen.exercise.components.ExerciseInputCard
 import com.android.timberworkoutlogs.ui.screen.workout.components.WorkoutBottomActions
@@ -53,8 +60,35 @@ import java.util.UUID
 
 private const val TIMER_TAG = "Timer Service"
 
+@Immutable
+data class WorkoutScreenState(
+    val workoutExercises: List<WorkoutExercise>,
+    val exerciseDefinitions: List<ExerciseDefinition?>,
+    val isWorkoutEmpty: Boolean,
+    val templates: List<WorkoutTemplateWithExerciseCount>,
+    val timerText: String
+)
+
+@Immutable
+data class WorkoutScreenActions(
+    val onNavigateBack: () -> Unit,
+    val onNavigateToSelectExercise: (exerciseIndex: Int) -> Unit,
+    val onOpenNotes: () -> Unit,
+    val onOpenPlateCalculator: () -> Unit,
+    val onAddSet: (UUID) -> Unit,
+    val deleteExercise: (WorkoutExercise) -> Unit,
+    val deleteSet: (UUID, ExerciseSet) -> Unit,
+    val onSetChanged: (UUID, Int, ExerciseSet) -> Unit,
+    val onExerciseUnitChange: (UUID, WeightUnit) -> Unit,
+    val onAddExercise: () -> Unit,
+    val onDiscardWorkout: () -> Unit,
+    val onFinishWorkout: () -> Unit,
+    val onImportFromTemplate: (Long) -> Unit,
+    val onStartTimer: () -> Unit,
+    val stopTimer: () -> Unit
+)
+
 @RequiresApi(Build.VERSION_CODES.Q)
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkoutScreen(
     workoutViewModel: WorkoutViewModel,
@@ -63,11 +97,41 @@ fun WorkoutScreen(
     onOpenNotes: () -> Unit,
     onOpenPlateCalculator: () -> Unit
 ) {
-    val workoutExercises = workoutViewModel.workoutExercises
-    val exerciseDefinitions = workoutViewModel.exerciseDefinitions
-    val isWorkoutEmpty by workoutViewModel.isWorkoutEmpty.collectAsStateWithLifecycle()
-    val templates by workoutViewModel.templates.collectAsStateWithLifecycle()
-    val timerText by workoutViewModel.timerText.collectAsState()
+    val state = WorkoutScreenState(
+        workoutExercises = workoutViewModel.workoutExercises,
+        exerciseDefinitions = workoutViewModel.exerciseDefinitions,
+        isWorkoutEmpty = workoutViewModel.isWorkoutEmpty.collectAsStateWithLifecycle(initialValue = true).value,
+        templates = workoutViewModel.templates.collectAsStateWithLifecycle().value,
+        timerText = workoutViewModel.timerText.collectAsState().value
+    )
+
+    val actions = WorkoutScreenActions(
+        onNavigateBack = onNavigateBack,
+        onNavigateToSelectExercise = onNavigateToSelectExercise,
+        onOpenNotes = onOpenNotes,
+        onOpenPlateCalculator = onOpenPlateCalculator,
+        onAddSet = workoutViewModel::onAddSet,
+        deleteExercise = workoutViewModel::deleteExercise,
+        deleteSet = workoutViewModel::deleteSet,
+        onSetChanged = workoutViewModel::onSetChanged,
+        onExerciseUnitChange = workoutViewModel::onExerciseUnitChange,
+        onAddExercise = workoutViewModel::onAddExercise,
+        onDiscardWorkout = { workoutViewModel.onDiscardWorkout(onNavigateBack) },
+        onFinishWorkout = { workoutViewModel.onFinishWorkout(onNavigateBack) },
+        onImportFromTemplate = workoutViewModel::importExercisesFromTemplate,
+        onStartTimer = workoutViewModel::startTimer,
+        stopTimer = { workoutViewModel.timerService?.stopTimer() }
+    )
+
+    WorkoutScreenContent(state = state, actions = actions)
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun WorkoutScreenContent(
+    state: WorkoutScreenState,
+    actions: WorkoutScreenActions
+) {
     val context = LocalContext.current
     var hasNotificationPermission by remember {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -86,7 +150,7 @@ fun WorkoutScreen(
         onResult = { isGranted ->
             hasNotificationPermission = isGranted
             if (isGranted) {
-                workoutViewModel.startTimer()
+                actions.onStartTimer()
             }
         }
     )
@@ -108,8 +172,7 @@ fun WorkoutScreen(
 
     LaunchedEffect(isConfirmingDiscard) {
         if (isConfirmingDiscard) {
-            Toast.makeText(context, "Tap once more to confirm discard", Toast.LENGTH_SHORT)
-                .show()
+            Toast.makeText(context, "Tap once more to confirm discard", Toast.LENGTH_SHORT).show()
             delay(3000)
             if (isConfirmingDiscard) {
                 isConfirmingDiscard = false
@@ -120,22 +183,22 @@ fun WorkoutScreen(
     LaunchedEffect(key1 = Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (hasNotificationPermission) {
-                workoutViewModel.startTimer()
+                actions.onStartTimer()
             } else {
                 permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         } else {
-            workoutViewModel.startTimer()
+            actions.onStartTimer()
         }
     }
 
     BackHandler(enabled = true) {
-        if (isWorkoutEmpty) {
+        if (state.isWorkoutEmpty) {
             Log.d(TIMER_TAG, "Timer service being stopped through back handler.")
-            workoutViewModel.timerService?.stopTimer()
-            workoutViewModel.onDiscardWorkout(onNavigateBack)
+            actions.stopTimer()
+            actions.onDiscardWorkout()
         } else {
-            onNavigateBack()
+            actions.onNavigateBack()
         }
     }
 
@@ -143,10 +206,8 @@ fun WorkoutScreen(
         topBar = {
             WorkoutTopAppBar(
                 title = "Log Workout",
-                timerText = timerText,
-                onDiscardWorkout = {
-                    workoutViewModel.onDiscardWorkout(onNavigateBack)
-                },
+                timerText = state.timerText,
+                onDiscardWorkout = actions.onDiscardWorkout,
                 onImportFromTemplate = { showTemplateSheet = true },
                 isConfirmingDiscard = isConfirmingDiscard,
                 onConfirmDiscard = { isConfirmingDiscard = true }
@@ -154,29 +215,29 @@ fun WorkoutScreen(
         },
         bottomBar = {
             WorkoutBottomActions(
-                onOpenNotes = onOpenNotes,
+                onOpenNotes = actions.onOpenNotes,
                 onFinishWorkout = {
                     Log.d(TIMER_TAG, "Timer service being stopped as workout is finished.")
-                    workoutViewModel.onFinishWorkout(onNavigateBack)
+                    actions.onFinishWorkout()
                 },
-                isFinishEnabled = !isWorkoutEmpty,
+                isFinishEnabled = !state.isWorkoutEmpty,
                 isConfirmingFinish = isConfirmingFinish,
                 onConfirmFinish = { isConfirmingFinish = true },
-                onOpenPlateCalculator = onOpenPlateCalculator
+                onOpenPlateCalculator = actions.onOpenPlateCalculator
             )
         }
     ) { innerPadding ->
         WorkoutExerciseList(
             modifier = Modifier.padding(innerPadding),
-            workoutExercises = workoutExercises,
-            exerciseDefinitions = exerciseDefinitions,
-            onAddSet = workoutViewModel::onAddSet,
-            onDeleteExercise = workoutViewModel::deleteExercise,
-            onDeleteSet = workoutViewModel::deleteSet,
-            onSetChanged = workoutViewModel::onSetChanged,
-            onExerciseUnitChange = workoutViewModel::onExerciseUnitChange,
-            onAddExercise = workoutViewModel::onAddExercise,
-            onNavigateToSelectExercise = onNavigateToSelectExercise
+            workoutExercises = state.workoutExercises,
+            exerciseDefinitions = state.exerciseDefinitions,
+            onAddSet = actions.onAddSet,
+            onDeleteExercise = actions.deleteExercise,
+            onDeleteSet = actions.deleteSet,
+            onSetChanged = actions.onSetChanged,
+            onExerciseUnitChange = actions.onExerciseUnitChange,
+            onAddExercise = actions.onAddExercise,
+            onNavigateToSelectExercise = actions.onNavigateToSelectExercise
         )
     }
 
@@ -186,13 +247,13 @@ fun WorkoutScreen(
             sheetState = sheetState
         ) {
             LazyColumn {
-                items(templates) { template ->
+                items(state.templates) { template ->
                     Text(
                         text = template.workoutTemplate.name,
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                workoutViewModel.importExercisesFromTemplate(template.workoutTemplate.id)
+                                actions.onImportFromTemplate(template.workoutTemplate.id)
                                 showTemplateSheet = false
                             }
                             .padding(16.dp)
@@ -270,6 +331,69 @@ private fun WorkoutExerciseList(
 @Composable
 fun WorkoutScreenPreview() {
     TimberWorkoutLogsTheme {
-        // TODO: Previewing this screen now requires a mocked ViewModel
+        val exerciseDef1 = ExerciseDefinition(
+            name = "Barbell Bench Press",
+            logType = LogType.WEIGHT_AND_REPS,
+            equipment = ExerciseEquipment.BARBELL,
+            muscleGroups = listOf(
+                MuscleGroup.CHEST
+            )
+        )
+        val exerciseDef2 = ExerciseDefinition(
+            name = "Cable Crossovers",
+            logType = LogType.WEIGHT_AND_REPS,
+            equipment = ExerciseEquipment.CABLE,
+            muscleGroups = listOf(
+                MuscleGroup.CHEST
+            )
+        )
+        val state = WorkoutScreenState(
+            workoutExercises = listOf(
+                WorkoutExercise(
+                    workoutId = 0L,
+                    definitionId = exerciseDef1.id,
+                    sets = listOf(
+                        WeightAndRepsSet(reps = 10, weight = 135.0, isDone = true),
+                        WeightAndRepsSet(reps = 8, weight = 145.0, isDone = true),
+                        WeightAndRepsSet(reps = 6, weight = 155.0, isDone = false)
+                    )
+                ),
+                WorkoutExercise(
+                    workoutId = 0L,
+                    definitionId = exerciseDef2.id,
+                    sets = listOf(
+                        WeightAndRepsSet(reps = 12, weight = 45.0, isDone = true),
+                        WeightAndRepsSet(reps = 10, weight = 50.0, isDone = false)
+                    )
+                )
+            ),
+            exerciseDefinitions = listOf(exerciseDef1, exerciseDef2),
+            isWorkoutEmpty = false,
+            templates = listOf(
+                WorkoutTemplateWithExerciseCount(WorkoutTemplate(id = 1, name = "Chest Day"), 5),
+                WorkoutTemplateWithExerciseCount(WorkoutTemplate(id = 2, name = "Back Day"), 6)
+            ),
+            timerText = "00:15:23"
+        )
+
+        val actions = WorkoutScreenActions(
+            onNavigateBack = {},
+            onNavigateToSelectExercise = {},
+            onOpenNotes = {},
+            onOpenPlateCalculator = {},
+            onAddSet = {},
+            deleteExercise = {},
+            deleteSet = { _, _ -> },
+            onSetChanged = { _, _, _ -> },
+            onExerciseUnitChange = { _, _ -> },
+            onAddExercise = {},
+            onDiscardWorkout = {},
+            onFinishWorkout = {},
+            onImportFromTemplate = {},
+            onStartTimer = {},
+            stopTimer = {}
+        )
+
+        WorkoutScreenContent(state = state, actions = actions)
     }
 }
