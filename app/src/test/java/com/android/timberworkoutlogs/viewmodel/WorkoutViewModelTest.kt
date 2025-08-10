@@ -1,5 +1,6 @@
 package com.android.timberworkoutlogs.viewmodel
 
+import android.app.Application
 import android.util.Log
 import com.android.timberworkoutlogs.database.ExerciseDefinitionRepository
 import com.android.timberworkoutlogs.database.SettingsRepository
@@ -38,6 +39,7 @@ class WorkoutViewModelTest {
     private lateinit var workoutTemplateRepository: WorkoutTemplateRepository
     private lateinit var exerciseDefinitionRepository: ExerciseDefinitionRepository
     private lateinit var settingsRepository: SettingsRepository
+    private lateinit var application: Application
     private lateinit var viewModel: WorkoutViewModel
 
     private val testDispatcher = StandardTestDispatcher()
@@ -52,6 +54,7 @@ class WorkoutViewModelTest {
         workoutTemplateRepository = mockk(relaxed = true)
         exerciseDefinitionRepository = mockk(relaxed = true)
         settingsRepository = mockk(relaxed = true)
+        application = mockk(relaxed = true)
 
         coEvery { settingsRepository.weightUnit } returns MutableStateFlow(WeightUnit.KG)
         coEvery { workoutRepository.insertWorkout(any()) } returns 1L
@@ -61,7 +64,8 @@ class WorkoutViewModelTest {
                 workoutRepository,
                 workoutTemplateRepository,
                 exerciseDefinitionRepository,
-                settingsRepository
+                settingsRepository,
+                application
             )
     }
 
