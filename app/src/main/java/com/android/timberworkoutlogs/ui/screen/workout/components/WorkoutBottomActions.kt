@@ -14,10 +14,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,6 +26,8 @@ fun WorkoutBottomActions(
     onOpenNotes: () -> Unit,
     onFinishWorkout: () -> Unit,
     isFinishEnabled: Boolean,
+    isConfirmingFinish: Boolean,
+    onConfirmFinish: () -> Unit,
     onOpenPlateCalculator: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -43,7 +41,12 @@ fun WorkoutBottomActions(
         IconButton(onClick = onOpenNotes, modifier = Modifier.size(56.dp)) {
             Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = "Session Notes", modifier = Modifier.size(32.dp))
         }
-        CompleteWorkoutButton(onFinishWorkout = onFinishWorkout, isFinishEnabled = isFinishEnabled)
+        CompleteWorkoutButton(
+            onFinishWorkout = onFinishWorkout,
+            isFinishEnabled = isFinishEnabled,
+            isConfirming = isConfirmingFinish,
+            onConfirmFinish = onConfirmFinish
+        )
         IconButton(onClick = onOpenPlateCalculator, modifier = Modifier.size(56.dp)) {
             Icon(Icons.Filled.Calculate, contentDescription = "Plate Calculator", modifier = Modifier.size(32.dp))
         }
@@ -54,10 +57,10 @@ fun WorkoutBottomActions(
 private fun CompleteWorkoutButton(
     onFinishWorkout: () -> Unit,
     isFinishEnabled: Boolean,
+    isConfirming: Boolean,
+    onConfirmFinish: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var isConfirming by remember { mutableStateOf(false) }
-
     val clickedColor = TimberTheme.customColors.success
     val containerColor = if (isConfirming) clickedColor else Color.Transparent
     val text = if (isConfirming) "Are you sure?" else "Complete workout"
@@ -67,7 +70,7 @@ private fun CompleteWorkoutButton(
             if (isConfirming) {
                 onFinishWorkout()
             } else {
-                isConfirming = true
+                onConfirmFinish()
             }
         },
         colors = ButtonDefaults.textButtonColors(
@@ -85,6 +88,8 @@ private fun CompleteWorkoutButton(
 private fun PreviewCompleteWorkoutButton() {
     CompleteWorkoutButton(
         onFinishWorkout = {},
-        isFinishEnabled = true
+        isFinishEnabled = true,
+        isConfirming = false,
+        onConfirmFinish = {}
     )
 }

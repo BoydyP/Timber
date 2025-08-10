@@ -4,9 +4,11 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -46,10 +48,12 @@ import com.android.timberworkoutlogs.ui.screen.workout.components.WorkoutBottomA
 import com.android.timberworkoutlogs.ui.screen.workout.components.WorkoutTopAppBar
 import com.android.timberworkoutlogs.ui.theme.TimberOrange
 import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
+import kotlinx.coroutines.delay
 import java.util.UUID
 
 private const val TIMER_TAG = "Timer Service"
 
+@RequiresApi(Build.VERSION_CODES.Q)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkoutScreen(
@@ -88,6 +92,18 @@ fun WorkoutScreen(
     )
     var showTemplateSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
+    var isConfirmingFinish by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isConfirmingFinish) {
+        if (isConfirmingFinish) {
+            Toast.makeText(context, "Tap once more to confirm completion", Toast.LENGTH_SHORT)
+                .show()
+            delay(3000)
+            if (isConfirmingFinish) {
+                isConfirmingFinish = false
+            }
+        }
+    }
 
     LaunchedEffect(key1 = Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -130,6 +146,8 @@ fun WorkoutScreen(
                     workoutViewModel.onFinishWorkout(onNavigateBack)
                 },
                 isFinishEnabled = !isWorkoutEmpty,
+                isConfirmingFinish = isConfirmingFinish,
+                onConfirmFinish = { isConfirmingFinish = true },
                 onOpenPlateCalculator = onOpenPlateCalculator
             )
         }
