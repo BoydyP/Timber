@@ -93,6 +93,7 @@ fun WorkoutScreen(
     var showTemplateSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
     var isConfirmingFinish by remember { mutableStateOf(false) }
+    var isConfirmingDiscard by remember { mutableStateOf(false) }
 
     LaunchedEffect(isConfirmingFinish) {
         if (isConfirmingFinish) {
@@ -101,6 +102,17 @@ fun WorkoutScreen(
             delay(3000)
             if (isConfirmingFinish) {
                 isConfirmingFinish = false
+            }
+        }
+    }
+
+    LaunchedEffect(isConfirmingDiscard) {
+        if (isConfirmingDiscard) {
+            Toast.makeText(context, "Tap once more to confirm discard", Toast.LENGTH_SHORT)
+                .show()
+            delay(3000)
+            if (isConfirmingDiscard) {
+                isConfirmingDiscard = false
             }
         }
     }
@@ -135,7 +147,9 @@ fun WorkoutScreen(
                 onDiscardWorkout = {
                     workoutViewModel.onDiscardWorkout(onNavigateBack)
                 },
-                onImportFromTemplate = { showTemplateSheet = true }
+                onImportFromTemplate = { showTemplateSheet = true },
+                isConfirmingDiscard = isConfirmingDiscard,
+                onConfirmDiscard = { isConfirmingDiscard = true }
             )
         },
         bottomBar = {
