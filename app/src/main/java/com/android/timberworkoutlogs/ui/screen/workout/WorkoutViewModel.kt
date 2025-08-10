@@ -1,7 +1,18 @@
 package com.android.timberworkoutlogs.ui.screen.workout
 
+import android.app.Application
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
+import android.os.Build
+import android.os.IBinder
 import android.util.Log
+import androidx.annotation.RequiresApi
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,9 +31,12 @@ import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.Workout
 import com.android.timberworkoutlogs.models.WorkoutExercise
 import com.android.timberworkoutlogs.models.WorkoutTemplateWithExerciseCount
+import com.android.timberworkoutlogs.services.TimerService
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -37,7 +51,38 @@ class WorkoutViewModel @Inject constructor(
     private val workoutTemplateRepository: WorkoutTemplateRepository,
     private val exerciseDefinitionRepository: ExerciseDefinitionRepository,
     private val settingsRepository: SettingsRepository,
+    private val application: Application
 ) : ViewModel() {
+    var timerService: TimerService? by mutableStateOf(null)
+    private var isBound by mutableStateOf(false)
+    private var startTimerWhenReady = false
+
+    private val _timerText = MutableStateFlow("00:00:00")
+    val timerText = _timerText.asStateFlow()
+
+
+    private val serviceConnection = object : ServiceConnection {
+        @RequiresApi(Build.VERSION_CODES.Q)
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            val binder = service as TimerService.TimerBinder
+            timerService = binder.getService()
+            isBound = true
+            if (startTimerWhenReady) {
+                timerService?.startTimer()
+                startTimerWhenReady = false
+            }
+            viewModelScope.launch {
+                timerService?.timerText?.collect {
+                    _timerText.value = it
+                }
+            }
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            isBound = false
+            timerService = null
+        }
+    }
 
     val workoutExercises = mutableStateListOf<WorkoutExercise>()
     val exerciseDefinitions = mutableStateListOf<ExerciseDefinition?>()
@@ -77,6 +122,26 @@ class WorkoutViewModel @Inject constructor(
     init {
         Log.d(TAG, "ViewModel initialized")
         startNewWorkoutSession()
+        Intent(application, TimerService::class.java).also { intent ->
+            application.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+        }
+    }
+
+    override fun onCleared() {
+        if (isBound) {
+            application.unbindService(serviceConnection)
+            isBound = false
+        }
+        super.onCleared()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    fun startTimer() {
+        if (isBound) {
+            timerService?.startTimer()
+        } else {
+            startTimerWhenReady = true
+        }
     }
 
     private fun startNewWorkoutSession() {
@@ -189,8 +254,10 @@ class WorkoutViewModel @Inject constructor(
         Log.d(TAG, "Exercise unit changed to $newUnit for exercise with ID: $exerciseId")
     }
 
-    fun onFinishWorkout(durationSeconds: Int, onNavigateBack: () -> Unit) {
+    fun onFinishWorkout(onNavigateBack: () -> Unit) {
         Log.d(TAG, "onFinishWorkout called.")
+        val seconds = timerService?.getSecondsElapsed() ?: 0
+
 
         currentWorkoutId?.let { id ->
             viewModelScope.launch {
@@ -206,7 +273,7 @@ class WorkoutViewModel @Inject constructor(
                 val workoutToUpdate = workoutRepository.getWorkout(id)
                 workoutToUpdate?.let { workout ->
                     val updatedWorkout = workout.copy(
-                        durationSeconds = durationSeconds
+                        durationSeconds = seconds
                     )
                     workoutRepository.updateWorkout(updatedWorkout)
                     Log.d(TAG, "Updated final duration for workout ID: $id")
@@ -222,6 +289,7 @@ class WorkoutViewModel @Inject constructor(
 
     fun onDiscardWorkout(onNavigateBack: () -> Unit) {
         Log.d(TAG, "onDiscardWorkout called.")
+        timerService?.stopTimer()
         currentWorkoutId?.let { id ->
             viewModelScope.launch {
                 Log.d(TAG, "Workout count before delete: ${workoutRepository.getAllWorkoutCount()}.")

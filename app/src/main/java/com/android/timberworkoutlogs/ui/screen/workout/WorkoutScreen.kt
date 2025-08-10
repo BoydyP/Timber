@@ -1,17 +1,12 @@
 package com.android.timberworkoutlogs.ui.screen.workout
 
 import android.Manifest
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Build
-import android.os.IBinder
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -29,7 +24,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -46,15 +40,15 @@ import com.android.timberworkoutlogs.models.ExerciseDefinition
 import com.android.timberworkoutlogs.models.ExerciseSet
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.WorkoutExercise
-import com.android.timberworkoutlogs.services.TimerService
 import com.android.timberworkoutlogs.ui.common.SwipeToDeleteContainer
-import com.android.timberworkoutlogs.ui.common.timerFeatureNotSupportedToast
 import com.android.timberworkoutlogs.ui.screen.exercise.components.ExerciseInputCard
 import com.android.timberworkoutlogs.ui.screen.workout.components.WorkoutBottomActions
 import com.android.timberworkoutlogs.ui.screen.workout.components.WorkoutTopAppBar
 import com.android.timberworkoutlogs.ui.theme.TimberOrange
 import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 import java.util.UUID
+
+private const val TIMER_TAG = "Timer Service"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,9 +63,8 @@ fun WorkoutScreen(
     val exerciseDefinitions = workoutViewModel.exerciseDefinitions
     val isWorkoutEmpty by workoutViewModel.isWorkoutEmpty.collectAsStateWithLifecycle()
     val templates by workoutViewModel.templates.collectAsStateWithLifecycle()
+    val timerText by workoutViewModel.timerText.collectAsState()
     val context = LocalContext.current
-    var timerService by remember { mutableStateOf<TimerService?>(null) }
-    val timerText by timerService?.timerText?.collectAsState("") ?: remember { mutableStateOf("") }
     var hasNotificationPermission by remember {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             mutableStateOf(
@@ -88,49 +81,30 @@ fun WorkoutScreen(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
             hasNotificationPermission = isGranted
+            if (isGranted) {
+                workoutViewModel.startTimer()
+            }
         }
     )
     var showTemplateSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
 
-    val serviceConnection = remember {
-        object : ServiceConnection {
-            @RequiresApi(Build.VERSION_CODES.Q)
-            override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-                val binder = service as TimerService.TimerBinder
-                timerService = binder.getService()
-                if (hasNotificationPermission) {
-                    timerService?.startTimer()
-                } else {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    } else {
-                        timerFeatureNotSupportedToast(context)
-                    }
-                }
-            }
-
-            override fun onServiceDisconnected(name: ComponentName?) {
-                timerService = null
-            }
-        }
-    }
-
     LaunchedEffect(key1 = Unit) {
-        Intent(context, TimerService::class.java).also { intent ->
-            context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
-        }
-    }
-
-    DisposableEffect(key1 = Unit) {
-        onDispose {
-            context.unbindService(serviceConnection)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (hasNotificationPermission) {
+                workoutViewModel.startTimer()
+            } else {
+                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        } else {
+            workoutViewModel.startTimer()
         }
     }
 
     BackHandler(enabled = true) {
         if (isWorkoutEmpty) {
-            timerService?.stopTimer()
+            Log.d(TIMER_TAG, "Timer service being stopped through back handler.")
+            workoutViewModel.timerService?.stopTimer()
             workoutViewModel.onDiscardWorkout(onNavigateBack)
         } else {
             onNavigateBack()
@@ -143,7 +117,6 @@ fun WorkoutScreen(
                 title = "Log Workout",
                 timerText = timerText,
                 onDiscardWorkout = {
-                    timerService?.stopTimer()
                     workoutViewModel.onDiscardWorkout(onNavigateBack)
                 },
                 onImportFromTemplate = { showTemplateSheet = true }
@@ -153,9 +126,8 @@ fun WorkoutScreen(
             WorkoutBottomActions(
                 onOpenNotes = onOpenNotes,
                 onFinishWorkout = {
-                    val secondsElapsed = timerService?.getSecondsElapsed() ?: 0
-                    timerService?.stopTimer()
-                    workoutViewModel.onFinishWorkout(secondsElapsed, onNavigateBack)
+                    Log.d(TIMER_TAG, "Timer service being stopped as workout is finished.")
+                    workoutViewModel.onFinishWorkout(onNavigateBack)
                 },
                 isFinishEnabled = !isWorkoutEmpty,
                 onOpenPlateCalculator = onOpenPlateCalculator

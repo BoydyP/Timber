@@ -87,5 +87,4 @@ fun NavGraphBuilder.templateGraph(navController: NavController) {
             }
         )
     }
-
 }
