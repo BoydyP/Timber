@@ -3,6 +3,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.android.timberworkoutlogs.database.AppDatabase
 import com.android.timberworkoutlogs.database.data.DefaultExercises
+import com.android.timberworkoutlogs.database.data.DefaultTemplates
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -14,6 +15,7 @@ class DatabaseSeedingTest {
     @Test
     fun seedDatabaseAndCreateFile() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
+        context.deleteDatabase("timber_database.db")
 
         val db = Room.databaseBuilder(
             context,
@@ -21,9 +23,19 @@ class DatabaseSeedingTest {
             "timber_database.db"
         ).build()
         runBlocking {
-            val dao = db.exerciseDefinitionDao()
+            val exerciseDao = db.exerciseDefinitionDao()
             val defaultExercises = DefaultExercises.getPredefinedExercises()
-            defaultExercises.forEach { dao.addExerciseDefinition(it) }
+            defaultExercises.forEach { exerciseDao.addExerciseDefinition(it) }
+
+            val templateDao = db.workoutTemplateDao()
+            val templatesWithExercises =
+                DefaultTemplates.getTemplatesWithExercises(defaultExercises)
+
+            templatesWithExercises.forEach { (template, exercises) ->
+                val templateId = templateDao.insertTemplate(template)
+                val exercisesWithCorrectId = exercises.map { it.copy(templateId = templateId) }
+                templateDao.upsertTemplateExercises(exercisesWithCorrectId)
+            }
         }
 
         db.close()

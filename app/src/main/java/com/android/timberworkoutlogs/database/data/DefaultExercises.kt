@@ -27,6 +27,12 @@ object DefaultExercises {
 
             // --- BACK ---
             ExerciseDefinition(name = "Deadlift", equipment = ExerciseEquipment.BARBELL, muscleGroups = listOf(MuscleGroup.BACK, MuscleGroup.LEGS, MuscleGroup.FULL_BODY), logType = LogType.WEIGHT_AND_REPS),
+            ExerciseDefinition(
+                name = "Barbell Row",
+                equipment = ExerciseEquipment.BARBELL,
+                muscleGroups = listOf(MuscleGroup.BACK, MuscleGroup.BICEPS),
+                logType = LogType.WEIGHT_AND_REPS
+            ),
             ExerciseDefinition(name = "Bent Over Row", equipment = ExerciseEquipment.BARBELL, muscleGroups = listOf(MuscleGroup.BACK, MuscleGroup.BICEPS), logType = LogType.WEIGHT_AND_REPS),
             ExerciseDefinition(name = "Bent Over Row", equipment = ExerciseEquipment.DUMBBELL, muscleGroups = listOf(MuscleGroup.BACK, MuscleGroup.BICEPS), logType = LogType.WEIGHT_AND_REPS),
             ExerciseDefinition(name = "Pull Up", equipment = ExerciseEquipment.BODYWEIGHT, muscleGroups = listOf(MuscleGroup.BACK, MuscleGroup.BICEPS), logType = LogType.REPS_ONLY),
