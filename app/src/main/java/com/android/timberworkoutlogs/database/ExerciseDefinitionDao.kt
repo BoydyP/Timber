@@ -3,6 +3,7 @@ package com.android.timberworkoutlogs.database
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.android.timberworkoutlogs.models.ExerciseDefinition
@@ -20,6 +21,12 @@ interface ExerciseDefinitionDao {
     fun getExerciseDefinitions(): Flow<List<ExerciseDefinition>>
 
     /**
+     * Searches for exercise definitions by name.
+     */
+    @Query("SELECT * FROM exercise_definitions WHERE name LIKE '%' || :query || '%' ORDER BY name ASC")
+    fun searchExerciseDefinitions(query: String): Flow<List<ExerciseDefinition>>
+
+    /**
      * Gets a single exercise definition by its ID.
      */
     @Query("SELECT * FROM exercise_definitions WHERE id=(:id)")
@@ -28,7 +35,7 @@ interface ExerciseDefinitionDao {
     /**
      * Inserts a new exercise definition into the database.
      */
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun addExerciseDefinition(exercise: ExerciseDefinition)
 
     /**

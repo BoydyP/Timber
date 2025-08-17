@@ -13,6 +13,10 @@ class ExerciseDefinitionRepository(private val exerciseDefinitionDao: ExerciseDe
 
     val allExerciseDefinitions: Flow<List<ExerciseDefinition>> = exerciseDefinitionDao.getExerciseDefinitions()
 
+    fun searchExerciseDefinitions(query: String): Flow<List<ExerciseDefinition>> {
+        return exerciseDefinitionDao.searchExerciseDefinitions(query)
+    }
+
     suspend fun getExerciseDefinition(id: UUID): ExerciseDefinition {
         return exerciseDefinitionDao.getExerciseDefinition(id)
     }

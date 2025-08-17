@@ -12,8 +12,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
@@ -34,7 +32,6 @@ import com.android.timberworkoutlogs.ui.screen.exercise.components.ExerciseDefin
 import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 import java.util.UUID
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectExerciseScreen(
     viewModel: SelectExerciseViewModel,
@@ -43,19 +40,10 @@ fun SelectExerciseScreen(
     onNavigateBack: () -> Unit,
 ) {
     val exercises by viewModel.filteredExercises.collectAsState()
-    val searchText by viewModel.searchText.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
 
     ContextualScaffold(
-        title = {
-            OutlinedTextField(
-                value = searchText,
-                onValueChange = viewModel::onSearchTextChange,
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Search exercises...") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
-                singleLine = true
-            )
-        },
+        title = { Text("Select Exercise") },
         onNavigateBack = onNavigateBack,
         floatingActionButton = {
             FloatingActionButton(onClick = onNavigateToCreateExercise) {
@@ -63,26 +51,49 @@ fun SelectExerciseScreen(
             }
         }
     ) { innerPadding ->
-        if (exercises.isEmpty()) {
-            Box(
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = viewModel::onSearchQueryChange,
+                label = { Text("Search") },
                 modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("No exercises found.")
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.padding(innerPadding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(exercises, key = { it.id }) { exercise ->
-                    ExerciseDefinitionCard(
-                        exercise = exercise,
-                        modifier = Modifier.clickable { onExerciseSelected(exercise.id) }
-                    )
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+
+            if (exercises.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    val message = if (searchQuery.isNotBlank()) {
+                        "No exercises match your search."
+                    } else {
+                        "No exercises defined yet. Tap the '+' to add one."
+                    }
+                    Text(message)
+                }
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(
+                        start = 16.dp,
+                        end = 16.dp,
+                        bottom = 80.dp // To avoid FAB overlap
+                    ),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(exercises, key = { it.id }) { exercise ->
+                        ExerciseDefinitionCard(
+                            exercise = exercise,
+                            modifier = Modifier.clickable { onExerciseSelected(exercise.id) }
+                        )
+                    }
                 }
             }
         }

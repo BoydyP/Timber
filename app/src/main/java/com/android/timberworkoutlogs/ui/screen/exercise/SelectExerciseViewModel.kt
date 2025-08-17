@@ -16,13 +16,13 @@ class SelectExerciseViewModel @Inject constructor(
     repository: ExerciseDefinitionRepository
 ) : ViewModel() {
 
-    private val _searchText = MutableStateFlow("")
-    val searchText = _searchText.asStateFlow()
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery = _searchQuery.asStateFlow()
 
     private val _allExercises = repository.allExerciseDefinitions
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val filteredExercises = searchText
+    val filteredExercises = searchQuery
         .combine(_allExercises) { text, exercises ->
             if (text.isBlank()) {
                 exercises
@@ -34,7 +34,7 @@ class SelectExerciseViewModel @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun onSearchTextChange(text: String) {
-        _searchText.value = text
+    fun onSearchQueryChange(text: String) {
+        _searchQuery.value = text
     }
 }
