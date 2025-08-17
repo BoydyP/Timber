@@ -16,7 +16,7 @@ object DefaultTemplates {
         val overheadPress =
             defaultExercises.first { it.name == "Overhead Press" && it.equipment.name.lowercase() == "barbell" }
         val pullUp = defaultExercises.first { it.name == "Pull Up" }
-        val barbellRow = defaultExercises.first { it.name == "Barbell Row" }
+        val barbellRow = defaultExercises.first { it.name == "Bent Over Row" }
         val latPulldown = defaultExercises.first { it.name == "Lat Pulldown" }
         val dumbbellPress =
             defaultExercises.first { it.name == "Bench Press" && it.equipment.name.lowercase() == "dumbbell" }
