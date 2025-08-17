@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import com.android.timberworkoutlogs.ui.common.SwipeToDeleteContainer
 import com.android.timberworkoutlogs.ui.elements.ContextualScaffold
 import com.android.timberworkoutlogs.ui.screen.exercise.components.ExerciseDefinitionCard
-import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 import java.util.UUID
 
 const val TEST_TAG = "exercise_list"
