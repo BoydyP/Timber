@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.WorkoutHistoryDisplayItem
 import java.text.DecimalFormat
 
@@ -67,13 +68,19 @@ fun WorkoutHistoryItemCard(
                     label = "Exercises",
                     value = displayItem.exerciseCount.toString()
                 )
-
-                if (displayItem.totalWeightLifted > 0) {
+                if (displayItem.totalWeightLiftedInKg > 0) {
                     val df = DecimalFormat("#,###")
+                    var weightValue: String
+                    if (displayItem.systemWeightUnit == WeightUnit.LB) {
+                        weightValue =
+                            "${df.format(displayItem.totalWeightLiftedInKg * 2.20462)} lbs"
+                    } else {
+                        weightValue = "${df.format(displayItem.totalWeightLiftedInKg)} kg"
+                    }
                     WorkoutStat(
                         icon = Icons.Outlined.Scale,
                         label = "Volume",
-                        value = "${df.format(displayItem.totalWeightLifted)} kg"
+                        value = weightValue
                     )
                 }
 

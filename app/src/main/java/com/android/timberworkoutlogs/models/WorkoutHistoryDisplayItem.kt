@@ -7,8 +7,9 @@ import java.util.Locale
 data class WorkoutHistoryDisplayItem(
     val workout: Workout,
     val exerciseCount: Int,
-    val totalWeightLifted: Double,
-    val totalDistance: Double
+    val totalDistance: Double,
+    val totalWeightLiftedInKg: Double,
+    val systemWeightUnit: WeightUnit
 ) {
     val formattedStartTime: String
         get() {

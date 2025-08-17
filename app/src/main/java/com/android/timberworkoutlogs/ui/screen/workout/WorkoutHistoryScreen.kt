@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.android.timberworkoutlogs.database.SettingsRepository
 import com.android.timberworkoutlogs.database.WorkoutDao
 import com.android.timberworkoutlogs.database.WorkoutExerciseDao
 import com.android.timberworkoutlogs.database.WorkoutRepository
@@ -150,11 +151,12 @@ fun WorkoutHistoryScreenPreview() {
 
     // 2. Create a Fake Repository using the Fakes.
     val fakeWorkoutRepository = WorkoutRepository(FakeWorkoutDao(), FakeWorkoutExerciseDao())
+    val fakeSettingsRepository = SettingsRepository()
 
     // 3. Create a real ViewModel with the fake repository.
     // Note: Creating a ViewModel directly in a Composable is generally an anti-pattern,
     // but it is a standard and necessary practice for creating isolated @Previews.
-    val previewViewModel = WorkoutHistoryViewModel(fakeWorkoutRepository)
+    val previewViewModel = WorkoutHistoryViewModel(fakeWorkoutRepository, fakeSettingsRepository)
 
     TimberWorkoutLogsTheme {
         WorkoutHistoryScreen(

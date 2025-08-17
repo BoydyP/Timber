@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class SettingsRepository(
-    private val dataStore: DataStore<Preferences>
+    private val dataStore: DataStore<Preferences>? = null
 ) {
 
     private object PreferencesKeys {
@@ -34,23 +34,25 @@ class SettingsRepository(
     private val repositoryScope = CoroutineScope(Dispatchers.IO)
 
     init {
-        repositoryScope.launch {
-            val initialUnit = dataStore.data.map { preferences ->
-                val unitName = preferences[PreferencesKeys.WEIGHT_UNIT] ?: WeightUnit.KG.name
-                WeightUnit.valueOf(unitName)
-            }.first()
-            _weightUnit.value = initialUnit
+        dataStore?.let {
+            repositoryScope.launch {
+                val initialUnit = it.data.map { preferences ->
+                    val unitName = preferences[PreferencesKeys.WEIGHT_UNIT] ?: WeightUnit.KG.name
+                    WeightUnit.valueOf(unitName)
+                }.first()
+                _weightUnit.value = initialUnit
 
-            val initialDynamicTheme = dataStore.data.map { preferences ->
-                preferences[PreferencesKeys.DYNAMIC_THEME] ?: true
-            }.first()
-            _dynamicTheme.value = initialDynamicTheme
+                val initialDynamicTheme = it.data.map { preferences ->
+                    preferences[PreferencesKeys.DYNAMIC_THEME] ?: true
+                }.first()
+                _dynamicTheme.value = initialDynamicTheme
+            }
         }
     }
 
     suspend fun setWeightUnit(unit: WeightUnit) {
         _weightUnit.value = unit
-        dataStore.edit { preferences ->
+        dataStore?.edit { preferences ->
             preferences[PreferencesKeys.WEIGHT_UNIT] = unit.name
             Log.d("SettingsRepository", "Weight unit updated to $unit")
         }
@@ -58,7 +60,7 @@ class SettingsRepository(
 
     suspend fun setDynamicTheme(enabled: Boolean) {
         _dynamicTheme.value = enabled
-        dataStore.edit { preferences ->
+        dataStore?.edit { preferences ->
             preferences[PreferencesKeys.DYNAMIC_THEME] = enabled
             Log.d("SettingsRepository", "Dynamic theme updated to $enabled")
         }
