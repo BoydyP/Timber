@@ -1,5 +1,5 @@
 # Timber: Workout Logs
-<img width="900" height="900" alt="timberlogo" src="https://github.com/user-attachments/assets/9333210a-c47f-4d68-bd0c-cca4d9946d54" />
+<img width="300" height="300" alt="timberlogo" src="https://github.com/user-attachments/assets/9333210a-c47f-4d68-bd0c-cca4d9946d54" />
 
 Timber is a modern, offline-first workout logging application for Android, built with 100% Kotlin
 and Jetpack Compose. It's designed for fitness enthusiasts who want a simple, clean, and efficient
