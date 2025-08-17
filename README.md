@@ -1,5 +1,7 @@
 # Timber: Workout Logs
-<img width="300" height="300" alt="timberlogo" src="https://github.com/user-attachments/assets/9333210a-c47f-4d68-bd0c-cca4d9946d54" />
+<div align="center">
+  <img width="300" height="300" alt="timberlogo" src="https://github.com/user-attachments/assets/9333210a-c47f-4d68-bd0c-cca4d9946d54" />
+</div>
 
 Timber is a modern, offline-first workout logging application for Android, built with 100% Kotlin
 and Jetpack Compose. It's designed for fitness enthusiasts who want a simple, clean, and efficient
@@ -35,8 +37,8 @@ Timber is built using modern Android development practices and libraries.
   to abstract data sources.
 - **Database:** [Room](https://developer.android.com/training/data-storage/room) for local,
   persistent storage in a SQLite database.
-- **Asynchronous Programming:
-  ** [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html)
+- **Asynchronous Programming:**
+  [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html)
   and [Flow](https://kotlinlang.org/docs/flow.html) for managing background threads and handling
   streams of data.
 - **Dependency Injection:** [Hilt](https://dagger.dev/hilt/) for managing dependencies and
@@ -52,7 +54,7 @@ To get the project up and running on your local machine, follow these steps:
    of [Android Studio](https://developer.android.com/studio) installed.
 2. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/Timber.git
+   git clone https://github.com/P440Boyd/Timber.git
    ```
 3. **Open in Android Studio:** Open the cloned project in Android Studio.
 4. **Generate the Database:**
