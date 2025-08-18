@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
-import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -19,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.android.timberworkoutlogs.ui.icons.BarbellPlate
 import com.android.timberworkoutlogs.ui.theme.TimberTheme
 
 @Composable
@@ -48,7 +48,11 @@ fun WorkoutBottomActions(
             onConfirmFinish = onConfirmFinish
         )
         IconButton(onClick = onOpenPlateCalculator, modifier = Modifier.size(56.dp)) {
-            Icon(Icons.Filled.Calculate, contentDescription = "Plate Calculator", modifier = Modifier.size(32.dp))
+            Icon(
+                BarbellPlate,
+                contentDescription = "Plate Calculator",
+                modifier = Modifier.size(32.dp)
+            )
         }
     }
 }
