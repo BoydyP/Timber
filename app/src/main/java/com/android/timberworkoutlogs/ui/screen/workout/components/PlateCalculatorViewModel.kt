@@ -30,7 +30,7 @@ class PlateCalculatorViewModel @Inject constructor(
 
     private val kgPlates = listOf(25.0, 20.0, 15.0, 10.0, 5.0, 2.5, 1.25)
     private val lbPlates = listOf(45.0, 35.0, 25.0, 10.0, 5.0, 2.5, 1.25)
-    private val MAX_PLATES_PER_TYPE = 8
+    private val maxPlatesPerType = 8
 
     init {
         viewModelScope.launch {
@@ -43,7 +43,7 @@ class PlateCalculatorViewModel @Inject constructor(
                         unit = unit,
                         barbellWeight = barbell,
                         targetWeight = barbell,
-                        availablePlates = plates.associateWith { MAX_PLATES_PER_TYPE.toString() }
+                        availablePlates = plates.associateWith { maxPlatesPerType.toString() }
                     )
                 }
                 calculatePlates()
@@ -87,7 +87,7 @@ class PlateCalculatorViewModel @Inject constructor(
                 unit = unit,
                 barbellWeight = barbell,
                 targetWeight = barbell,
-                availablePlates = plates.associateWith { MAX_PLATES_PER_TYPE.toString() }
+                availablePlates = plates.associateWith { maxPlatesPerType.toString() }
             )
         }
         calculatePlates()
@@ -97,9 +97,9 @@ class PlateCalculatorViewModel @Inject constructor(
         val filteredText = quantityStr.filter { it.isDigit() }.take(2)
         val quantity = filteredText.toIntOrNull()
 
-        if (quantity != null && quantity > MAX_PLATES_PER_TYPE) {
+        if (quantity != null && quantity > maxPlatesPerType) {
             val updatedPlates = _uiState.value.availablePlates.toMutableMap()
-            updatedPlates[weight] = MAX_PLATES_PER_TYPE.toString()
+            updatedPlates[weight] = maxPlatesPerType.toString()
             _uiState.update { it.copy(availablePlates = updatedPlates) }
         } else {
             val updatedPlates = _uiState.value.availablePlates.toMutableMap()
