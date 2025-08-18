@@ -44,7 +44,7 @@ class TemplateE2ETest : TestCase() {
         }
 
         step("Create template") {
-            val templateName = "Full Body Workout"
+            val templateName = "A Test Workout Name"
             composeTestRule.onNodeWithText("Template Name").performTextInput(templateName)
             composeTestRule.onNodeWithText("Add Exercise").performClick()
             composeTestRule.onNodeWithText("Select Exercise...").performClick()
@@ -53,7 +53,7 @@ class TemplateE2ETest : TestCase() {
         }
 
         step("Verify template created") {
-            composeTestRule.onNodeWithText("Full Body Workout").assertIsDisplayed()
+            composeTestRule.onNodeWithText("A Test Workout Name").assertIsDisplayed()
         }
     }
 

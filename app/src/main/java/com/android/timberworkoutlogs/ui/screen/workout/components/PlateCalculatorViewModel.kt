@@ -13,7 +13,7 @@ data class PlateCalculatorUiState(
     val targetWeight: String = "45",
     val barbellWeight: String = "45",
     val unit: WeightUnit = WeightUnit.LB,
-    val availablePlates: Map<Double, String> = mapOf(),
+    val availablePlates: Map<Double, String> = mapOf(), // Changed to String for input
     val platesOnBar: List<Double> = emptyList()
 )
 
@@ -53,7 +53,7 @@ class PlateCalculatorViewModel @Inject constructor(
 
     fun onWeightChange(weightStr: String) {
         val filteredText = weightStr.filter { it.isDigit() || it == '.' }.take(6)
-        var weight = filteredText.toDoubleOrNull() ?: 0.0
+        val weightValue = filteredText.toDoubleOrNull() ?: 0.0
 
         // Calculate max possible weight and cap the input
         val barbellWeight = _uiState.value.barbellWeight.toDoubleOrNull() ?: 0.0
@@ -64,11 +64,13 @@ class PlateCalculatorViewModel @Inject constructor(
             }
         val maxPossibleWeight = barbellWeight + maxPlatesWeight
 
-        if (weight > maxPossibleWeight && maxPossibleWeight > 0) {
-            weight = maxPossibleWeight
+        val newTargetWeight = if (weightValue > maxPossibleWeight && maxPossibleWeight > 0) {
+            maxPossibleWeight.toString().removeSuffix(".0")
+        } else {
+            filteredText
         }
 
-        _uiState.update { it.copy(targetWeight = weight.toString().removeSuffix(".0")) }
+        _uiState.update { it.copy(targetWeight = newTargetWeight) }
         calculatePlates()
     }
 

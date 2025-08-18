@@ -16,11 +16,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
+import kotlin.math.max
 
 @Composable
 fun PlateCalculatorDialog(
@@ -119,6 +121,18 @@ fun PlateCalculatorDialog(
 
 @Composable
 fun Barbell(plates: List<Double>) {
+    val defaultPlateWidth = 20.dp
+    val minPlateWidth = 10.dp
+    val maxPlatesBeforeShrink = 7
+
+    val plateWidth = if (plates.size <= maxPlatesBeforeShrink) {
+        defaultPlateWidth
+    } else {
+        // Calculate a proportionally smaller width, but don't go below the minimum
+        val calculatedWidth = defaultPlateWidth * (maxPlatesBeforeShrink.toFloat() / plates.size)
+        max(minPlateWidth.value, calculatedWidth.value).dp
+    }
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
@@ -126,13 +140,14 @@ fun Barbell(plates: List<Double>) {
             .fillMaxWidth()
             .height(140.dp)
     ) {
-        // Left side plates (sorted smallest to largest)
+        // Left side plates (rendered in reverse order)
         Row(
             modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.End
         ) {
-            plates.sorted().forEach { plateWeight -> Plate(weight = plateWeight) }
+            plates.reversed()
+                .forEach { plateWeight -> Plate(weight = plateWeight, width = plateWidth) }
         }
 
         // The Bar
@@ -157,23 +172,23 @@ fun Barbell(plates: List<Double>) {
             )
         }
 
-        // Right side plates (sorted largest to smallest)
+        // Right side plates (rendered in the calculated order)
         Row(
             modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start
         ) {
-            plates.sortedDescending().forEach { plateWeight -> Plate(weight = plateWeight) }
+            plates.forEach { plateWeight -> Plate(weight = plateWeight, width = plateWidth) }
         }
     }
 }
 
 @Composable
-fun Plate(weight: Double) {
+fun Plate(weight: Double, width: Dp) {
     val height = when (weight) {
         25.0, 45.0 -> 120.dp
         20.0, 35.0 -> 110.dp
-        15.0, 25.0 -> 100.dp
+        15.0 -> 100.dp
         10.0 -> 85.dp
         5.0 -> 70.dp
         else -> 50.dp
@@ -199,7 +214,7 @@ fun Plate(weight: Double) {
     Box(
         modifier = Modifier
             .height(height)
-            .width(20.dp)
+            .width(width)
             .background(backgroundColor, RoundedCornerShape(4.dp))
             .border(1.dp, Color.Gray, RoundedCornerShape(4.dp)),
         contentAlignment = Alignment.Center
@@ -208,7 +223,8 @@ fun Plate(weight: Double) {
             text = if (weight % 1 == 0.0) weight.toInt().toString() else weight.toString(),
             color = textColor,
             fontWeight = FontWeight.Bold,
-            fontSize = 12.sp
+            fontSize = if (width == 10.dp) 8.sp else 12.sp,
+            textAlign = TextAlign.Center
         )
     }
 }
