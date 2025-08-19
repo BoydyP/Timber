@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -78,7 +79,9 @@ fun PlateCalculatorDialog(
                                 if (isChecked) nonSelectedUnit else viewModel.weightUnitFromSettings
                             viewModel.onUnitChange(newUnit)
                         },
-                        modifier = Modifier.padding(horizontal = 8.dp)
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp)
+                            .testTag("unit_switch")
                     )
                     Text(
                         text = nonSelectedUnit.toString(),
@@ -104,7 +107,9 @@ fun PlateCalculatorDialog(
                             value = uiState.availablePlates[plateWeight] ?: "",
                             onValueChange = { viewModel.onPlateQuantityChange(plateWeight, it) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.width(50.dp),
+                            modifier = Modifier
+                                .width(50.dp)
+                                .testTag("plate_quantity_${plateWeight}"),
                             textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center)
                         )
                     }
@@ -128,7 +133,6 @@ fun Barbell(plates: List<Double>) {
     val plateWidth = if (plates.size <= maxPlatesBeforeShrink) {
         defaultPlateWidth
     } else {
-        // Calculate a proportionally smaller width, but don't go below the minimum
         val calculatedWidth = defaultPlateWidth * (maxPlatesBeforeShrink.toFloat() / plates.size)
         max(minPlateWidth.value, calculatedWidth.value).dp
     }
@@ -140,7 +144,7 @@ fun Barbell(plates: List<Double>) {
             .fillMaxWidth()
             .height(140.dp)
     ) {
-        // Left side plates (rendered in reverse order)
+        // Left side plates
         Row(
             modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.CenterVertically,
@@ -172,7 +176,7 @@ fun Barbell(plates: List<Double>) {
             )
         }
 
-        // Right side plates (rendered in the calculated order)
+        // Right side plates
         Row(
             modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.CenterVertically,
@@ -195,19 +199,14 @@ fun Plate(weight: Double, width: Dp) {
     }
 
     val (backgroundColor, textColor) = when (weight) {
-        // IWF KG Colors (prioritized)
-        25.0 -> Color(0xFFD32F2F) to Color.White // Red
-        20.0 -> Color(0xFF1976D2) to Color.White // Blue
-        15.0 -> Color(0xFFFBC02D) to Color.Black // Yellow
-        10.0 -> Color(0xFF388E3C) to Color.White // Green
+        25.0 -> Color(0xFFD32F2F) to Color.White
+        20.0 -> Color(0xFF1976D2) to Color.White
+        15.0 -> Color(0xFFFBC02D) to Color.Black
+        10.0 -> Color(0xFF388E3C) to Color.White
         5.0 -> Color.Black to Color.White
         1.25 -> Color.White to Color.Black
-
-        // Common LB plate colors that don't conflict
-        45.0 -> Color(0xFF1976D2) to Color.White // Blue (like 20kg)
-        35.0 -> Color(0xFFFBC02D) to Color.Black // Yellow (like 15kg)
-
-        // Default for fractional plates (e.g., 2.5kg, 5lb, 2.5lb)
+        45.0 -> Color(0xFF1976D2) to Color.White
+        35.0 -> Color(0xFFFBC02D) to Color.Black
         else -> Color.DarkGray to Color.White
     }
 
@@ -216,15 +215,15 @@ fun Plate(weight: Double, width: Dp) {
             .height(height)
             .width(width)
             .background(backgroundColor, RoundedCornerShape(4.dp))
-            .border(1.dp, Color.Gray, RoundedCornerShape(4.dp)),
+            .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
+            .testTag("plate_${weight}"),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = if (weight % 1 == 0.0) weight.toInt().toString() else weight.toString(),
             color = textColor,
             fontWeight = FontWeight.Bold,
-            fontSize = if (width == 10.dp) 8.sp else 12.sp,
-            textAlign = TextAlign.Center
+            fontSize = 12.sp
         )
     }
 }

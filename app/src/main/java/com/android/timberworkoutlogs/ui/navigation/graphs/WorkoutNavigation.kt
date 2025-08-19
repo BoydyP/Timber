@@ -59,7 +59,10 @@ fun NavGraphBuilder.workoutGraph(navController: NavController) {
             }
         }
     ) { backStackEntry ->
-        val workoutViewModel: WorkoutViewModel = hiltViewModel()
+        val parentEntry = remember(backStackEntry) {
+            navController.getBackStackEntry(AppDestinations.HOME_ROUTE)
+        }
+        val workoutViewModel: WorkoutViewModel = hiltViewModel(parentEntry)
         var showPlateCalculator by remember { mutableStateOf(false) }
         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 

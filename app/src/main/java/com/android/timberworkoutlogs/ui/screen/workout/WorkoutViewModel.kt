@@ -32,6 +32,7 @@ import com.android.timberworkoutlogs.models.Workout
 import com.android.timberworkoutlogs.models.WorkoutExercise
 import com.android.timberworkoutlogs.models.WorkoutTemplateWithExerciseCount
 import com.android.timberworkoutlogs.services.TimerService
+import com.android.timberworkoutlogs.services.WorkoutStateHolder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -51,6 +52,7 @@ class WorkoutViewModel @Inject constructor(
     private val workoutTemplateRepository: WorkoutTemplateRepository,
     private val exerciseDefinitionRepository: ExerciseDefinitionRepository,
     private val settingsRepository: SettingsRepository,
+    private val workoutStateHolder: WorkoutStateHolder,
     private val application: Application
 ) : ViewModel() {
     var timerService: TimerService? by mutableStateOf(null)
@@ -72,6 +74,11 @@ class WorkoutViewModel @Inject constructor(
                 startTimerWhenReady = false
             }
             viewModelScope.launch {
+                timerService?.isTimerRunning?.collect {
+                    workoutStateHolder.setTimerRunning(it)
+                }
+            }
+            viewModelScope.launch {
                 timerService?.timerText?.collect {
                     _timerText.value = it
                 }
@@ -81,6 +88,7 @@ class WorkoutViewModel @Inject constructor(
         override fun onServiceDisconnected(name: ComponentName?) {
             isBound = false
             timerService = null
+            workoutStateHolder.setTimerRunning(false)
         }
     }
 
@@ -131,6 +139,7 @@ class WorkoutViewModel @Inject constructor(
         if (isBound) {
             application.unbindService(serviceConnection)
             isBound = false
+            workoutStateHolder.setTimerRunning(false)
         }
         super.onCleared()
     }

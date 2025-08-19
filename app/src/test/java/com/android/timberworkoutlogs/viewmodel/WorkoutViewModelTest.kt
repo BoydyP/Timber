@@ -13,6 +13,7 @@ import com.android.timberworkoutlogs.models.MuscleGroup
 import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.WorkoutExercise
+import com.android.timberworkoutlogs.services.WorkoutStateHolder
 import com.android.timberworkoutlogs.ui.screen.workout.WorkoutViewModel
 import io.mockk.coEvery
 import io.mockk.every
@@ -39,6 +40,7 @@ class WorkoutViewModelTest {
     private lateinit var workoutTemplateRepository: WorkoutTemplateRepository
     private lateinit var exerciseDefinitionRepository: ExerciseDefinitionRepository
     private lateinit var settingsRepository: SettingsRepository
+    private lateinit var workoutStateHolder: WorkoutStateHolder
     private lateinit var application: Application
     private lateinit var viewModel: WorkoutViewModel
 
@@ -54,6 +56,7 @@ class WorkoutViewModelTest {
         workoutTemplateRepository = mockk(relaxed = true)
         exerciseDefinitionRepository = mockk(relaxed = true)
         settingsRepository = mockk(relaxed = true)
+        workoutStateHolder = mockk(relaxed = true)
         application = mockk(relaxed = true)
 
         coEvery { settingsRepository.weightUnit } returns MutableStateFlow(WeightUnit.KG)
@@ -65,6 +68,7 @@ class WorkoutViewModelTest {
                 workoutTemplateRepository,
                 exerciseDefinitionRepository,
                 settingsRepository,
+                workoutStateHolder,
                 application
             )
     }

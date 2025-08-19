@@ -198,6 +198,7 @@ private fun WorkoutScreenContent(
             actions.stopTimer()
             actions.onDiscardWorkout()
         } else {
+            // If workout is not empty, just navigate back, preserving the state
             actions.onNavigateBack()
         }
     }

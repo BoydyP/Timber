@@ -16,7 +16,9 @@ import com.android.timberworkoutlogs.ui.screen.workout.WorkoutHistoryViewModel
 fun NavGraphBuilder.homeGraph(navController: NavController) {
     homeComposable(AppDestinations.HOME_ROUTE) {
         MainLayout(navController = navController) {
-            HomeScreen()
+            HomeScreen(
+                navigateToWorkout = { navController.navigate(AppDestinations.WORKOUT_ROUTE) }
+            )
         }
     }
     homeComposable(AppDestinations.STATS_ROUTE) {
@@ -39,5 +41,4 @@ fun NavGraphBuilder.homeGraph(navController: NavController) {
             SettingsScreen(viewModel = viewModel)
         }
     }
-
 }

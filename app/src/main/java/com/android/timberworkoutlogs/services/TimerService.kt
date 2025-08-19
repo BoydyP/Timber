@@ -34,6 +34,9 @@ class TimerService : Service() {
     private val scope = CoroutineScope(Dispatchers.Default)
     private val notificationChannelId = "TimerServiceChannel"
 
+    private val _isTimerRunning = MutableStateFlow(false)
+
+    val isTimerRunning = _isTimerRunning.asStateFlow()
 
     inner class TimerBinder : Binder() {
         fun getService(): TimerService = this@TimerService
@@ -53,6 +56,7 @@ class TimerService : Service() {
         )
 
         timerJob?.cancel()
+        _isTimerRunning.value = true
         timerJob = scope.launch {
             while (true) {
                 delay(1000)
@@ -66,6 +70,7 @@ class TimerService : Service() {
 
     fun stopTimer() {
         timerJob?.cancel()
+        _isTimerRunning.value = false
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
@@ -128,6 +133,7 @@ class TimerService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        _isTimerRunning.value = false
         timerJob?.cancel()
     }
 }

@@ -11,18 +11,36 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.android.timberworkoutlogs.ui.screen.workout.components.WorkoutInProgressBanner
 import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 import com.android.timberworkoutlogs.util.getGreetingByTime
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier) {
-    HomeScreenContent(modifier = modifier)
+fun HomeScreen(
+    navigateToWorkout: () -> Unit,
+    viewModel: HomeScreenViewModel = hiltViewModel()
+) {
+    val isWorkoutInProgress by viewModel.isWorkoutInProgress.collectAsState()
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        HomeScreenContent(modifier = Modifier.fillMaxSize())
+
+        if (isWorkoutInProgress) {
+            WorkoutInProgressBanner(
+                modifier = Modifier.align(Alignment.TopCenter),
+                navigateToWorkout = navigateToWorkout
+            )
+        }
+    }
 }
 
 @Composable
@@ -32,15 +50,14 @@ fun HomeScreenContent(modifier: Modifier = Modifier) {
             .padding(16.dp)
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            // TODO: Replace with actual user name from profile/auth
             text = getGreetingByTime(),
             style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier
                 .align(Alignment.Start)
-                .padding(bottom = 6.dp),
+                .padding(bottom = 8.dp),
         )
 
         PlaceholderContent(
@@ -88,11 +105,10 @@ fun PlaceholderContent(label: String, modifier: Modifier = Modifier) {
     }
 }
 
-
 @Preview(showBackground = true, widthDp = 360, heightDp = 740)
 @Composable
 fun HomeScreenPreview() {
     TimberWorkoutLogsTheme {
-        HomeScreen()
+        HomeScreen(navigateToWorkout = {})
     }
 }
