@@ -65,4 +65,9 @@ class SettingsRepository(
             Log.d("SettingsRepository", "Dynamic theme updated to $enabled")
         }
     }
+    suspend fun clearPreferences() {
+        dataStore?.edit { preferences ->
+            preferences.clear()
+        }
+    }
 }

@@ -12,6 +12,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.rule.GrantPermissionRule
 import com.android.timberworkoutlogs.MainActivity
 import com.android.timberworkoutlogs.database.SettingsRepository
+import com.android.timberworkoutlogs.models.WeightUnit
 import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -42,9 +43,21 @@ class PlateCalculatorDialogTest : TestCase() {
     @Before
     fun setUp() {
         hiltRule.inject()
+        // Explicitly set the default state before each test to prevent leaks
+        runBlocking {
+            settingsRepository.setWeightUnit(WeightUnit.KG)
+        }
         // Navigate to the workout screen and open the dialog
         composeTestRule.onNodeWithText("Workout").performClick()
         composeTestRule.onNodeWithContentDescription("Plate Calculator").performClick()
+    }
+
+    @After
+    fun tearDown() {
+        // Clear preferences after each test to ensure a clean slate for the next run
+        runBlocking {
+            settingsRepository.clearPreferences()
+        }
     }
 
     // --- KG Tests (Default Unit) ---
@@ -53,7 +66,7 @@ class PlateCalculatorDialogTest : TestCase() {
     fun whenSimpleWeightIsEntered_KG_correctPlatesAreDisplayed() = run {
         step("Enter a simple target weight in KG") {
             composeTestRule.onNodeWithText("Total Weight").performTextClearance()
-            composeTestRule.onNodeWithText("Total Weight").performTextInput("60") // Barbell is 20kg
+            composeTestRule.onNodeWithText("Total Weight").performTextInput("60")
         }
 
         step("Verify the correct plates are shown") {
@@ -65,8 +78,7 @@ class PlateCalculatorDialogTest : TestCase() {
     fun whenComplexWeightIsEntered_KG_correctPlatesAreDisplayed() = run {
         step("Enter a complex target weight in KG") {
             composeTestRule.onNodeWithText("Total Weight").performTextClearance()
-            composeTestRule.onNodeWithText("Total Weight")
-                .performTextInput("142.5") // 20kg bar + 61.25 per side
+            composeTestRule.onNodeWithText("Total Weight").performTextInput("142.5")
         }
 
         step("Verify the correct plates are shown") {
@@ -85,8 +97,7 @@ class PlateCalculatorDialogTest : TestCase() {
 
         step("Enter a target weight that would normally use 25kg plates") {
             composeTestRule.onNodeWithText("Total Weight").performTextClearance()
-            composeTestRule.onNodeWithText("Total Weight")
-                .performTextInput("90") // 20kg bar + 35 per side
+            composeTestRule.onNodeWithText("Total Weight").performTextInput("90")
         }
 
         step("Verify the calculator uses the next available plates (20s and 15s)") {
@@ -101,6 +112,7 @@ class PlateCalculatorDialogTest : TestCase() {
     fun whenSimpleWeightIsEntered_LB_correctPlatesAreDisplayed() = run {
         step("Switch to LB unit") {
             composeTestRule.onNodeWithTag("unit_switch").performClick()
+            Thread.sleep(500) // Wait for recomposition
         }
 
         step("Enter a simple target weight in LB") {
@@ -117,6 +129,7 @@ class PlateCalculatorDialogTest : TestCase() {
     fun whenComplexWeightIsEntered_LB_correctPlatesAreDisplayed() = run {
         step("Switch to LB unit") {
             composeTestRule.onNodeWithTag("unit_switch").performClick()
+            Thread.sleep(500) // Wait for recomposition
         }
 
         step("Enter a complex target weight in LB") {
@@ -134,8 +147,10 @@ class PlateCalculatorDialogTest : TestCase() {
 
     @Test
     fun whenPlateIsUnavailable_LB_calculatorUsesNextAvailable() = run {
-
-        // TODO: Figure out why this test is in LBs
+        step("Switch to LB unit") {
+            composeTestRule.onNodeWithTag("unit_switch").performClick()
+            Thread.sleep(500) // Wait for recomposition
+        }
 
         step("Find the text field for 45lb plates and set its quantity to 0") {
             composeTestRule.onNodeWithTag("plate_quantity_45.0").performTextClearance()
