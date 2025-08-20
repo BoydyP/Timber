@@ -8,6 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.min
 
 data class PlateCalculatorUiState(
     val targetWeight: String = "45",
@@ -55,7 +56,6 @@ class PlateCalculatorViewModel @Inject constructor(
         val filteredText = weightStr.filter { it.isDigit() || it == '.' }.take(6)
         val weightValue = filteredText.toDoubleOrNull() ?: 0.0
 
-        // Calculate max possible weight and cap the input
         val barbellWeight = _uiState.value.barbellWeight.toDoubleOrNull() ?: 0.0
         val maxPlatesWeight = _uiState.value.availablePlates.entries
             .sumOf { (plateValue, quantityStr) ->
@@ -118,18 +118,21 @@ class PlateCalculatorViewModel @Inject constructor(
             return
         }
 
-        var weightPerSide = (targetWeight - barbellWeight) / 2.0
+        var remainingWeightPerSide = (targetWeight - barbellWeight) / 2.0
         val platesForSide = mutableListOf<Double>()
 
         state.availablePlates.keys.sortedDescending().forEach { plateWeight ->
             val totalPlatesOfType = (state.availablePlates[plateWeight] ?: "0").toIntOrNull() ?: 0
-            val platesPerSide = totalPlatesOfType / 2
-            var platesUsedOnThisSide = 0
+            val availablePlatesOnThisSide = totalPlatesOfType / 2
 
-            while (weightPerSide >= plateWeight && platesUsedOnThisSide < platesPerSide) {
-                platesForSide.add(plateWeight)
-                weightPerSide -= plateWeight
-                platesUsedOnThisSide++
+            val numPlatesToUse = (remainingWeightPerSide / plateWeight).toInt()
+            val platesToAdd = min(numPlatesToUse, availablePlatesOnThisSide)
+
+            if (platesToAdd > 0) {
+                repeat(platesToAdd) {
+                    platesForSide.add(plateWeight)
+                }
+                remainingWeightPerSide -= platesToAdd * plateWeight
             }
         }
 

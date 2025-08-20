@@ -12,12 +12,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -144,14 +146,16 @@ fun Barbell(plates: List<Double>) {
             .fillMaxWidth()
             .height(140.dp)
     ) {
-        // Left side plates
-        Row(
-            modifier = Modifier.weight(1f),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.End
-        ) {
-            plates.reversed()
-                .forEach { plateWeight -> Plate(weight = plateWeight, width = plateWidth) }
+        // Left side plates (in Right-to-Left layout direction)
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start // Start in RTL means flush right
+            ) {
+                plates.sortedDescending()
+                    .forEach { plateWeight -> Plate(weight = plateWeight, width = plateWidth) }
+            }
         }
 
         // The Bar
@@ -162,12 +166,10 @@ fun Barbell(plates: List<Double>) {
                     .width(10.dp)
                     .background(Color.DarkGray, RoundedCornerShape(2.dp))
             )
-            Box(
-                modifier = Modifier
-                    .height(8.dp)
-                    .width(80.dp)
-                    .background(Color.LightGray)
-            )
+            Box(modifier = Modifier
+                .height(8.dp)
+                .width(80.dp)
+                .background(Color.LightGray))
             Box(
                 modifier = Modifier
                     .height(25.dp)
@@ -176,13 +178,14 @@ fun Barbell(plates: List<Double>) {
             )
         }
 
-        // Right side plates
+        // Right side plates (in default Left-to-Right layout direction)
         Row(
             modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start
         ) {
-            plates.forEach { plateWeight -> Plate(weight = plateWeight, width = plateWidth) }
+            plates.sortedDescending()
+                .forEach { plateWeight -> Plate(weight = plateWeight, width = plateWidth) }
         }
     }
 }
