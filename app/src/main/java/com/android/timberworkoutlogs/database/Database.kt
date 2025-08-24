@@ -13,11 +13,15 @@ import com.android.timberworkoutlogs.database.converters.LogTypeConverter
 import com.android.timberworkoutlogs.database.converters.MuscleGroupListConverter
 import com.android.timberworkoutlogs.database.converters.UUIDConverter
 import com.android.timberworkoutlogs.database.converters.WeightUnitConverter
+import com.android.timberworkoutlogs.database.data.DatabaseSeeder
 import com.android.timberworkoutlogs.models.ExerciseDefinition
 import com.android.timberworkoutlogs.models.TemplateExercise
 import com.android.timberworkoutlogs.models.Workout
 import com.android.timberworkoutlogs.models.WorkoutExercise
 import com.android.timberworkoutlogs.models.WorkoutTemplate
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Database(
     entities = [
@@ -113,7 +117,18 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "timber_database.db"
                 )
-                    .createFromAsset("database/timber_database.db")
+                    .addCallback(object : Callback() {
+                        override fun onCreate(db: SupportSQLiteDatabase) {
+                            super.onCreate(db)
+                            INSTANCE?.let { database ->
+                                // Default "Prod" build call. Comment this out to use the realistic seeder.
+//                                DatabaseSeeder.seedProdData(database)
+
+                                // For "Dev" builds, uncomment the line below:
+                                DatabaseSeeder.seedRealisticData(database)
+                            }
+                        }
+                    })
                     .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
                     .build()
                 INSTANCE = instance
