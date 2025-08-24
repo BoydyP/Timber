@@ -89,6 +89,8 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.material.icons.extended)
+    implementation(libs.compose.m3)
+
 
     // DataStore
     implementation(libs.androidx.datastore.preferences)
