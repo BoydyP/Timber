@@ -126,7 +126,7 @@ abstract class AppDatabase : RoomDatabase() {
                                     DatabaseSeeder.seedTestData(database)
                                 } else {
                                     // Full realistic data for development (90 days of workouts)
-                                    DatabaseSeeder.seedRealisticData(database)
+                                    DatabaseSeeder.seedProdData(database)
                                 }
                             }
                         }

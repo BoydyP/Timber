@@ -91,8 +91,16 @@ class WorkoutScreenTest : TestCase() {
             composeTestRule.onNodeWithText("Are you sure?").assertIsDisplayed()
             composeTestRule.onNodeWithText("Are you sure?").performClick()
 
+            // Wait for database operations to complete and data to propagate
             composeTestRule.waitForIdle()
+            Thread.sleep(1000) // Give time for database transaction to complete
+            
             composeTestRule.onNodeWithText("History").performClick()
+            
+            // Wait for History screen to load data from database
+            composeTestRule.waitForIdle()
+            Thread.sleep(500) // Additional wait for Flow to emit new data
+            
             composeTestRule.onNodeWithText("${(123 * 5)} kg").assertIsDisplayed()
         }
     }
