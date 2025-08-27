@@ -19,9 +19,6 @@ import com.android.timberworkoutlogs.models.TemplateExercise
 import com.android.timberworkoutlogs.models.Workout
 import com.android.timberworkoutlogs.models.WorkoutExercise
 import com.android.timberworkoutlogs.models.WorkoutTemplate
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 @Database(
     entities = [
@@ -121,11 +118,16 @@ abstract class AppDatabase : RoomDatabase() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)
                             INSTANCE?.let { database ->
-                                // Default "Prod" build call. Comment this out to use the realistic seeder.
-//                                DatabaseSeeder.seedProdData(database)
-
-                                // For "Dev" builds, uncomment the line below:
-                                DatabaseSeeder.seedRealisticData(database)
+                                // Use appropriate data seeding based on environment
+                                // Check if running in test environment (instrumented tests have .test. in package)
+                                if (context.packageName.contains(".test") || 
+                                    context.applicationInfo.processName.contains("test")) {
+                                    // Test data: exercises, templates, and 20 workouts for testing
+                                    DatabaseSeeder.seedTestData(database)
+                                } else {
+                                    // Full realistic data for development (90 days of workouts)
+                                    DatabaseSeeder.seedRealisticData(database)
+                                }
                             }
                         }
                     })

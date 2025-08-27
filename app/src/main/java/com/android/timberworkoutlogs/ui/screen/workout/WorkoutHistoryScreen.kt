@@ -18,11 +18,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.android.timberworkoutlogs.database.ExerciseDefinitionWithCount
 import com.android.timberworkoutlogs.database.SettingsRepository
 import com.android.timberworkoutlogs.database.WorkoutDao
 import com.android.timberworkoutlogs.database.WorkoutExerciseDao
+import com.android.timberworkoutlogs.database.WorkoutExerciseWithDate
 import com.android.timberworkoutlogs.database.WorkoutRepository
 import com.android.timberworkoutlogs.database.WorkoutWithExercises
+import com.android.timberworkoutlogs.models.ExerciseDefinition
 import com.android.timberworkoutlogs.models.ExerciseSet
 import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.WeightUnit
@@ -112,6 +115,15 @@ fun WorkoutHistoryScreenPreview() {
         override fun getWorkoutFlow(id: Long): Flow<Workout> = flowOf(Workout(id = id))
         override suspend fun getWorkout(id: Long): Workout? = Workout(id = id)
         override fun getWorkoutsWithExercisesFrom(startTimeMillis: Long): Flow<List<WorkoutWithExercises>> =
+            flowOf(emptyList())
+        
+        override fun getExerciseDefinitionsWithWorkoutHistory(): Flow<List<ExerciseDefinition>> =
+            flowOf(emptyList())
+        
+        override fun getExerciseHistoryData(definitionId: UUID, fromTime: Long): Flow<List<WorkoutExerciseWithDate>> =
+            flowOf(emptyList())
+        
+        override fun getExerciseDefinitionsWithWorkoutCounts(): Flow<List<ExerciseDefinitionWithCount>> =
             flowOf(emptyList())
     }
 

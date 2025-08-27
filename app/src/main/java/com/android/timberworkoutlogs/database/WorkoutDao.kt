@@ -9,9 +9,11 @@ import androidx.room.Update
 import androidx.room.Transaction
 import androidx.room.Embedded
 import androidx.room.Relation
+import com.android.timberworkoutlogs.models.ExerciseDefinition
 import com.android.timberworkoutlogs.models.Workout
 import com.android.timberworkoutlogs.models.WorkoutExercise
 import kotlinx.coroutines.flow.Flow
+import java.util.UUID
 
 data class WorkoutWithExercises(
     @Embedded val workout: Workout,
@@ -75,4 +77,63 @@ interface WorkoutDao {
     @Transaction
     @Query("SELECT * FROM workouts WHERE startTime >= :startTimeMillis ORDER BY startTime DESC")
     fun getWorkoutsWithExercisesFrom(startTimeMillis: Long): Flow<List<WorkoutWithExercises>>
+
+    /**
+     * Get distinct exercise definitions that have been performed in workouts.
+     * @return A Flow emitting a list of exercise definitions with workout history.
+     */
+    @Transaction
+    @Query("""
+        SELECT DISTINCT ed.* FROM exercise_definitions ed 
+        INNER JOIN workout_exercises we ON ed.id = we.definitionId 
+        INNER JOIN workouts w ON we.workoutId = w.id 
+        ORDER BY ed.name ASC
+    """)
+    fun getExerciseDefinitionsWithWorkoutHistory(): Flow<List<ExerciseDefinition>>
+
+    /**
+     * Get exercise history data for a specific exercise within a time range.
+     * @param definitionId The ID of the exercise definition to get history for.
+     * @param fromTime The start time in milliseconds.
+     * @return A Flow emitting workout exercises for the specified exercise and time range.
+     */
+    @Transaction
+    @Query("""
+        SELECT we.*, w.startTime as workoutStartTime FROM workout_exercises we 
+        INNER JOIN workouts w ON we.workoutId = w.id 
+        WHERE we.definitionId = :definitionId AND w.startTime >= :fromTime 
+        ORDER BY w.startTime ASC
+    """)
+    fun getExerciseHistoryData(definitionId: UUID, fromTime: Long): Flow<List<WorkoutExerciseWithDate>>
+
+    /**
+     * Get count of workouts for each exercise (for display in exercise selection).
+     * @return A Flow emitting exercise definitions with their workout counts.
+     */
+    @Transaction
+    @Query("""
+        SELECT ed.*, COUNT(DISTINCT we.workoutId) as workoutCount 
+        FROM exercise_definitions ed 
+        INNER JOIN workout_exercises we ON ed.id = we.definitionId 
+        INNER JOIN workouts w ON we.workoutId = w.id 
+        GROUP BY ed.id, ed.name, ed.equipment, ed.muscleGroups, ed.logType 
+        ORDER BY workoutCount DESC, ed.name ASC
+    """)
+    fun getExerciseDefinitionsWithWorkoutCounts(): Flow<List<ExerciseDefinitionWithCount>>
 }
+
+/**
+ * Data class to represent exercise with workout date information
+ */
+data class WorkoutExerciseWithDate(
+    @Embedded val workoutExercise: WorkoutExercise,
+    val workoutStartTime: Long
+)
+
+/**
+ * Data class for exercise definition with workout counts
+ */
+data class ExerciseDefinitionWithCount(
+    @Embedded val exerciseDefinition: ExerciseDefinition,
+    val workoutCount: Int
+)
