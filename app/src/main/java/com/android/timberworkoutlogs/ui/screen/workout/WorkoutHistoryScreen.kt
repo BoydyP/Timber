@@ -22,6 +22,7 @@ import com.android.timberworkoutlogs.database.SettingsRepository
 import com.android.timberworkoutlogs.database.WorkoutDao
 import com.android.timberworkoutlogs.database.WorkoutExerciseDao
 import com.android.timberworkoutlogs.database.WorkoutRepository
+import com.android.timberworkoutlogs.database.WorkoutWithExercises
 import com.android.timberworkoutlogs.models.ExerciseSet
 import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.WeightUnit
@@ -110,6 +111,8 @@ fun WorkoutHistoryScreenPreview() {
         override suspend fun getWorkoutCount(): Int = 2
         override fun getWorkoutFlow(id: Long): Flow<Workout> = flowOf(Workout(id = id))
         override suspend fun getWorkout(id: Long): Workout? = Workout(id = id)
+        override fun getWorkoutsWithExercisesFrom(startTimeMillis: Long): Flow<List<WorkoutWithExercises>> =
+            flowOf(emptyList())
     }
 
     class FakeWorkoutExerciseDao : WorkoutExerciseDao {

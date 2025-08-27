@@ -50,7 +50,7 @@ class WorkoutPreservationTest : TestCase() {
         }
 
         step("Verify we are back on the HomeScreen and the banner is visible") {
-            composeTestRule.onNodeWithText("Volume this week").assertIsDisplayed()
+            composeTestRule.onNodeWithText("Volume this week (kg)").assertIsDisplayed()
             composeTestRule.onNodeWithText("Workout in Progress - Tap to Return")
                 .assertIsDisplayed()
         }

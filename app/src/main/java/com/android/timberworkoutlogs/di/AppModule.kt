@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import com.android.timberworkoutlogs.database.AppDatabase
 import com.android.timberworkoutlogs.database.ExerciseDefinitionRepository
 import com.android.timberworkoutlogs.database.SettingsRepository
+import com.android.timberworkoutlogs.database.WorkoutDao
 import com.android.timberworkoutlogs.database.WorkoutRepository
 import com.android.timberworkoutlogs.database.WorkoutTemplateDao
 import com.android.timberworkoutlogs.database.WorkoutTemplateRepository
@@ -25,6 +26,11 @@ object AppModule {
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
         return AppDatabase.getDatabase(context)
+    }
+
+    @Provides
+    fun provideWorkoutDao(db: AppDatabase): WorkoutDao {
+        return db.workoutDao()
     }
 
     @Provides

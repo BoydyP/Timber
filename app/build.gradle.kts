@@ -56,6 +56,11 @@ android {
 
 configurations.all {
     exclude(group = "com.intellij", module = "annotations")
+    resolutionStrategy {
+        if (name.contains("AndroidTest")) {
+            force("androidx.drawerlayout:drawerlayout:1.1.1")
+        }
+    }
 }
 
 dependencies {
@@ -64,7 +69,6 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
     ksp(libs.hilt.android.compiler)
-
 
     // App core
     implementation(libs.androidx.core.ktx)
@@ -89,11 +93,13 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.material.icons.extended)
-    implementation(libs.compose.m3)
-
 
     // DataStore
     implementation(libs.androidx.datastore.preferences)
+
+    // Analysis
+    implementation(libs.vico.compose)
+    implementation(libs.vico.compose.m3)
 
     // Test
     testImplementation(libs.junit)

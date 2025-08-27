@@ -76,7 +76,7 @@ object DatabaseSeeder {
                     currentDate.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli()
 
                 val workout = Workout(
-                    name = "Realistic Workout on $currentDate",
+                    name = "Workout",
                     startTime = workoutTimestamp,
                     durationSeconds = (TimeUnit.HOURS.toMillis(1) + Random.nextLong(
                         TimeUnit.MINUTES.toMillis(

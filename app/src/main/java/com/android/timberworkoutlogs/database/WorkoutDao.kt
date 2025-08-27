@@ -6,8 +6,21 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import androidx.room.Transaction
+import androidx.room.Embedded
+import androidx.room.Relation
 import com.android.timberworkoutlogs.models.Workout
+import com.android.timberworkoutlogs.models.WorkoutExercise
 import kotlinx.coroutines.flow.Flow
+
+data class WorkoutWithExercises(
+    @Embedded val workout: Workout,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "workoutId"
+    )
+    val exercises: List<WorkoutExercise>
+)
 
 @Dao
 interface WorkoutDao {
@@ -18,7 +31,7 @@ interface WorkoutDao {
      * @return The row ID of the newly inserted workout.
      */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertWorkout(workout: Workout): Long // <-- Changed to return Long
+    suspend fun insertWorkout(workout: Workout): Long
 
     /**
      * Retrieves all workouts from the database, ordered by start time in descending order.
@@ -45,7 +58,6 @@ interface WorkoutDao {
      * @param id The ID of the workout to retrieve.
      * @return A Flow emitting the specific workout.
      */
-
     @Query("SELECT * FROM workouts WHERE id = :id")
     fun getWorkoutFlow(id: Long): Flow<Workout>
 
@@ -55,5 +67,12 @@ interface WorkoutDao {
     @Delete
     suspend fun deleteWorkout(workout: Workout)
 
-
+    /**
+     * Retrieves all workouts with their exercises from a given start date.
+     * @param startTimeMillis The start date in milliseconds.
+     * @return A Flow emitting a list of Workouts with their associated exercises.
+     */
+    @Transaction
+    @Query("SELECT * FROM workouts WHERE startTime >= :startTimeMillis ORDER BY startTime DESC")
+    fun getWorkoutsWithExercisesFrom(startTimeMillis: Long): Flow<List<WorkoutWithExercises>>
 }
