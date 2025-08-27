@@ -97,6 +97,11 @@ fun WorkoutScreen(
     onOpenNotes: () -> Unit,
     onOpenPlateCalculator: () -> Unit
 ) {
+    // Ensure we have an active workout session when entering the screen
+    LaunchedEffect(Unit) {
+        workoutViewModel.ensureWorkoutSession()
+    }
+
     val state = WorkoutScreenState(
         workoutExercises = workoutViewModel.workoutExercises,
         exerciseDefinitions = workoutViewModel.exerciseDefinitions,
@@ -194,8 +199,7 @@ private fun WorkoutScreenContent(
 
     BackHandler(enabled = true) {
         if (state.isWorkoutEmpty) {
-            Log.d(TIMER_TAG, "Timer service being stopped through back handler.")
-            actions.stopTimer()
+            Log.d(TIMER_TAG, "Discarding empty workout through back handler.")
             actions.onDiscardWorkout()
         } else {
             // If workout is not empty, just navigate back, preserving the state

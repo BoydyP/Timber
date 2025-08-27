@@ -58,6 +58,7 @@ class WorkoutViewModel @Inject constructor(
     var timerService: TimerService? by mutableStateOf(null)
     private var isBound by mutableStateOf(false)
     private var startTimerWhenReady = false
+    private var isInitializingSession = false
 
     private val _timerText = MutableStateFlow("00:00:00")
     val timerText = _timerText.asStateFlow()
@@ -154,13 +155,23 @@ class WorkoutViewModel @Inject constructor(
     }
 
     private fun startNewWorkoutSession() {
+        if (isInitializingSession) {
+            Log.d(TAG, "Workout session initialization already in progress, skipping")
+            return
+        }
+        
+        isInitializingSession = true
         viewModelScope.launch {
-            val currentTime = System.currentTimeMillis()
-            val newWorkout = Workout(startTime = currentTime)
-            val id = workoutRepository.insertWorkout(newWorkout)
-            currentWorkoutId = id
-            Log.d(TAG, "New workout session started with ID: $id")
-            onAddExercise()
+            try {
+                val currentTime = System.currentTimeMillis()
+                val newWorkout = Workout(startTime = currentTime)
+                val id = workoutRepository.insertWorkout(newWorkout)
+                currentWorkoutId = id
+                Log.d(TAG, "New workout session started with ID: $id")
+                onAddExercise()
+            } finally {
+                isInitializingSession = false
+            }
         }
     }
 
@@ -267,7 +278,6 @@ class WorkoutViewModel @Inject constructor(
         Log.d(TAG, "onFinishWorkout called.")
         val seconds = timerService?.getSecondsElapsed() ?: 0
 
-
         currentWorkoutId?.let { id ->
             viewModelScope.launch {
                 val exercisesToSave = workoutExercises.filter { exercise ->
@@ -291,6 +301,8 @@ class WorkoutViewModel @Inject constructor(
                     "Could not update workout because it was not found in the database (ID: $id)"
                 )
                 Log.d(TAG, "New workout count is: ${workoutRepository.getAllWorkoutCount()}")
+                
+                resetWorkoutSession()
                 onNavigateBack()
             }
         } ?: Log.e(TAG, "Cannot finish workout, workoutId is null.")
@@ -298,7 +310,6 @@ class WorkoutViewModel @Inject constructor(
 
     fun onDiscardWorkout(onNavigateBack: () -> Unit) {
         Log.d(TAG, "onDiscardWorkout called.")
-        timerService?.stopTimer()
         currentWorkoutId?.let { id ->
             viewModelScope.launch {
                 Log.d(TAG, "Workout count before delete: ${workoutRepository.getAllWorkoutCount()}.")
@@ -307,9 +318,14 @@ class WorkoutViewModel @Inject constructor(
                     Log.d(TAG, "Discarded and deleted workout ID: $id")
                 }
                 Log.d(TAG, "Workout count after delete: ${workoutRepository.getAllWorkoutCount()}.")
+                
+                resetWorkoutSession()
                 onNavigateBack()
             }
-        } ?: onNavigateBack()
+        } ?: {
+            resetWorkoutSession()
+            onNavigateBack()
+        }()
     }
 
     fun importExercisesFromTemplate(templateId: Long) {
@@ -334,6 +350,57 @@ class WorkoutViewModel @Inject constructor(
                 workoutExercises.add(newWorkoutExercise)
                 exerciseDefinitions.add(definition)
             }
+        }
+    }
+
+    /**
+     * Resets the workout session state while keeping the ViewModel alive.
+     * This is called when finishing or discarding a workout to ensure proper cleanup
+     * while maintaining the hoisted architecture.
+     */
+    private fun resetWorkoutSession() {
+        Log.d(TAG, "resetWorkoutSession called - cleaning up workout state")
+        
+        // Stop and cleanup timer service
+        timerService?.stopTimer()
+        if (isBound) {
+            application.unbindService(serviceConnection)
+            isBound = false
+        }
+        timerService = null
+        
+        _timerText.value = "00:00"
+        workoutStateHolder.setTimerRunning(false)
+        
+        workoutExercises.clear()
+        exerciseDefinitions.clear()
+        currentWorkoutId = null
+        
+        startTimerWhenReady = false
+        isInitializingSession = false
+        
+        Log.d(TAG, "Workout session reset completed")
+    }
+
+    /**
+     * Starts a new workout session if one is not already active.
+     * This ensures we have a fresh session when navigating back to workout screen.
+     */
+    fun ensureWorkoutSession() {
+        Log.d(TAG, "ensureWorkoutSession called, currentWorkoutId: $currentWorkoutId, isInitializing: $isInitializingSession")
+        
+        if (currentWorkoutId == null && !isInitializingSession) {
+            Log.d(TAG, "No active workout session, starting new one")
+            startNewWorkoutSession()
+            
+            // Rebind to timer service
+            Intent(application, TimerService::class.java).also { intent ->
+                application.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+            }
+        } else if (currentWorkoutId != null) {
+            Log.d(TAG, "Active workout session already exists with ID: $currentWorkoutId")
+        } else {
+            Log.d(TAG, "Workout session initialization in progress, skipping")
         }
     }
 }
