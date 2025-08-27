@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.ui.screen.workout.components.WorkoutInProgressBanner
 import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 import com.android.timberworkoutlogs.util.getGreetingByTime
@@ -31,15 +32,14 @@ import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
+import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
 
 @Composable
 fun HomeScreen(
@@ -106,27 +106,40 @@ fun VolumeThisWeekSection(
     weeklyVolumeUiState: WeeklyVolumeUiState
 ) {
     val modelProducer = remember { CartesianChartModelProducer() }
-    val (daysAxisValueFormatter, volumeAxisValueFormatter) = rememberFormatters()
 
     Column(modifier = modifier) {
+        // Dynamic title based on weight unit
+        val titleText = when (weeklyVolumeUiState) {
+            is WeeklyVolumeUiState.Success -> {
+                val unitSymbol = if (weeklyVolumeUiState.weightUnit == com.android.timberworkoutlogs.models.WeightUnit.KG) "kg" else "lb"
+                "Volume this week ($unitSymbol)"
+            }
+            else -> "Volume this week"
+        }
+        
         Text(
-            text = "Volume this week (kg)",
+            text = titleText,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
         when (weeklyVolumeUiState) {
             is WeeklyVolumeUiState.Loading -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             }
 
             is WeeklyVolumeUiState.Success -> {
+                val (daysAxisValueFormatter, volumeAxisValueFormatter) = rememberFormatters(weeklyVolumeUiState.weightUnit)
+                
                 LaunchedEffect(weeklyVolumeUiState.chartData) {
                     modelProducer.runTransaction {
+                        // Add both column and line series for a combo effect
                         columnSeries { series(weeklyVolumeUiState.chartData) }
+                        lineSeries { series(weeklyVolumeUiState.chartData) }
                     }
                 }
                 if (weeklyVolumeUiState.chartData.isEmpty() || weeklyVolumeUiState.chartData.all { it == 0f }) {
@@ -138,25 +151,21 @@ fun VolumeThisWeekSection(
                     ) {
                         Text(
                             "No workout volume recorded for this week.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(16.dp)
                         )
                     }
                 } else {
-                    CartesianChartHost(
-                        chart = rememberCartesianChart(
-                            rememberColumnCartesianLayer(),
-                            startAxis = VerticalAxis.rememberStart(
-                                valueFormatter = volumeAxisValueFormatter,
-                                title = "Volume (kg)"
-                            ),
-                            bottomAxis = HorizontalAxis.rememberBottom(
-                                valueFormatter = daysAxisValueFormatter,
-                                title = "Day of Week"
-                            ),
-                        ),
+                    JazzyVolumeChart(
                         modelProducer = modelProducer,
-                        modifier = Modifier.fillMaxSize()
+                        daysAxisValueFormatter = daysAxisValueFormatter,
+                        volumeAxisValueFormatter = volumeAxisValueFormatter,
+                        weightUnit = weeklyVolumeUiState.weightUnit,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(8.dp)
                     )
                 }
             }
@@ -170,6 +179,7 @@ fun VolumeThisWeekSection(
                 ) {
                     Text(
                         text = "Error loading volume: ${weeklyVolumeUiState.message}",
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(16.dp)
@@ -181,32 +191,55 @@ fun VolumeThisWeekSection(
 }
 
 @Composable
-private fun rememberFormatters(): Pair<CartesianValueFormatter, CartesianValueFormatter> {
+private fun JazzyVolumeChart(
+    modelProducer: CartesianChartModelProducer,
+    daysAxisValueFormatter: CartesianValueFormatter,
+    volumeAxisValueFormatter: CartesianValueFormatter,
+    weightUnit: WeightUnit,
+    modifier: Modifier = Modifier
+) {
+    val unitSymbol = if (weightUnit == WeightUnit.KG) "kg" else "lb"
+    
+    CartesianChartHost(
+        chart = rememberCartesianChart(
+            // Column layer for the bars
+            rememberColumnCartesianLayer(),
+            // Line layer for the trend line overlay - creates a combo chart effect
+            rememberLineCartesianLayer(),
+            startAxis = VerticalAxis.rememberStart(
+                valueFormatter = volumeAxisValueFormatter,
+                title = "Volume ($unitSymbol)"
+            ),
+            bottomAxis = HorizontalAxis.rememberBottom(
+                valueFormatter = daysAxisValueFormatter,
+                title = "Days of Week"
+            )
+        ),
+        modelProducer = modelProducer,
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun rememberFormatters(weightUnit: WeightUnit): Pair<CartesianValueFormatter, CartesianValueFormatter> {
     val dayFormatter = remember {
         CartesianValueFormatter { _, axisValue, _ ->
-            val dayOfWeek = when (axisValue.toString()) {
-                "0" -> Calendar.MONDAY
-                "1" -> Calendar.TUESDAY
-                "2" -> Calendar.WEDNESDAY
-                "3" -> Calendar.THURSDAY
-                "4" -> Calendar.FRIDAY
-                "5" -> Calendar.SATURDAY
-                "6" -> Calendar.SUNDAY
-                else -> Calendar.MONDAY
-            }
-            val calendar = Calendar.getInstance()
-            calendar.set(Calendar.DAY_OF_WEEK, dayOfWeek)
-            SimpleDateFormat("EEE", Locale.getDefault()).format(calendar.time)
+            val dayNames = arrayOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+            val index = axisValue.toInt()
+            if (index in 0..6) dayNames[index] else "---"
         }
     }
-    val volumeFormatter = remember {
+    val volumeFormatter = remember(weightUnit) {
         CartesianValueFormatter { _, axisValue, _ ->
-            "%.0f kg".format(axisValue.toFloat())
+            when {
+                axisValue < 1000 -> "%.0f".format(axisValue)
+                axisValue < 10000 -> "%.1fk".format(axisValue / 1000f)
+                else -> "%.0fk".format(axisValue / 1000f)
+            }
         }
     }
     return dayFormatter to volumeFormatter
 }
-
 
 @Composable
 fun PlaceholderContent(label: String, modifier: Modifier = Modifier) {
@@ -247,10 +280,10 @@ fun VolumeThisWeekSection_LoadingPreview() {
 @Preview(showBackground = true, widthDp = 360)
 @Composable
 fun VolumeThisWeekSection_SuccessPreview() {
-    val sampleData = listOf(1000f, 1500f, 800f, 1200f, 0f, 0f, 0f)
+    val sampleData = listOf(1000f, 1500f, 800f, 1200f, 2500f, 1800f, 900f)
     TimberWorkoutLogsTheme {
         VolumeThisWeekSection(
-            weeklyVolumeUiState = WeeklyVolumeUiState.Success(sampleData),
+            weeklyVolumeUiState = WeeklyVolumeUiState.Success(sampleData, WeightUnit.KG),
             modifier = Modifier.height(200.dp)
         )
     }
@@ -262,7 +295,7 @@ fun VolumeThisWeekSection_EmptyPreview() {
     val sampleData = List(7) { 0f }
     TimberWorkoutLogsTheme {
         VolumeThisWeekSection(
-            weeklyVolumeUiState = WeeklyVolumeUiState.Success(sampleData),
+            weeklyVolumeUiState = WeeklyVolumeUiState.Success(sampleData, WeightUnit.LB),
             modifier = Modifier.height(200.dp)
         )
     }
