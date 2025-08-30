@@ -1,5 +1,7 @@
 package com.android.timberworkoutlogs.ui.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
@@ -22,6 +24,7 @@ object AppDestinations {
     const val CREATE_TEMPLATE_ROUTE = "create_template"
 }
 
+@RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun TimberUi() {
     val navController = rememberNavController()
