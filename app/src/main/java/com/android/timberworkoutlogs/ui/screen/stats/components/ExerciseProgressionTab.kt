@@ -30,6 +30,8 @@ import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.common.ProvideVicoTheme
+import com.patrykandpatrick.vico.compose.m3.common.rememberM3VicoTheme
 import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
@@ -199,26 +201,26 @@ private fun ExerciseProgressionChart(
                 }
             }
         }
-
         val (dateFormatter, valueFormatter) = rememberProgressionFormatters(weightUnit, isVolume, data)
-
-        CartesianChartHost(
-            chart = rememberCartesianChart(
-                rememberLineCartesianLayer(),
-                startAxis = VerticalAxis.rememberStart(
-                    valueFormatter = valueFormatter,
-                    title = if (isVolume) "Volume ($unitSymbol)" else "Weight ($unitSymbol)"
+        ProvideVicoTheme(rememberM3VicoTheme()) {
+            CartesianChartHost(
+                chart = rememberCartesianChart(
+                    rememberLineCartesianLayer(),
+                    startAxis = VerticalAxis.rememberStart(
+                        valueFormatter = valueFormatter,
+                        title = if (isVolume) "Volume ($unitSymbol)" else "Weight ($unitSymbol)"
+                    ),
+                    bottomAxis = HorizontalAxis.rememberBottom(
+                        valueFormatter = dateFormatter,
+                        title = "Date"
+                    )
                 ),
-                bottomAxis = HorizontalAxis.rememberBottom(
-                    valueFormatter = dateFormatter,
-                    title = "Date"
-                )
-            ),
-            modelProducer = modelProducer,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(8.dp)
-        )
+                modelProducer = modelProducer,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp)
+            )
+        }
     }
 }
 

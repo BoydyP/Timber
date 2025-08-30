@@ -34,6 +34,8 @@ import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.common.ProvideVicoTheme
+import com.patrykandpatrick.vico.compose.m3.common.rememberM3VicoTheme
 import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
@@ -197,25 +199,26 @@ private fun JazzyVolumeChart(
     modifier: Modifier = Modifier
 ) {
     val unitSymbol = if (weightUnit == WeightUnit.KG) "kg" else "lb"
-    
-    CartesianChartHost(
-        chart = rememberCartesianChart(
-            // Column layer for the bars
-            rememberColumnCartesianLayer(),
-            // Line layer for the trend line overlay - creates a combo chart effect
-            rememberLineCartesianLayer(),
-            startAxis = VerticalAxis.rememberStart(
-                valueFormatter = volumeAxisValueFormatter,
-                title = "Volume ($unitSymbol)"
+    ProvideVicoTheme(rememberM3VicoTheme()) {
+        CartesianChartHost(
+            chart = rememberCartesianChart(
+                // Column layer for the bars
+                rememberColumnCartesianLayer(),
+                // Line layer for the trend line overlay - creates a combo chart effect
+                rememberLineCartesianLayer(),
+                startAxis = VerticalAxis.rememberStart(
+                    valueFormatter = volumeAxisValueFormatter,
+                    title = "Volume ($unitSymbol)"
+                ),
+                bottomAxis = HorizontalAxis.rememberBottom(
+                    valueFormatter = daysAxisValueFormatter,
+                    title = "Days of Week"
+                )
             ),
-            bottomAxis = HorizontalAxis.rememberBottom(
-                valueFormatter = daysAxisValueFormatter,
-                title = "Days of Week"
-            )
-        ),
-        modelProducer = modelProducer,
-        modifier = modifier
-    )
+            modelProducer = modelProducer,
+            modifier = modifier
+        )
+    }
 }
 
 @Composable
