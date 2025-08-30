@@ -38,7 +38,6 @@ import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
-import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 
 @Composable
@@ -139,7 +138,6 @@ fun VolumeThisWeekSection(
                     modelProducer.runTransaction {
                         // Add both column and line series for a combo effect
                         columnSeries { series(weeklyVolumeUiState.chartData) }
-                        lineSeries { series(weeklyVolumeUiState.chartData) }
                     }
                 }
                 if (weeklyVolumeUiState.chartData.isEmpty() || weeklyVolumeUiState.chartData.all { it == 0f }) {
