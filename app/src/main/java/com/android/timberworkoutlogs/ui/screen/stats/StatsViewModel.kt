@@ -31,9 +31,9 @@ enum class StatsTab {
 }
 
 enum class TimeRange(val displayName: String, val daysBack: Int) {
-    LAST_4_WEEKS("Last 4 weeks", 28),
-    LAST_3_MONTHS("Last 3 months", 90),
-    LAST_6_MONTHS("Last 6 months", 180),
+    LAST_4_WEEKS("4 weeks", 28),
+    LAST_3_MONTHS("3 months", 90),
+    LAST_6_MONTHS("6 months", 180),
     LAST_YEAR("Last year", 365),
     ALL_TIME("All time", Int.MAX_VALUE)
 }
@@ -71,7 +71,7 @@ data class StatsUiState(
 @HiltViewModel
 class StatsViewModel @Inject constructor(
     private val workoutDao: WorkoutDao,
-    private val settingsRepository: SettingsRepository
+    settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StatsUiState())
