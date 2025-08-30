@@ -63,21 +63,20 @@ fun ExerciseProgressionTab(
         // Exercise and Time Range Selection
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             ExerciseSelectionDropdown(
                 selectedExercise = selectedExercise,
                 availableExercises = availableExercises,
                 onExerciseSelected = onExerciseSelected,
-                modifier = Modifier
-                    .weight(1f)
+                modifier = Modifier.weight(2f)
             )
             
             TimeRangePicker(
                 selectedTimeRange = selectedTimeRange,
                 onTimeRangeSelected = onTimeRangeSelected,
-                modifier = Modifier
-                    .weight(1f)
+                modifier = Modifier.weight(1f)
             )
         }
 

@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -74,15 +75,16 @@ fun OneRepMaxTab(
         // Controls Row 1: Exercise and Time Range
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             ExerciseSelectionDropdown(
                 selectedExercise = selectedExercise,
                 availableExercises = availableExercises,
                 onExerciseSelected = onExerciseSelected,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(2f)
             )
-            
+
             TimeRangePicker(
                 selectedTimeRange = selectedTimeRange,
                 onTimeRangeSelected = onTimeRangeSelected,
@@ -94,7 +96,9 @@ fun OneRepMaxTab(
         FormulaSelectionDropdown(
             selectedFormula = selectedFormula,
             onFormulaSelected = onFormulaSelected,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("OneRMFormulaDropdown_$selectedFormula")
         )
 
         // Chart Section
@@ -212,7 +216,8 @@ private fun FormulaSelectionDropdown(
                         onClick = {
                             onFormulaSelected(formula)
                             expanded = false
-                        }
+                        },
+                        modifier = Modifier.testTag("formula_option_${formula.name}")
                     )
                 }
             }
