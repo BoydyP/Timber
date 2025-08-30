@@ -1,4 +1,4 @@
-package com.android.timberworkoutlogs.ui.screen
+package com.android.timberworkoutlogs.ui.screen.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -28,7 +28,7 @@ sealed interface WeeklyVolumeUiState {
 class HomeScreenViewModel @Inject constructor(
     workoutStateHolder: WorkoutStateHolder,
     private val workoutDao: WorkoutDao,
-    private val settingsRepository: SettingsRepository
+    settingsRepository: SettingsRepository
 ) : ViewModel() {
     val isWorkoutInProgress: StateFlow<Boolean> = workoutStateHolder.isTimerRunning
 

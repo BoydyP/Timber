@@ -5,7 +5,7 @@ import com.android.timberworkoutlogs.database.WorkoutDao
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.rules.MainDispatcherRule
 import com.android.timberworkoutlogs.services.WorkoutStateHolder
-import com.android.timberworkoutlogs.ui.screen.HomeScreenViewModel
+import com.android.timberworkoutlogs.ui.screen.home.HomeScreenViewModel
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi

@@ -1,4 +1,4 @@
-package com.android.timberworkoutlogs.ui.screen
+package com.android.timberworkoutlogs.ui.screen.home
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
@@ -111,7 +111,7 @@ fun VolumeThisWeekSection(
         // Dynamic title based on weight unit
         val titleText = when (weeklyVolumeUiState) {
             is WeeklyVolumeUiState.Success -> {
-                val unitSymbol = if (weeklyVolumeUiState.weightUnit == com.android.timberworkoutlogs.models.WeightUnit.KG) "kg" else "lb"
+                val unitSymbol = if (weeklyVolumeUiState.weightUnit == WeightUnit.KG) "kg" else "lb"
                 "Volume this week ($unitSymbol)"
             }
             else -> "Volume this week"

@@ -6,8 +6,8 @@ import androidx.navigation.NavGraphBuilder
 import com.android.timberworkoutlogs.ui.elements.MainLayout
 import com.android.timberworkoutlogs.ui.navigation.AppDestinations
 import com.android.timberworkoutlogs.ui.navigation.homeComposable
-import com.android.timberworkoutlogs.ui.screen.HomeScreen
-import com.android.timberworkoutlogs.ui.screen.StatsScreen
+import com.android.timberworkoutlogs.ui.screen.home.HomeScreen
+import com.android.timberworkoutlogs.ui.screen.stats.StatsScreen
 import com.android.timberworkoutlogs.ui.screen.settings.SettingsScreen
 import com.android.timberworkoutlogs.ui.screen.settings.SettingsViewModel
 import com.android.timberworkoutlogs.ui.screen.workout.WorkoutHistoryScreen
