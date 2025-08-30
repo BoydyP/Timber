@@ -1,4 +1,4 @@
-package com.android.timberworkoutlogs.ui.screen.workout.components
+package com.android.timberworkoutlogs.ui.screen.history
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

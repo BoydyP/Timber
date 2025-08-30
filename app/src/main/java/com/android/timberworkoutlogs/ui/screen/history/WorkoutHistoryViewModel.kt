@@ -1,4 +1,4 @@
-package com.android.timberworkoutlogs.ui.screen.workout
+package com.android.timberworkoutlogs.ui.screen.history
 
 import android.util.Log
 import androidx.lifecycle.ViewModel

@@ -10,8 +10,8 @@ import com.android.timberworkoutlogs.ui.screen.home.HomeScreen
 import com.android.timberworkoutlogs.ui.screen.stats.StatsScreen
 import com.android.timberworkoutlogs.ui.screen.settings.SettingsScreen
 import com.android.timberworkoutlogs.ui.screen.settings.SettingsViewModel
-import com.android.timberworkoutlogs.ui.screen.workout.WorkoutHistoryScreen
-import com.android.timberworkoutlogs.ui.screen.workout.WorkoutHistoryViewModel
+import com.android.timberworkoutlogs.ui.screen.history.WorkoutHistoryScreen
+import com.android.timberworkoutlogs.ui.screen.history.WorkoutHistoryViewModel
 
 fun NavGraphBuilder.homeGraph(navController: NavController) {
     homeComposable(AppDestinations.HOME_ROUTE) {

@@ -1,4 +1,4 @@
-package com.android.timberworkoutlogs.ui.screen.workout
+package com.android.timberworkoutlogs.ui.screen.history
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
@@ -32,7 +32,6 @@ import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.Workout
 import com.android.timberworkoutlogs.models.WorkoutExercise
 import com.android.timberworkoutlogs.ui.common.SwipeToDeleteContainer
-import com.android.timberworkoutlogs.ui.screen.workout.components.WorkoutHistoryItemCard
 import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
