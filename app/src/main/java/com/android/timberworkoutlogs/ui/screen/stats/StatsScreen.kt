@@ -1,4 +1,4 @@
-package com.android.timberworkoutlogs.ui.screen
+package com.android.timberworkoutlogs.ui.screen.stats
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,8 +13,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.android.timberworkoutlogs.ui.screen.stats.StatsTab
-import com.android.timberworkoutlogs.ui.screen.stats.StatsViewModel
 import com.android.timberworkoutlogs.ui.screen.stats.components.ExerciseProgressionTab
 import com.android.timberworkoutlogs.ui.screen.stats.components.OneRepMaxTab
 import com.android.timberworkoutlogs.ui.screen.stats.components.VolumeStatsTab
