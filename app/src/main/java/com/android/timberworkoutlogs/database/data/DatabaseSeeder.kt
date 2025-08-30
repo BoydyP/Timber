@@ -90,10 +90,10 @@ object DatabaseSeeder {
 
                 exercisesForThisWorkout.forEach { exerciseDef ->
                     val sets = mutableListOf<ExerciseSet>()
-                    for (setNum in 1..2) { // Only 2 sets per exercise
+                    repeat(2) { // Only 2 sets per exercise
                         val set: ExerciseSet = when (exerciseDef.logType) {
                             LogType.WEIGHT_AND_REPS -> WeightAndRepsSet(
-                                reps = Random.nextInt(5, 13), 
+                                reps = Random.nextInt(5, 10),
                                 weight = Random.nextDouble(20.0, 100.0), 
                                 isDone = true
                             )
@@ -130,7 +130,7 @@ object DatabaseSeeder {
     }
 
     /**
-     * "Dev" seeder. Populates exercises, templates, AND 90 days of realistic workout history.
+     * "Dev" seeder. Populates exercises, templates, AND 60 days of realistic workout history.
      */
     fun seedRealisticData(db: AppDatabase) {
         val exerciseDefDao = db.exerciseDefinitionDao()
@@ -150,15 +150,71 @@ object DatabaseSeeder {
                 templateDao.upsertTemplateExercises(exercisesWithCorrectId)
             }
 
-            // 2. Seed Realistic Workout History
-            val startDate = LocalDate.now().minusDays(90)
-            for (i in 0 until 90) {
+            // 2. Seed Realistic Workout History (60 days of PPL)
+            val pushExercises = defaultExercises.filter {
+                it.name in listOf(
+                    "Bench Press",
+                    "Incline Bench Press",
+                    "Fly",
+                    "Chest Press",
+                    "Push Up",
+                    "Dip",
+                    "Overhead Press",
+                    "Shoulder Press",
+                    "Arnold Press",
+                    "Lateral Raise",
+                    "Front Raise",
+                    "Tricep Pushdown",
+                    "Skull Crusher",
+                    "Overhead Tricep Extension",
+                    "Close Grip Bench Press"
+                )
+            }
+            val pullExercises = defaultExercises.filter {
+                it.name in listOf(
+                    "Deadlift",
+                    "Bent Over Row",
+                    "Pull Up",
+                    "Lat Pulldown",
+                    "Seated Row",
+                    "T-Bar Row",
+                    "Pullover",
+                    "Shrug",
+                    "Face Pull",
+                    "Bicep Curl",
+                    "Hammer Curl",
+                    "Preacher Curl",
+                    "Chin Up"
+                )
+            }
+            val legExercises = defaultExercises.filter {
+                it.name in listOf(
+                    "Squat",
+                    "Goblet Squat",
+                    "Leg Press",
+                    "Lunge",
+                    "Romanian Deadlift",
+                    "Leg Extension",
+                    "Leg Curl",
+                    "Calf Raise",
+                    "Swing"
+                )
+            }
+
+            val startDate = LocalDate.now().minusDays(60)
+            for (i in 0 until 60) {
                 val currentDate = startDate.plusDays(i.toLong())
                 val workoutTimestamp =
                     currentDate.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli()
 
+                val (workoutName, exercisesForThisWorkout) = when (i % 3) {
+                    0 -> "Push Day" to pushExercises.shuffled().take(5)
+                    1 -> "Pull Day" to pullExercises.shuffled().take(5)
+                    else -> "Leg Day" to legExercises.shuffled().take(5)
+                }
+
                 val workout = Workout(
-                    name = "Workout",
+                    name = workoutName,
                     startTime = workoutTimestamp,
                     durationSeconds = (TimeUnit.HOURS.toMillis(1) + Random.nextLong(
                         TimeUnit.MINUTES.toMillis(
@@ -169,12 +225,11 @@ object DatabaseSeeder {
                 )
                 val workoutId = workoutDao.insertWorkout(workout)
 
-                val exercisesForThisWorkout = defaultExercises.shuffled().take(3)
                 val workoutExercises = mutableListOf<WorkoutExercise>()
 
                 exercisesForThisWorkout.forEach { exerciseDef ->
                     val sets = mutableListOf<ExerciseSet>()
-                    for (setNum in 1..3) {
+                    repeat(3) {
                         val set: ExerciseSet = when (exerciseDef.logType) {
                             LogType.WEIGHT_AND_REPS -> WeightAndRepsSet(
                                 reps = Random.nextInt(
