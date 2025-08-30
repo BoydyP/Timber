@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.android.timberworkoutlogs.ui.navigation.AppDestinations
 
 @Composable
 fun MainLayout(
@@ -21,7 +22,7 @@ fun MainLayout(
 
     Scaffold(
         topBar = {
-            TimberTopAppBar(onIconClick = { /* TODO */ })
+            TimberTopAppBar(onIconClick = { navController.navigate(AppDestinations.HOME_ROUTE) })
         },
         bottomBar = {
             TimberBottomNavigationBar(
