@@ -24,6 +24,20 @@ sealed interface WeeklyVolumeUiState {
     data class Error(val message: String) : WeeklyVolumeUiState
 }
 
+sealed interface PersonalRecordsUiState {
+    object Loading : PersonalRecordsUiState
+    data class Success(val lifts: List<ExerciseLift>) : PersonalRecordsUiState
+    data class Error(val message: String) : PersonalRecordsUiState
+}
+
+data class ExerciseLift(
+    val exerciseName: String,
+    val currentMax: Double,
+    val unit: WeightUnit,
+    val lastPrDate: Long?,
+    val oneRepMax: Double
+)
+
 @HiltViewModel
 class HomeScreenViewModel @Inject constructor(
     workoutStateHolder: WorkoutStateHolder,
@@ -31,6 +45,23 @@ class HomeScreenViewModel @Inject constructor(
     settingsRepository: SettingsRepository
 ) : ViewModel() {
     val isWorkoutInProgress: StateFlow<Boolean> = workoutStateHolder.isTimerRunning
+
+    val personalRecordsUiState: StateFlow<PersonalRecordsUiState> = 
+        combine(
+            workoutDao.getExerciseDefinitionsWithWorkoutCounts(),
+            workoutDao.getWorkoutsWithExercisesFrom(0), // All time data for max lifts
+            settingsRepository.weightUnit
+        ) { exerciseCounts, allWorkouts, weightUnit ->
+            try {
+                calculateTopExerciseLifts(exerciseCounts, allWorkouts, weightUnit)
+            } catch (e: Exception) {
+                PersonalRecordsUiState.Error("Failed to load exercise records: ${e.localizedMessage ?: "Unknown error"}")
+            }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = PersonalRecordsUiState.Loading
+        )
 
     val weeklyVolumeUiState: StateFlow<WeeklyVolumeUiState> = 
         combine(
@@ -116,4 +147,91 @@ class HomeScreenViewModel @Inject constructor(
         set(Calendar.SECOND, 0)
         set(Calendar.MILLISECOND, 0)
     }
+
+    private fun calculateTopExerciseLifts(
+        exerciseCounts: List<com.android.timberworkoutlogs.database.ExerciseDefinitionWithCount>,
+        allWorkouts: List<com.android.timberworkoutlogs.database.WorkoutWithExercises>,
+        weightUnit: WeightUnit
+    ): PersonalRecordsUiState {
+        if (exerciseCounts.isEmpty() || allWorkouts.isEmpty()) {
+            return PersonalRecordsUiState.Success(emptyList())
+        }
+
+        // Get top 6 most performed exercises that use weights
+        val topExercises = exerciseCounts
+            .filter { it.exerciseDefinition.logType.name.contains("WEIGHT") }
+            .take(6)
+
+        val exerciseMaxes = mutableMapOf<String, ExerciseMaxData>()
+
+        // Process all workouts to find max lifts for top exercises
+        for (workoutWithExercises in allWorkouts) {
+            for (exercise in workoutWithExercises.exercises) {
+                // Find matching exercise definition
+                val exerciseDefinition = topExercises.find { it.exerciseDefinition.id == exercise.definitionId }?.exerciseDefinition
+                
+                if (exerciseDefinition != null) {
+                    val exerciseName = "${exerciseDefinition.equipment.name.lowercase().replaceFirstChar { it.uppercase() }} ${exerciseDefinition.name}"
+                    
+                    for (set in exercise.sets) {
+                        if (set is WeightAndRepsSet && set.weight > 0 && set.reps > 0) {
+                            // Convert weight to consistent unit (KG) for comparison
+                            val weightInKg = if (exercise.unit == WeightUnit.LB) {
+                                set.weight * LBS_TO_KG_FACTOR
+                            } else {
+                                set.weight
+                            }
+
+                            // Calculate estimated 1RM using Brzycki formula
+                            val oneRepMax = if (set.reps == 1) {
+                                weightInKg
+                            } else {
+                                weightInKg / (1.0278 - 0.0278 * set.reps)
+                            }
+
+                            val currentMax = exerciseMaxes[exerciseName]
+                            if (currentMax == null || oneRepMax > currentMax.oneRepMaxKg) {
+                                exerciseMaxes[exerciseName] = ExerciseMaxData(
+                                    maxWeightKg = weightInKg,
+                                    oneRepMaxKg = oneRepMax,
+                                    achievedDate = workoutWithExercises.workout.startTime
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Convert to ExerciseLift objects
+        val lifts = exerciseMaxes.map { (exerciseName, maxData) ->
+            val displayWeight = if (weightUnit == WeightUnit.LB) {
+                maxData.maxWeightKg * KG_TO_LBS_FACTOR
+            } else {
+                maxData.maxWeightKg
+            }
+
+            val displayOneRepMax = if (weightUnit == WeightUnit.LB) {
+                maxData.oneRepMaxKg * KG_TO_LBS_FACTOR
+            } else {
+                maxData.oneRepMaxKg
+            }
+
+            ExerciseLift(
+                exerciseName = exerciseName,
+                currentMax = displayWeight,
+                unit = weightUnit,
+                lastPrDate = maxData.achievedDate,
+                oneRepMax = displayOneRepMax
+            )
+        }.sortedByDescending { it.oneRepMax } // Sort by strongest lifts first
+
+        return PersonalRecordsUiState.Success(lifts)
+    }
+
+    private data class ExerciseMaxData(
+        val maxWeightKg: Double,
+        val oneRepMaxKg: Double,
+        val achievedDate: Long
+    )
 }

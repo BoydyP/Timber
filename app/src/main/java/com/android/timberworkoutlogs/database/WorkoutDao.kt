@@ -120,6 +120,30 @@ interface WorkoutDao {
         ORDER BY workoutCount DESC, ed.name ASC
     """)
     fun getExerciseDefinitionsWithWorkoutCounts(): Flow<List<ExerciseDefinitionWithCount>>
+
+    /**
+     * Get maximum weight lifted for specific exercises (for personal records display).
+     * This query finds the highest weight lifted for each of the specified exercises.
+     * @param exerciseNames List of exercise names to get max lifts for
+     * @return A Flow emitting max lift data for the specified exercises
+     */
+    @Transaction
+    @Query("""
+        SELECT 
+            ed.name,
+            ed.equipment,
+            MAX(json_extract(we.sets, '$[0].weight')) as maxWeight,
+            we.unit,
+            w.startTime as achievedDate
+        FROM exercise_definitions ed
+        INNER JOIN workout_exercises we ON ed.id = we.definitionId
+        INNER JOIN workouts w ON we.workoutId = w.id
+        WHERE ed.name IN (:exerciseNames) AND ed.equipment = 'BARBELL'
+        AND json_extract(we.sets, '$[0].weight') IS NOT NULL
+        GROUP BY ed.name, ed.equipment, we.unit
+        ORDER BY ed.name ASC
+    """)
+    fun getPersonalRecordsMaxLifts(exerciseNames: List<String>): Flow<List<MaxLiftData>>
 }
 
 /**
@@ -136,4 +160,15 @@ data class WorkoutExerciseWithDate(
 data class ExerciseDefinitionWithCount(
     @Embedded val exerciseDefinition: ExerciseDefinition,
     val workoutCount: Int
+)
+
+/**
+ * Data class for max lift information
+ */
+data class MaxLiftData(
+    val name: String,
+    val equipment: String,
+    val maxWeight: Double,
+    val unit: String,
+    val achievedDate: Long
 )

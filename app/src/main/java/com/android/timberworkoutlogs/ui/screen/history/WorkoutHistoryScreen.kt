@@ -124,6 +124,9 @@ fun WorkoutHistoryScreenPreview() {
         
         override fun getExerciseDefinitionsWithWorkoutCounts(): Flow<List<ExerciseDefinitionWithCount>> =
             flowOf(emptyList())
+
+        override fun getPersonalRecordsMaxLifts(exerciseNames: List<String>): Flow<List<com.android.timberworkoutlogs.database.MaxLiftData>> =
+            flowOf(emptyList())
     }
 
     class FakeWorkoutExerciseDao : WorkoutExerciseDao {
