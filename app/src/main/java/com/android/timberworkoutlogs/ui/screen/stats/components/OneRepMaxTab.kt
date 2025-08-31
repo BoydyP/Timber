@@ -217,7 +217,7 @@ private fun FormulaSelectionDropdown(
                             onFormulaSelected(formula)
                             expanded = false
                         },
-                        modifier = Modifier.testTag("formula_option_${formula.name}")
+                        modifier = Modifier.testTag("formula_option_${formula.displayName}")
                     )
                 }
             }

@@ -1,5 +1,7 @@
 package com.android.timberworkoutlogs.database.data
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.android.timberworkoutlogs.database.AppDatabase
 import com.android.timberworkoutlogs.models.DistanceAndTimeSet
 import com.android.timberworkoutlogs.models.ExerciseSet
@@ -50,6 +52,7 @@ object DatabaseSeeder {
     /**
      * "Test" seeder. Populates exercises, templates, AND 20 days of workout history for testing.
      */
+    @RequiresApi(Build.VERSION_CODES.O)
     fun seedTestData(db: AppDatabase) {
         val exerciseDefDao = db.exerciseDefinitionDao()
         val templateDao = db.workoutTemplateDao()
@@ -70,6 +73,8 @@ object DatabaseSeeder {
 
             // 2. Seed MINIMAL Workout History (20 workouts for testing)
             val startDate = LocalDate.now().minusDays(20)
+            val testExercises = defaultExercises.take(10) // Take a consistent subset of exercises
+
             for (i in 0 until 20) {
                 val currentDate = startDate.plusDays(i.toLong())
                 val workoutTimestamp =
@@ -85,7 +90,11 @@ object DatabaseSeeder {
                 )
                 val workoutId = workoutDao.insertWorkout(workout)
 
-                val exercisesForThisWorkout = defaultExercises.shuffled().take(2) // Only 2 exercises per workout
+                // Cycle through the test exercises deterministically
+                val exercisesForThisWorkout = listOf(
+                    testExercises[i % testExercises.size],
+                    testExercises[(i + 1) % testExercises.size]
+                )
                 val workoutExercises = mutableListOf<WorkoutExercise>()
 
                 exercisesForThisWorkout.forEach { exerciseDef ->
@@ -132,6 +141,7 @@ object DatabaseSeeder {
     /**
      * "Dev" seeder. Populates exercises, templates, AND 60 days of realistic workout history.
      */
+    @RequiresApi(Build.VERSION_CODES.O)
     fun seedRealisticData(db: AppDatabase) {
         val exerciseDefDao = db.exerciseDefinitionDao()
         val templateDao = db.workoutTemplateDao()

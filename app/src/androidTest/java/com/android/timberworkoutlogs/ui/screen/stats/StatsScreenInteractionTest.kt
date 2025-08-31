@@ -2,6 +2,7 @@ package com.android.timberworkoutlogs.ui.screen.stats
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.android.timberworkoutlogs.MainActivity
@@ -58,9 +59,9 @@ class StatsScreenInteractionTest : TestCase() {
         }
 
         step("Look for time range picker") {
-            // The time range picker might show the current selection like "Last 4 weeks"
+            // The time range picker might show the current selection like "4 weeks"
             try {
-                composeTestRule.onNodeWithText("Last 4 weeks").assertIsDisplayed()
+                composeTestRule.onNodeWithText("4 weeks").assertIsDisplayed()
             } catch (e: AssertionError) {
                 // If not visible, might be in a different state
                 // We can still test basic functionality
@@ -70,9 +71,9 @@ class StatsScreenInteractionTest : TestCase() {
         step("Test time range interaction") {
             // Try to find and interact with time range options
             val timeRangeOptions = listOf(
-                "Last 4 weeks",
-                "Last 3 months", 
-                "Last 6 months",
+                "4 weeks",
+                "3 months",
+                "6 months",
                 "Last year",
                 "All time"
             )
@@ -80,7 +81,9 @@ class StatsScreenInteractionTest : TestCase() {
             // Try to click on time range options if visible
             timeRangeOptions.forEach { option ->
                 try {
-                    composeTestRule.onNodeWithText(option).performClick()
+                    composeTestRule.onNodeWithText("Time Range").performClick()
+                    composeTestRule.onNodeWithTag("time_range_$option", useUnmergedTree = true)
+                        .performClick()
                 } catch (e: Exception) {
                     // Option might not be visible, that's okay
                 }
@@ -111,11 +114,13 @@ class StatsScreenInteractionTest : TestCase() {
             
             formulas.forEach { formula ->
                 try {
-                    if (composeTestRule.onNodeWithText(formula).assertExists() != null) {
-                        composeTestRule.onNodeWithText(formula).performClick()
-                        // Verify the selection was made by checking if dropdown closed
-                        composeTestRule.onNodeWithText("1RM Formula").assertIsDisplayed()
-                    }
+                    composeTestRule
+                        .onNodeWithTag("formula_option_$formula", useUnmergedTree = true)
+                        .performClick()
+                    composeTestRule.onNodeWithText(formula).performClick()
+
+                    // Verify the selection was made by checking if dropdown closed
+                    composeTestRule.onNodeWithText("1RM Formula").assertIsDisplayed()
                 } catch (e: Exception) {
                     // Formula might not be visible in dropdown, continue
                 }

@@ -2,9 +2,11 @@ package com.android.timberworkoutlogs.ui.screen.stats
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.android.timberworkoutlogs.MainActivity
+import com.android.timberworkoutlogs.util.getGreetingByTime
 import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -30,8 +32,7 @@ class StatsScreenNavigationTest : TestCase() {
     fun whenNavigatingToStats_statsScreenIsDisplayed() = run {
         step("Navigate to Stats screen from bottom navigation") {
             // Wait for app to load
-            composeTestRule.onNodeWithText("Home").assertIsDisplayed()
-            
+            composeTestRule.onNodeWithText(getGreetingByTime()).assertIsDisplayed()
             // Navigate to Stats
             composeTestRule.onNodeWithText("Stats").performClick()
         }
@@ -132,8 +133,8 @@ class StatsScreenNavigationTest : TestCase() {
         }
 
         step("Navigate away to Home") {
-            composeTestRule.onNodeWithText("Home").performClick()
-            composeTestRule.onNodeWithText("Good morning").assertIsDisplayed()
+            composeTestRule.onNodeWithTag("TimberAppLogo").performClick()
+            composeTestRule.onNodeWithText(getGreetingByTime()).assertIsDisplayed()
         }
 
         step("Navigate back to Stats") {

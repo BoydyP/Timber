@@ -2,9 +2,11 @@ package com.android.timberworkoutlogs.ui.screen.stats
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.android.timberworkoutlogs.MainActivity
+import com.android.timberworkoutlogs.util.getGreetingByTime
 import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -27,9 +29,10 @@ class StatsScreenE2ETest : TestCase() {
     }
 
     @Test
-    fun completeStatsWorkflow_userCanNavigateAndViewStats() = run {
+    fun userCanNavigateStatsProgression() = run {
+        // Home will have the time-bound greeting.
         step("Start at home screen") {
-            composeTestRule.onNodeWithText("Home").assertIsDisplayed()
+            composeTestRule.onNodeWithText(getGreetingByTime()).assertIsDisplayed()
         }
 
         step("Navigate to Stats screen") {
@@ -40,23 +43,24 @@ class StatsScreenE2ETest : TestCase() {
         step("Test Exercise Progression tab workflow") {
             // Should be on Progression tab by default
             composeTestRule.onNodeWithText("Exercise").assertIsDisplayed()
-            
+
             // Try to interact with exercise dropdown
             composeTestRule.onNodeWithText("Exercise").performClick()
-            
+
             // Look for any exercise or "No exercises found"
             try {
                 // Check for common exercises from database seeding
-                val found = listOf("Barbell Bench Press", "Dumbbell Bicep Curl", "Barbell Squat")
+                val found = listOf("Barbell Shrug", "Bodyweight Pull Up", "Barbell Squat")
                     .any { exercise ->
                         try {
-                            composeTestRule.onNodeWithText(exercise).assertIsDisplayed()
+                            composeTestRule.onNodeWithText(text = exercise, substring = true)
+                                .assertIsDisplayed()
                             true
                         } catch (e: AssertionError) {
                             false
                         }
                     }
-                
+
                 if (!found) {
                     // Should show no exercises message
                     composeTestRule.onNodeWithText("No exercises found").assertIsDisplayed()
@@ -65,6 +69,60 @@ class StatsScreenE2ETest : TestCase() {
                 // Close dropdown if it opened
                 composeTestRule.onNodeWithText("Exercise").performClick()
             }
+        }
+    }
+
+    @Test
+    fun userCanMoveBetweenTabs() = run {
+        step("Start at home screen") {
+            composeTestRule.onNodeWithText(getGreetingByTime()).assertIsDisplayed()
+        }
+
+        step("Navigate to Stats screen") {
+            composeTestRule.onNodeWithText("Stats").performClick()
+            composeTestRule.onNodeWithText("Progression").assertIsDisplayed()
+        }
+        step("Test multiple interactions without crashes") {
+            // Perform various interactions to test stability
+
+            repeat(3) {
+                composeTestRule.onNodeWithText("Progression").performClick()
+                composeTestRule.onNodeWithText("Exercise").performClick()
+                composeTestRule.onNodeWithText("Exercise").performClick()
+
+                composeTestRule.onNodeWithText("1RM").performClick()
+                composeTestRule.onNodeWithText("1RM Formula").performClick()
+                composeTestRule.onNodeWithText("1RM Formula").performClick()
+
+                composeTestRule.onNodeWithText("Volume").performClick()
+            }
+
+            // Verify app is still functional
+            composeTestRule.onNodeWithText("Stats").assertIsDisplayed()
+            composeTestRule.onNodeWithText("Progression").assertIsDisplayed()
+        }
+        step("Test tab persistence and navigation") {
+            // Switch to 1RM tab
+            composeTestRule.onNodeWithText("1RM").performClick()
+            composeTestRule.onNodeWithText("1RM Formula").assertIsDisplayed()
+
+            // Navigate away to Home
+            composeTestRule.onNodeWithTag("TimberAppLogo").performClick()
+            composeTestRule.onNodeWithText(getGreetingByTime()).assertIsDisplayed()
+        }
+    }
+
+
+    @Test
+    fun userCanNavigateAndViewStats1RM() = run {
+        // Home will have the time-bound greeting.
+        step("Start at home screen") {
+            composeTestRule.onNodeWithText(getGreetingByTime()).assertIsDisplayed()
+        }
+
+        step("Navigate to Stats screen") {
+            composeTestRule.onNodeWithText("Stats").performClick()
+            composeTestRule.onNodeWithText("Progression").assertIsDisplayed()
         }
 
         step("Test One Rep Max tab workflow") {
@@ -80,6 +138,10 @@ class StatsScreenE2ETest : TestCase() {
             
             formulas.forEach { formula ->
                 try {
+                    composeTestRule
+                        .onNodeWithTag("formula_option_$formula", useUnmergedTree = true)
+                        .performClick()
+
                     composeTestRule.onNodeWithText(formula).performClick()
                     selectedFormula = true
                     // Verify dropdown closed
@@ -104,41 +166,6 @@ class StatsScreenE2ETest : TestCase() {
             
             // The content depends on VolumeStatsTab implementation
             // We just verify it doesn't crash
-        }
-
-        step("Test tab persistence and navigation") {
-            // Switch to 1RM tab
-            composeTestRule.onNodeWithText("1RM").performClick()
-            composeTestRule.onNodeWithText("1RM Formula").assertIsDisplayed()
-            
-            // Navigate away to Home
-            composeTestRule.onNodeWithText("Home").performClick()
-            composeTestRule.onNodeWithText("Good morning").assertIsDisplayed()
-            
-            // Navigate back to Stats
-            composeTestRule.onNodeWithText("Stats").performClick()
-            
-            // Should remember the last selected tab (1RM)
-            composeTestRule.onNodeWithText("1RM Formula").assertIsDisplayed()
-        }
-
-        step("Test multiple interactions without crashes") {
-            // Perform various interactions to test stability
-            repeat(3) {
-                composeTestRule.onNodeWithText("Progression").performClick()
-                composeTestRule.onNodeWithText("Exercise").performClick()
-                composeTestRule.onNodeWithText("Exercise").performClick()
-                
-                composeTestRule.onNodeWithText("1RM").performClick()
-                composeTestRule.onNodeWithText("1RM Formula").performClick()
-                composeTestRule.onNodeWithText("1RM Formula").performClick()
-                
-                composeTestRule.onNodeWithText("Volume").performClick()
-            }
-            
-            // Verify app is still functional
-            composeTestRule.onNodeWithText("Stats").assertIsDisplayed()
-            composeTestRule.onNodeWithText("Progression").assertIsDisplayed()
         }
     }
 
@@ -217,13 +244,13 @@ class StatsScreenE2ETest : TestCase() {
 
         step("Test rapid navigation between screens") {
             // Rapidly switch between all screens
-            val screens = listOf("Home", "Stats", "History", "Settings")
+            val screens = listOf("Stats", "History", "Templates", "Settings")
             
             repeat(2) {
                 screens.forEach { screen ->
                     composeTestRule.onNodeWithText(screen).performClick()
                     // Brief pause to let the screen load
-                    Thread.sleep(100)
+                    composeTestRule.waitForIdle()
                 }
             }
             
@@ -241,19 +268,19 @@ class StatsScreenE2ETest : TestCase() {
 
         step("Test time range options on Progression tab") {
             val timeRanges = listOf(
-                "Last 4 weeks",
-                "Last 3 months",
-                "Last 6 months", 
+                "4 weeks",
+                "3 months",
+                "6 months",
                 "Last year",
                 "All time"
             )
-            
             // Try to find and select different time ranges
             timeRanges.forEach { timeRange ->
                 try {
-                    composeTestRule.onNodeWithText(timeRange).performClick()
-                    // Small delay to let data load
-                    Thread.sleep(100)
+                    composeTestRule.onNodeWithText("Time Range").performClick()
+                    composeTestRule.waitForIdle()
+                    composeTestRule.onNodeWithTag("time_range_${timeRange}", useUnmergedTree = true)
+                        .performClick()
                 } catch (e: Exception) {
                     // Time range might not be visible, continue
                 }
@@ -265,16 +292,19 @@ class StatsScreenE2ETest : TestCase() {
             
             // Time range should be available on 1RM tab too
             val timeRanges = listOf(
-                "Last 4 weeks",
-                "Last 3 months",
-                "Last 6 months", 
+                "4 weeks",
+                "3 months",
+                "6 months",
                 "Last year",
                 "All time"
             )
             
             timeRanges.forEach { timeRange ->
                 try {
-                    composeTestRule.onNodeWithText(timeRange).performClick()
+                    composeTestRule.onNodeWithText("Time Range").performClick()
+                    composeTestRule.waitForIdle()
+                    composeTestRule.onNodeWithTag("time_range_${timeRange}", useUnmergedTree = true)
+                        .performClick()
                 } catch (e: Exception) {
                     // Continue if not visible
                 }

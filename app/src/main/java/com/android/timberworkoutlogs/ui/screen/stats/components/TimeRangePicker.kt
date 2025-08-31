@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import com.android.timberworkoutlogs.ui.screen.stats.TimeRange
 
@@ -72,7 +73,9 @@ fun TimeRangePicker(
                         onClick = {
                             onTimeRangeSelected(timeRange)
                             expanded = false
-                        }
+                        },
+                        modifier = Modifier.testTag("time_range_${timeRange.displayName}")
+
                     )
                 }
             }

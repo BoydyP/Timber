@@ -7,7 +7,7 @@ import javax.inject.Singleton
 
 /**
  * A Singleton class that holds the state of the active workout, used to avoid context leak
- * when a workout is in progress.*/
+ * when a workout is in progress and to enable functionality of the home screen return banner.*/
 @Singleton
 class WorkoutStateHolder @Inject constructor() {
     private val _isTimerRunning = MutableStateFlow(false)
