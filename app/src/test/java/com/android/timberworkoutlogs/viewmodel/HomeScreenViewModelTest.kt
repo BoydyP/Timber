@@ -2,20 +2,28 @@ package com.android.timberworkoutlogs.viewmodel
 
 import com.android.timberworkoutlogs.database.SettingsRepository
 import com.android.timberworkoutlogs.database.WorkoutDao
+import com.android.timberworkoutlogs.database.WorkoutWithExercises
+import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.WeightUnit
+import com.android.timberworkoutlogs.models.Workout
+import com.android.timberworkoutlogs.models.WorkoutExercise
 import com.android.timberworkoutlogs.rules.MainDispatcherRule
 import com.android.timberworkoutlogs.services.WorkoutStateHolder
 import com.android.timberworkoutlogs.ui.screen.home.HomeScreenViewModel
+import com.android.timberworkoutlogs.ui.screen.home.WeeklyVolumeUiState
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.util.Calendar
+import java.util.UUID
 
 @ExperimentalCoroutinesApi
 class HomeScreenViewModelTest {
@@ -28,6 +36,8 @@ class HomeScreenViewModelTest {
     private lateinit var workoutDao: WorkoutDao
     private lateinit var settingsRepository: SettingsRepository
     private val isTimerRunningFlow = MutableStateFlow(false)
+    private val weightUnitFlow = MutableStateFlow(WeightUnit.KG)
+    private val workoutsFlow = MutableStateFlow<List<WorkoutWithExercises>>(emptyList())
 
     @Before
     fun setup() {
@@ -35,10 +45,10 @@ class HomeScreenViewModelTest {
             every { isTimerRunning } returns isTimerRunningFlow
         }
         workoutDao = mockk {
-            every { getWorkoutsWithExercisesFrom(any()) } returns flowOf(emptyList())
+            every { getWorkoutsWithExercisesFrom(any()) } returns workoutsFlow
         }
         settingsRepository = mockk {
-            every { weightUnit } returns MutableStateFlow(WeightUnit.KG)
+            every { weightUnit } returns weightUnitFlow
         }
         viewModel = HomeScreenViewModel(workoutStateHolder, workoutDao, settingsRepository)
     }
@@ -77,5 +87,285 @@ class HomeScreenViewModelTest {
 
         // Then state is false again
         assertEquals(false, viewModel.isWorkoutInProgress.value)
+    }
+
+    @Test
+    fun `weeklyVolumeUiState starts with Loading state`() = runTest {
+        // Given & When - Initial state
+        val initialState = viewModel.weeklyVolumeUiState.value
+
+        // Then
+        assertTrue(initialState is WeeklyVolumeUiState.Loading)
+    }
+
+    @Test
+    fun `weeklyVolumeUiState shows Success with empty data when no workouts`() = runTest {
+        // Given
+        workoutsFlow.value = emptyList()
+
+        // When
+        val state = viewModel.weeklyVolumeUiState.first()
+
+        // Then
+        assertTrue(state is WeeklyVolumeUiState.Success)
+        state as WeeklyVolumeUiState.Success
+        assertEquals(7, state.chartData.size) // 7 days
+        assertTrue(state.chartData.all { it == 0.0f }) // All days should be 0
+        assertEquals(WeightUnit.KG, state.weightUnit)
+    }
+
+    @Test
+    fun `weeklyVolumeUiState calculates weekly volume correctly in KG`() = runTest {
+        // Given - Monday workout
+        val mondayTime = getTimeForDayOfWeek(Calendar.MONDAY)
+        val workout = Workout(
+            id = 1L,
+            name = "Test Workout",
+            startTime = mondayTime,
+            durationSeconds = 3600
+        )
+        val exercise = WorkoutExercise(
+            id = UUID.randomUUID(),
+            workoutId = 1L,
+            definitionId = UUID.randomUUID(),
+            unit = WeightUnit.KG,
+            sets = mutableListOf(
+                WeightAndRepsSet(weight = 100.0, reps = 5, isDone = true), // 500 kg volume
+                WeightAndRepsSet(weight = 80.0, reps = 8, isDone = true)   // 640 kg volume
+            )
+        )
+        val workoutWithExercises = WorkoutWithExercises(
+            workout = workout,
+            exercises = listOf(exercise)
+        )
+        workoutsFlow.value = listOf(workoutWithExercises)
+
+        // When
+        val state = viewModel.weeklyVolumeUiState.first()
+
+        // Then
+        assertTrue(state is WeeklyVolumeUiState.Success)
+        state as WeeklyVolumeUiState.Success
+        assertEquals(7, state.chartData.size)
+        assertEquals(1140.0f, state.chartData[0], 0.1f) // Monday - total volume
+        assertTrue(state.chartData.drop(1).all { it == 0.0f }) // Other days should be 0
+        assertEquals(WeightUnit.KG, state.weightUnit)
+    }
+
+    @Test
+    fun `weeklyVolumeUiState converts LB exercises to KG for calculation`() = runTest {
+        // Given - Tuesday workout with LB weights
+        val tuesdayTime = getTimeForDayOfWeek(Calendar.TUESDAY)
+        val workout = Workout(
+            id = 1L,
+            name = "Test Workout",
+            startTime = tuesdayTime,
+            durationSeconds = 3600
+        )
+        val exercise = WorkoutExercise(
+            id = UUID.randomUUID(),
+            workoutId = 1L,
+            definitionId = UUID.randomUUID(),
+            unit = WeightUnit.LB,
+            sets = mutableListOf(
+                WeightAndRepsSet(weight = 100.0, reps = 5, isDone = true) // 100 lbs * 5 reps
+            )
+        )
+        val workoutWithExercises = WorkoutWithExercises(
+            workout = workout,
+            exercises = listOf(exercise)
+        )
+        workoutsFlow.value = listOf(workoutWithExercises)
+
+        // When
+        val state = viewModel.weeklyVolumeUiState.first()
+
+        // Then
+        assertTrue(state is WeeklyVolumeUiState.Success)
+        state as WeeklyVolumeUiState.Success
+        // 100 lbs * 5 reps * 0.45359237 = ~226.8 kg
+        assertEquals(226.8f, state.chartData[1], 1.0f) // Tuesday
+    }
+
+    @Test
+    fun `weeklyVolumeUiState displays volume in LB when weight unit is LB`() = runTest {
+        // Given - Set weight unit to LB
+        weightUnitFlow.value = WeightUnit.LB
+        
+        val mondayTime = getTimeForDayOfWeek(Calendar.MONDAY)
+        val workout = Workout(
+            id = 1L,
+            name = "Test Workout",
+            startTime = mondayTime,
+            durationSeconds = 3600
+        )
+        val exercise = WorkoutExercise(
+            id = UUID.randomUUID(),
+            workoutId = 1L,
+            definitionId = UUID.randomUUID(),
+            unit = WeightUnit.KG,
+            sets = mutableListOf(
+                WeightAndRepsSet(weight = 100.0, reps = 5, isDone = true) // 500 kg volume
+            )
+        )
+        val workoutWithExercises = WorkoutWithExercises(
+            workout = workout,
+            exercises = listOf(exercise)
+        )
+        workoutsFlow.value = listOf(workoutWithExercises)
+
+        // When
+        val state = viewModel.weeklyVolumeUiState.first()
+
+        // Then
+        assertTrue(state is WeeklyVolumeUiState.Success)
+        state as WeeklyVolumeUiState.Success
+        // 500 kg * 2.20462262 = ~1102.3 lbs
+        assertEquals(1102.3f, state.chartData[0], 1.0f) // Monday
+        assertEquals(WeightUnit.LB, state.weightUnit)
+    }
+
+    @Test
+    fun `weeklyVolumeUiState aggregates multiple workouts on same day`() = runTest {
+        // Given - Two workouts on Wednesday
+        val wednesdayTime = getTimeForDayOfWeek(Calendar.WEDNESDAY)
+        val workout1 = Workout(id = 1L, name = "Morning", startTime = wednesdayTime, durationSeconds = 3600)
+        val workout2 = Workout(id = 2L, name = "Evening", startTime = wednesdayTime + 3600000, durationSeconds = 3600)
+        
+        val exercise1 = WorkoutExercise(
+            id = UUID.randomUUID(),
+            workoutId = 1L,
+            definitionId = UUID.randomUUID(),
+            unit = WeightUnit.KG,
+            sets = mutableListOf(WeightAndRepsSet(weight = 100.0, reps = 5, isDone = true)) // 500 kg
+        )
+        val exercise2 = WorkoutExercise(
+            id = UUID.randomUUID(),
+            workoutId = 2L,
+            definitionId = UUID.randomUUID(),
+            unit = WeightUnit.KG,
+            sets = mutableListOf(WeightAndRepsSet(weight = 80.0, reps = 10, isDone = true)) // 800 kg
+        )
+        
+        workoutsFlow.value = listOf(
+            WorkoutWithExercises(workout1, listOf(exercise1)),
+            WorkoutWithExercises(workout2, listOf(exercise2))
+        )
+
+        // When
+        val state = viewModel.weeklyVolumeUiState.first()
+
+        // Then
+        assertTrue(state is WeeklyVolumeUiState.Success)
+        state as WeeklyVolumeUiState.Success
+        assertEquals(1300.0f, state.chartData[2], 0.1f) // Wednesday - combined volume
+    }
+
+    @Test
+    fun `weeklyVolumeUiState ignores sets with zero weight or reps`() = runTest {
+        // Given - Workout with invalid sets
+        val fridayTime = getTimeForDayOfWeek(Calendar.FRIDAY)
+        val workout = Workout(id = 1L, name = "Test", startTime = fridayTime, durationSeconds = 3600)
+        val exercise = WorkoutExercise(
+            id = UUID.randomUUID(),
+            workoutId = 1L,
+            definitionId = UUID.randomUUID(),
+            unit = WeightUnit.KG,
+            sets = mutableListOf(
+                WeightAndRepsSet(weight = 100.0, reps = 5, isDone = true),  // Valid: 500 kg
+                WeightAndRepsSet(weight = 0.0, reps = 5, isDone = true),    // Invalid: 0 weight
+                WeightAndRepsSet(weight = 80.0, reps = 0, isDone = true),   // Invalid: 0 reps
+                WeightAndRepsSet(weight = 60.0, reps = 8, isDone = true)    // Valid: 480 kg
+            )
+        )
+        workoutsFlow.value = listOf(WorkoutWithExercises(workout, listOf(exercise)))
+
+        // When
+        val state = viewModel.weeklyVolumeUiState.first()
+
+        // Then
+        assertTrue(state is WeeklyVolumeUiState.Success)
+        state as WeeklyVolumeUiState.Success
+        assertEquals(980.0f, state.chartData[4], 0.1f) // Friday - only valid sets
+    }
+
+    @Test
+    fun `weeklyVolumeUiState handles weekend workouts correctly`() = runTest {
+        // Given - Saturday and Sunday workouts
+        val saturdayTime = getTimeForDayOfWeek(Calendar.SATURDAY)
+        val sundayTime = getTimeForDayOfWeek(Calendar.SUNDAY)
+        
+        val saturdayWorkout = Workout(id = 1L, name = "Saturday", startTime = saturdayTime, durationSeconds = 3600)
+        val sundayWorkout = Workout(id = 2L, name = "Sunday", startTime = sundayTime, durationSeconds = 3600)
+        
+        val saturdayExercise = WorkoutExercise(
+            id = UUID.randomUUID(),
+            workoutId = 1L,
+            definitionId = UUID.randomUUID(),
+            unit = WeightUnit.KG,
+            sets = mutableListOf(WeightAndRepsSet(weight = 120.0, reps = 3, isDone = true)) // 360 kg
+        )
+        val sundayExercise = WorkoutExercise(
+            id = UUID.randomUUID(),
+            workoutId = 2L,
+            definitionId = UUID.randomUUID(),
+            unit = WeightUnit.KG,
+            sets = mutableListOf(WeightAndRepsSet(weight = 90.0, reps = 4, isDone = true)) // 360 kg
+        )
+        
+        workoutsFlow.value = listOf(
+            WorkoutWithExercises(saturdayWorkout, listOf(saturdayExercise)),
+            WorkoutWithExercises(sundayWorkout, listOf(sundayExercise))
+        )
+
+        // When
+        val state = viewModel.weeklyVolumeUiState.first()
+
+        // Then
+        assertTrue(state is WeeklyVolumeUiState.Success)
+        state as WeeklyVolumeUiState.Success
+        assertEquals(360.0f, state.chartData[5], 0.1f) // Saturday
+        assertEquals(360.0f, state.chartData[6], 0.1f) // Sunday
+    }
+
+    @Test
+    fun `weeklyVolumeUiState updates when weight unit changes`() = runTest {
+        // Given - Initial workout data
+        val mondayTime = getTimeForDayOfWeek(Calendar.MONDAY)
+        val workout = Workout(id = 1L, name = "Test", startTime = mondayTime, durationSeconds = 3600)
+        val exercise = WorkoutExercise(
+            id = UUID.randomUUID(),
+            workoutId = 1L,
+            definitionId = UUID.randomUUID(),
+            unit = WeightUnit.KG,
+            sets = mutableListOf(WeightAndRepsSet(weight = 100.0, reps = 5, isDone = true)) // 500 kg
+        )
+        workoutsFlow.value = listOf(WorkoutWithExercises(workout, listOf(exercise)))
+
+        // Initial state in KG
+        val initialState = viewModel.weeklyVolumeUiState.first()
+        assertTrue(initialState is WeeklyVolumeUiState.Success)
+        assertEquals(WeightUnit.KG, (initialState as WeeklyVolumeUiState.Success).weightUnit)
+        assertEquals(500.0f, initialState.chartData[0], 0.1f)
+
+        // When - Change to LB
+        weightUnitFlow.value = WeightUnit.LB
+
+        // Then - Volume should be converted to LB
+        val updatedState = viewModel.weeklyVolumeUiState.first()
+        assertTrue(updatedState is WeeklyVolumeUiState.Success)
+        assertEquals(WeightUnit.LB, (updatedState as WeeklyVolumeUiState.Success).weightUnit)
+        assertEquals(1102.3f, updatedState.chartData[0], 1.0f) // 500 kg * 2.20462262
+    }
+
+    private fun getTimeForDayOfWeek(dayOfWeek: Int): Long {
+        return Calendar.getInstance().apply {
+            firstDayOfWeek = Calendar.MONDAY
+            set(Calendar.DAY_OF_WEEK, dayOfWeek)
+            set(Calendar.HOUR_OF_DAY, 10) // Set to 10 AM to avoid edge cases
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
     }
 }
