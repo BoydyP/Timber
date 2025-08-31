@@ -56,7 +56,7 @@ class StatsScreenE2ETest : TestCase() {
                             composeTestRule.onNodeWithText(text = exercise, substring = true)
                                 .assertIsDisplayed()
                             true
-                        } catch (e: AssertionError) {
+                        } catch (_: AssertionError) {
                             false
                         }
                     }
@@ -65,7 +65,7 @@ class StatsScreenE2ETest : TestCase() {
                     // Should show no exercises message
                     composeTestRule.onNodeWithText("No exercises found").assertIsDisplayed()
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Close dropdown if it opened
                 composeTestRule.onNodeWithText("Exercise").performClick()
             }
@@ -146,7 +146,7 @@ class StatsScreenE2ETest : TestCase() {
                     selectedFormula = true
                     // Verify dropdown closed
                     composeTestRule.onNodeWithText("1RM Formula").assertIsDisplayed()
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // Formula not visible, continue
                 }
                 if (selectedFormula) return@forEach
@@ -179,10 +179,10 @@ class StatsScreenE2ETest : TestCase() {
             // Test Progression tab empty state
             try {
                 composeTestRule.onNodeWithText("Select an exercise to view progression data.").assertIsDisplayed()
-            } catch (e: AssertionError) {
+            } catch (_: AssertionError) {
                 try {
                     composeTestRule.onNodeWithText("No progression data found").assertIsDisplayed()
-                } catch (e2: AssertionError) {
+                } catch (_: AssertionError) {
                     // Might be in loading state or have data, that's also valid
                 }
             }
@@ -191,10 +191,10 @@ class StatsScreenE2ETest : TestCase() {
             composeTestRule.onNodeWithText("1RM").performClick()
             try {
                 composeTestRule.onNodeWithText("Select an exercise to view one-rep max progression.").assertIsDisplayed()
-            } catch (e: AssertionError) {
+            } catch (_: AssertionError) {
                 try {
                     composeTestRule.onNodeWithText("No one-rep max data found").assertIsDisplayed()
-                } catch (e2: AssertionError) {
+                } catch (_: AssertionError) {
                     // Might be in loading state or have data
                 }
             }
@@ -229,7 +229,7 @@ class StatsScreenE2ETest : TestCase() {
             // Should see settings screen
             try {
                 composeTestRule.onNodeWithText("Weight Unit").assertIsDisplayed()
-            } catch (e: AssertionError) {
+            } catch (_: AssertionError) {
                 // Settings might have different layout
             }
             
@@ -281,7 +281,7 @@ class StatsScreenE2ETest : TestCase() {
                     composeTestRule.waitForIdle()
                     composeTestRule.onNodeWithTag("time_range_${timeRange}", useUnmergedTree = true)
                         .performClick()
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // Time range might not be visible, continue
                 }
             }
@@ -305,7 +305,7 @@ class StatsScreenE2ETest : TestCase() {
                     composeTestRule.waitForIdle()
                     composeTestRule.onNodeWithTag("time_range_${timeRange}", useUnmergedTree = true)
                         .performClick()
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // Continue if not visible
                 }
             }

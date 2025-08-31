@@ -159,7 +159,7 @@ class StatsScreenNavigationTest : TestCase() {
             // The exact text depends on whether exercises exist in DB
             try {
                 composeTestRule.onNodeWithText("Select an exercise to view progression data.").assertIsDisplayed()
-            } catch (e: AssertionError) {
+            } catch (_: AssertionError) {
                 // Alternative message when no exercises have workout history
                 composeTestRule.onNodeWithText("No progression data found").assertIsDisplayed()
             }
@@ -170,7 +170,7 @@ class StatsScreenNavigationTest : TestCase() {
             
             try {
                 composeTestRule.onNodeWithText("Select an exercise to view one-rep max progression.").assertIsDisplayed()
-            } catch (e: AssertionError) {
+            } catch (_: AssertionError) {
                 composeTestRule.onNodeWithText("No one-rep max data found").assertIsDisplayed()
             }
         }

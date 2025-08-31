@@ -62,7 +62,7 @@ class StatsScreenInteractionTest : TestCase() {
             // The time range picker might show the current selection like "4 weeks"
             try {
                 composeTestRule.onNodeWithText("4 weeks").assertIsDisplayed()
-            } catch (e: AssertionError) {
+            } catch (_: AssertionError) {
                 // If not visible, might be in a different state
                 // We can still test basic functionality
             }
@@ -84,7 +84,7 @@ class StatsScreenInteractionTest : TestCase() {
                     composeTestRule.onNodeWithText("Time Range").performClick()
                     composeTestRule.onNodeWithTag("time_range_$option", useUnmergedTree = true)
                         .performClick()
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // Option might not be visible, that's okay
                 }
             }
@@ -121,7 +121,7 @@ class StatsScreenInteractionTest : TestCase() {
 
                     // Verify the selection was made by checking if dropdown closed
                     composeTestRule.onNodeWithText("1RM Formula").assertIsDisplayed()
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // Formula might not be visible in dropdown, continue
                 }
             }
@@ -185,7 +185,7 @@ class StatsScreenInteractionTest : TestCase() {
                 try {
                     composeTestRule.onNodeWithText(exercise).assertIsDisplayed()
                     foundAnyExercise = true
-                } catch (e: AssertionError) {
+                } catch (_: AssertionError) {
                     // Exercise might not have workout history, that's okay
                 }
             }
@@ -194,7 +194,7 @@ class StatsScreenInteractionTest : TestCase() {
                 // If no exercises found, should see "No exercises found" message
                 try {
                     composeTestRule.onNodeWithText("No exercises found").assertIsDisplayed()
-                } catch (e: AssertionError) {
+                } catch (_: AssertionError) {
                     // Might be in a different state, that's also okay for this test
                 }
             }
@@ -217,7 +217,7 @@ class StatsScreenInteractionTest : TestCase() {
             // Try to select Brzycki if available
             try {
                 composeTestRule.onNodeWithText("Brzycki").performClick()
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // If not available, just close the dropdown
                 composeTestRule.onNodeWithText("1RM Formula").performClick()
             }

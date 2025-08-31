@@ -149,11 +149,11 @@ class OneRepMaxCalculatorTest {
         
         // When
         val defaultResult = OneRepMaxCalculator.getDefault(weight, reps)
-        val epleyrResult = OneRepMaxCalculator.epley(weight, reps)
+        val epleyResult = OneRepMaxCalculator.epley(weight, reps)
         
         // Then
         assertEquals("Default should use Epley formula", 
-            epleyrResult, defaultResult, tolerance)
+            epleyResult, defaultResult, tolerance)
     }
 
     @Test
@@ -169,9 +169,9 @@ class OneRepMaxCalculatorTest {
         testInputs.forEach { (weight, reps) ->
             // When & Then: Should not crash (may return non-finite values for edge cases)
             try {
-                val epley = OneRepMaxCalculator.epley(weight, reps)
-                val brzycki = OneRepMaxCalculator.brzycki(weight, reps)
-                val lombardi = OneRepMaxCalculator.lombardi(weight, reps)
+                OneRepMaxCalculator.epley(weight, reps)
+                OneRepMaxCalculator.brzycki(weight, reps)
+                OneRepMaxCalculator.lombardi(weight, reps)
                 
                 // Just verify the functions don't throw exceptions
                 // Results may be NaN or infinite for edge cases, which is acceptable
