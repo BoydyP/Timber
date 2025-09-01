@@ -16,7 +16,7 @@
         android:roundIcon="@mipmap/timber_launcher_no_writing_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.TimberWorkoutLogs"
-        tools:targetApi="31">
+        tools:targetApi="33">
         <service
             android:name=".services.TimerService"
             android:description="@string/timer_service_description"
