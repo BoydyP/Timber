@@ -11,6 +11,7 @@ import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.ui.screen.stats.utils.OneRepMaxCalculator
 import com.android.timberworkoutlogs.ui.screen.stats.utils.OneRMFormula
+import com.android.timberworkoutlogs.util.WeightUnitConverter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,8 +22,6 @@ import kotlinx.coroutines.flow.onEach
 import java.util.Calendar
 import javax.inject.Inject
 
-private const val LBS_TO_KG_FACTOR = 0.45359237
-private const val KG_TO_LBS_FACTOR = 2.20462262
 
 enum class StatsTab {
     EXERCISE_PROGRESSION,
@@ -166,11 +165,7 @@ class StatsViewModel @Inject constructor(
                     exerciseWithDate.workoutExercise.sets.forEach { set ->
                         if (set is WeightAndRepsSet && set.isDone && set.reps > 0 && set.weight > 0) {
                             // Convert weight to kg for calculations
-                            val weightInKg = if (exerciseWithDate.workoutExercise.unit == WeightUnit.LB) {
-                                set.weight * LBS_TO_KG_FACTOR
-                            } else {
-                                set.weight
-                            }
+                            val weightInKg = WeightUnitConverter.toKg(set.weight, exerciseWithDate.workoutExercise.unit)
 
                             // Track max weight
                             if (weightInKg > maxWeight) {
@@ -185,17 +180,8 @@ class StatsViewModel @Inject constructor(
                 }
 
                 // Convert final values to user's preferred unit
-                val finalMaxWeight = if (weightUnit == WeightUnit.LB) {
-                    maxWeight * KG_TO_LBS_FACTOR
-                } else {
-                    maxWeight
-                }
-                
-                val finalTotalVolume = if (weightUnit == WeightUnit.LB) {
-                    totalVolume * KG_TO_LBS_FACTOR
-                } else {
-                    totalVolume
-                }
+                val finalMaxWeight = WeightUnitConverter.fromKg(maxWeight, weightUnit)
+                val finalTotalVolume = WeightUnitConverter.fromKg(totalVolume, weightUnit)
 
                 ExerciseProgressionPoint(
                     date = workoutDate,
@@ -217,11 +203,7 @@ class StatsViewModel @Inject constructor(
             exerciseWithDate.workoutExercise.sets.mapNotNull { set ->
                 if (set is WeightAndRepsSet && set.isDone && set.reps > 0 && set.weight > 0) {
                     // Convert to kg for calculation
-                    val weightInKg = if (exerciseWithDate.workoutExercise.unit == WeightUnit.LB) {
-                        set.weight * LBS_TO_KG_FACTOR
-                    } else {
-                        set.weight
-                    }
+                    val weightInKg = WeightUnitConverter.toKg(set.weight, exerciseWithDate.workoutExercise.unit)
 
                     val oneRMInKg = when (selectedFormula) {
                         OneRMFormula.EPLEY -> OneRepMaxCalculator.epley(weightInKg, set.reps)
@@ -234,19 +216,8 @@ class StatsViewModel @Inject constructor(
                     }
 
                     // Convert final 1RM to user's preferred unit
-                    val finalOneRM = if (weightUnit == WeightUnit.LB) {
-                        oneRMInKg * KG_TO_LBS_FACTOR
-                    } else {
-                        oneRMInKg
-                    }
-
-                    val finalActualWeight = if (weightUnit == WeightUnit.LB && exerciseWithDate.workoutExercise.unit == WeightUnit.KG) {
-                        set.weight * KG_TO_LBS_FACTOR
-                    } else if (weightUnit == WeightUnit.KG && exerciseWithDate.workoutExercise.unit == WeightUnit.LB) {
-                        set.weight * LBS_TO_KG_FACTOR
-                    } else {
-                        set.weight
-                    }
+                    val finalOneRM = WeightUnitConverter.fromKg(oneRMInKg, weightUnit)
+                    val finalActualWeight = WeightUnitConverter.convert(set.weight, exerciseWithDate.workoutExercise.unit, weightUnit)
 
                     OneRepMaxPoint(
                         date = exerciseWithDate.workoutStartTime,

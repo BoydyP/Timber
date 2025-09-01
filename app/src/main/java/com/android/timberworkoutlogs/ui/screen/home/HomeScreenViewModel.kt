@@ -7,6 +7,7 @@ import com.android.timberworkoutlogs.database.WorkoutDao
 import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.services.WorkoutStateHolder
+import com.android.timberworkoutlogs.util.WeightUnitConverter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -15,8 +16,6 @@ import kotlinx.coroutines.flow.stateIn
 import java.util.Calendar
 import javax.inject.Inject
 
-private const val LBS_TO_KG_FACTOR = 0.45359237
-private const val KG_TO_LBS_FACTOR = 2.20462262
 
 sealed interface WeeklyVolumeUiState {
     object Loading : WeeklyVolumeUiState
@@ -96,11 +95,7 @@ class HomeScreenViewModel @Inject constructor(
                             exercise.sets.forEach { set ->
                                 if (set is WeightAndRepsSet) {
                                     // First convert to kg for calculation
-                                    val weightInKg = if (exercise.unit == WeightUnit.LB) {
-                                        set.weight * LBS_TO_KG_FACTOR
-                                    } else {
-                                        set.weight
-                                    }
+                                    val weightInKg = WeightUnitConverter.toKg(set.weight, exercise.unit)
                                     if (set.reps > 0 && weightInKg > 0) {
                                         workoutTotalVolume += set.reps * weightInKg
                                     }
@@ -113,12 +108,7 @@ class HomeScreenViewModel @Inject constructor(
 
                 // Convert final volumes to user's preferred unit
                 val chartYValues = dailyVolumes.map { volumeInKg ->
-                    val finalVolume = if (weightUnit == WeightUnit.LB) {
-                        volumeInKg * KG_TO_LBS_FACTOR
-                    } else {
-                        volumeInKg
-                    }
-                    finalVolume.toFloat()
+                    WeightUnitConverter.fromKg(volumeInKg, weightUnit).toFloat()
                 }
 
                 WeeklyVolumeUiState.Success(chartYValues, weightUnit)
@@ -173,14 +163,18 @@ class HomeScreenViewModel @Inject constructor(
                 if (exerciseDefinition != null) {
                     val exerciseName = "${exerciseDefinition.equipment.name.lowercase().replaceFirstChar { it.uppercase() }} ${exerciseDefinition.name}"
                     
+                    // Check if this exercise has any valid sets with weight > 0
+                    var hasValidSets = false
+                    var maxWeightKg = 0.0
+                    var maxOneRepMax = 0.0
+                    var maxAchievedDate = 0L
+                    
                     for (set in exercise.sets) {
                         if (set is WeightAndRepsSet && set.weight > 0 && set.reps > 0) {
+                            hasValidSets = true
+                            
                             // Convert weight to consistent unit (KG) for comparison
-                            val weightInKg = if (exercise.unit == WeightUnit.LB) {
-                                set.weight * LBS_TO_KG_FACTOR
-                            } else {
-                                set.weight
-                            }
+                            val weightInKg = WeightUnitConverter.toKg(set.weight, exercise.unit)
 
                             // Calculate estimated 1RM using Brzycki formula
                             val oneRepMax = if (set.reps == 1) {
@@ -189,33 +183,34 @@ class HomeScreenViewModel @Inject constructor(
                                 weightInKg / (1.0278 - 0.0278 * set.reps)
                             }
 
-                            val currentMax = exerciseMaxes[exerciseName]
-                            if (currentMax == null || oneRepMax > currentMax.oneRepMaxKg) {
-                                exerciseMaxes[exerciseName] = ExerciseMaxData(
-                                    maxWeightKg = weightInKg,
-                                    oneRepMaxKg = oneRepMax,
-                                    achievedDate = workoutWithExercises.workout.startTime
-                                )
+                            // Track the best lift for this exercise in this workout
+                            if (oneRepMax > maxOneRepMax) {
+                                maxWeightKg = weightInKg
+                                maxOneRepMax = oneRepMax
+                                maxAchievedDate = workoutWithExercises.workout.startTime
                             }
+                        }
+                    }
+                    
+                    // Only include exercises that have actually been performed with weights
+                    if (hasValidSets) {
+                        val currentMax = exerciseMaxes[exerciseName]
+                        if (currentMax == null || maxOneRepMax > currentMax.oneRepMaxKg) {
+                            exerciseMaxes[exerciseName] = ExerciseMaxData(
+                                maxWeightKg = maxWeightKg,
+                                oneRepMaxKg = maxOneRepMax,
+                                achievedDate = maxAchievedDate
+                            )
                         }
                     }
                 }
             }
         }
 
-        // Convert to ExerciseLift objects
+        // Convert to ExerciseLift objects - only for exercises that have actual workout data
         val lifts = exerciseMaxes.map { (exerciseName, maxData) ->
-            val displayWeight = if (weightUnit == WeightUnit.LB) {
-                maxData.maxWeightKg * KG_TO_LBS_FACTOR
-            } else {
-                maxData.maxWeightKg
-            }
-
-            val displayOneRepMax = if (weightUnit == WeightUnit.LB) {
-                maxData.oneRepMaxKg * KG_TO_LBS_FACTOR
-            } else {
-                maxData.oneRepMaxKg
-            }
+            val displayWeight = WeightUnitConverter.fromKg(maxData.maxWeightKg, weightUnit)
+            val displayOneRepMax = WeightUnitConverter.fromKg(maxData.oneRepMaxKg, weightUnit)
 
             ExerciseLift(
                 exerciseName = exerciseName,
