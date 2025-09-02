@@ -1,8 +1,12 @@
 package com.android.timberworkoutlogs.ui.integration
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -11,6 +15,9 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.espresso.Espresso
 import androidx.test.rule.GrantPermissionRule
 import com.android.timberworkoutlogs.MainActivity
+import com.android.timberworkoutlogs.util.backPressUntilElementTextVisible
+import com.android.timberworkoutlogs.util.scrollToAndAssertElement
+import com.android.timberworkoutlogs.util.tryClickBeforeScrollClick
 import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -28,7 +35,7 @@ class CrossScreenDataFlowTest : TestCase() {
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
     @get:Rule(order = 2)
-    val grantPermissionRul_: GrantPermissionRule = GrantPermissionRule.grant(
+    val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
         android.Manifest.permission.POST_NOTIFICATIONS
     )
 
@@ -49,17 +56,17 @@ class CrossScreenDataFlowTest : TestCase() {
             composeTestRule.onNodeWithText("Workout").performClick()
             composeTestRule.onNodeWithText("Select Exercise...").performClick()
             composeTestRule.onNodeWithText("Barbell Bench Press").performClick()
-            
+
             // Should show LB instead of KG
             composeTestRule.onNodeWithText("Weight (LB)").assertIsDisplayed()
         }
 
         step("Verify weight unit change affects plate calculator") {
             composeTestRule.onNodeWithContentDescription("Plate Calculator").performClick()
-            
+
             // Plate calculator should use LB plates
             composeTestRule.onNodeWithText("Total Weight").performTextInput("225")
-            
+
             // Should show LB plates (45lb plates)
             try {
                 composeTestRule.onNodeWithTag("plate_45.0").assertIsDisplayed()
@@ -71,10 +78,7 @@ class CrossScreenDataFlowTest : TestCase() {
 
         step("Reset weight unit back to KG") {
             // Close plate calculator first if it's open
-            composeTestRule.waitForIdle()
-            Espresso.pressBack()
-            composeTestRule.waitForIdle()
-            Espresso.pressBack()
+            backPressUntilElementTextVisible(composeTestRule, "Settings")
             composeTestRule.onNodeWithText("Settings").performClick()
             composeTestRule.onNodeWithText("KG").performClick()
             composeTestRule.onNodeWithText("KG").assertIsSelected()
@@ -90,13 +94,13 @@ class CrossScreenDataFlowTest : TestCase() {
             composeTestRule.onNodeWithContentDescription("Add Exercise").performClick()
 
             composeTestRule.onNodeWithText("Exercise Name").performTextInput(customExerciseName)
-            
+
             // Select muscle group
             composeTestRule.onNodeWithText("Shoulders").performClick()
             // Select equipment
             composeTestRule.onNodeWithText("Equipment").performClick()
             composeTestRule.onNodeWithText("Dumbbell").performClick()
-            
+
             composeTestRule.onNodeWithText("Save Exercise").performClick()
         }
 
@@ -105,8 +109,8 @@ class CrossScreenDataFlowTest : TestCase() {
             composeTestRule.onNodeWithText("Dumbbell $customExerciseName").assertIsDisplayed()
         }
 
-        step("Move back to home"){
-            Espresso.pressBack()
+        step("Move back to home") {
+            backPressUntilElementTextVisible(composeTestRule, "Stats")
             val homeScreens = listOf(
                 "Stats",
                 "History",
@@ -126,11 +130,8 @@ class CrossScreenDataFlowTest : TestCase() {
             composeTestRule.onNodeWithText("Dumbbell $customExerciseName").assertIsDisplayed()
         }
 
-        step("Move back to home"){
-            Espresso.pressBack()
-            composeTestRule.waitForIdle()
-            Espresso.pressBack()
-            composeTestRule.waitForIdle()
+        step("Move back to home") {
+            backPressUntilElementTextVisible(composeTestRule, "Stats")
             val homeScreens = listOf(
                 "Stats",
                 "History",
@@ -147,7 +148,7 @@ class CrossScreenDataFlowTest : TestCase() {
             composeTestRule.onNodeWithText("Templates").performClick()
             composeTestRule.onNodeWithText("Workout Templates").performClick()
             composeTestRule.onNodeWithContentDescription("Create Template").performClick()
-            
+
             composeTestRule.onNodeWithText("Template Name").performTextInput("Test Template")
             composeTestRule.onNodeWithText("Add Exercise").performClick()
             composeTestRule.onNodeWithText("Select Exercise...").performClick()
@@ -162,21 +163,26 @@ class CrossScreenDataFlowTest : TestCase() {
             composeTestRule.onNodeWithText("Workout").performClick()
             composeTestRule.onNodeWithText("Select Exercise...").performClick()
             composeTestRule.onNodeWithText("Barbell Bench Press").performClick()
-            
+
             val weight = "90"
-            val reps = "8"
-            composeTestRule.onNodeWithText("Weight (KG)").performTextInput(weight)
-            composeTestRule.onNodeWithText("Reps").performTextInput(reps)
+            val reps1 = "8"
+            val reps2 = "6"
+            composeTestRule.onNodeWithText("Weight", substring = true).performTextInput(weight)
+            composeTestRule.onNodeWithText("Reps").performTextInput(reps1)
             composeTestRule.onNodeWithTag("checkbox_1").performClick()
-            
+
+            composeTestRule.onNodeWithTag("AddSetIcon", useUnmergedTree = true)
+                .assertIsDisplayed()
+                .performClick()
+
             // Add second set
-            composeTestRule.onNodeWithText("Weight (KG)").performTextInput(weight)
-            composeTestRule.onNodeWithText("Reps").performTextInput("6")
+            composeTestRule.onAllNodesWithText("Weight", substring = true).onLast().performTextInput(weight)
+            composeTestRule.onAllNodesWithText("Reps").onLast().performTextInput(reps2)
             composeTestRule.onNodeWithTag("checkbox_2").performClick()
-            
+
             composeTestRule.onNodeWithText("Complete workout").performClick()
             composeTestRule.onNodeWithText("Are you sure?").performClick()
-            
+
             composeTestRule.waitForIdle()
             Thread.sleep(1000)
         }
@@ -185,7 +191,7 @@ class CrossScreenDataFlowTest : TestCase() {
             composeTestRule.onNodeWithText("History").performClick()
             composeTestRule.waitForIdle()
             Thread.sleep(500)
-            
+
             // Total volume should be (90*8) + (90*6) = 1260 kg
             try {
                 composeTestRule.onNodeWithText("1260 kg").assertIsDisplayed()
@@ -201,13 +207,13 @@ class CrossScreenDataFlowTest : TestCase() {
 
         step("Verify workout data is available in stats") {
             composeTestRule.onNodeWithText("Stats").performClick()
-            
+
             composeTestRule.onNodeWithText("Exercise").performClick()
-            
+
             try {
                 composeTestRule.onNodeWithText("Barbell Bench Press").assertIsDisplayed()
                 composeTestRule.onNodeWithText("Barbell Bench Press").performClick()
-                
+
                 // Should show progression data for this exercise
                 composeTestRule.onNodeWithText("Exercise").assertIsDisplayed()
             } catch (_: AssertionError) {
@@ -219,48 +225,45 @@ class CrossScreenDataFlowTest : TestCase() {
 
     @Test
     fun templateWorkflow_maintainsDataConsistency() = run {
+        val templateName = "Full Body Integration"
+
         step("Create template with multiple exercises") {
             composeTestRule.onNodeWithText("Templates").performClick()
             composeTestRule.onNodeWithText("Workout Templates").performClick()
             composeTestRule.onNodeWithContentDescription("Create Template").performClick()
-            
+
             val templateName = "Full Body Integration"
             composeTestRule.onNodeWithText("Template Name").performTextInput(templateName)
-            
+
             // Add multiple exercises
             composeTestRule.onNodeWithText("Add Exercise").performClick()
             composeTestRule.onNodeWithText("Select Exercise...").performClick()
-            composeTestRule.onNodeWithText("Barbell Squat").performClick()
-            
+            tryClickBeforeScrollClick(composeTestRule,"Barbell Squat")
+
             composeTestRule.onNodeWithText("Add Exercise").performClick()
             composeTestRule.onNodeWithText("Select Exercise...").performClick()
-            composeTestRule.onNodeWithText("Barbell Bench Press").performClick()
-            
+            tryClickBeforeScrollClick(composeTestRule, "Barbell Bench Press")
             composeTestRule.onNodeWithText("Save Template").performClick()
+            Espresso.pressBack()
         }
 
         step("Use template exercises in workout") {
             composeTestRule.onNodeWithText("Workout").performClick()
-            
-            // Manually add exercises from template (since direct template usage may vary)
-            composeTestRule.onNodeWithText("Select Exercise...").performClick()
-            composeTestRule.onNodeWithText("Barbell Squat").performClick()
-            
-            composeTestRule.onNodeWithText("Weight (KG)").performTextInput("120")
-            composeTestRule.onNodeWithText("Reps").performTextInput("10")
-            composeTestRule.onNodeWithTag("checkbox_1").performClick()
-            
-            // Add second exercise
-            composeTestRule.onNodeWithText("Add Exercise").performClick()
-            composeTestRule.onNodeWithText("Barbell Bench Press").performClick()
-            
-            composeTestRule.onNodeWithText("Weight (KG)").performTextInput("80")
-            composeTestRule.onNodeWithText("Reps").performTextInput("12")
-            composeTestRule.onNodeWithTag("checkbox_1").performClick()
-            
+            composeTestRule.onNodeWithContentDescription("Import from Template", useUnmergedTree = true)
+                .assertIsDisplayed()
+                .performClick()
+
+            composeTestRule.waitForIdle()
+            tryClickBeforeScrollClick(composeTestRule, templateName)
+            composeTestRule.onAllNodesWithText("Weight", substring = true).onLast().performTextInput("120")
+            composeTestRule.onAllNodesWithText("Reps").onLast().performTextInput("10")
+
+            composeTestRule.onAllNodesWithText("Weight", substring = true).onFirst().performTextInput("80")
+            composeTestRule.onAllNodesWithText("Reps").onFirst().performTextInput("12")
+
             composeTestRule.onNodeWithText("Complete workout").performClick()
             composeTestRule.onNodeWithText("Are you sure?").performClick()
-            
+
             composeTestRule.waitForIdle()
             Thread.sleep(1000)
         }
@@ -269,7 +272,7 @@ class CrossScreenDataFlowTest : TestCase() {
             composeTestRule.onNodeWithText("History").performClick()
             composeTestRule.waitForIdle()
             Thread.sleep(500)
-            
+
             // Total volum_: (120*10) + (80*12) = 2160 kg
             try {
                 composeTestRule.onNodeWithText("2160 kg").assertIsDisplayed()
@@ -280,9 +283,10 @@ class CrossScreenDataFlowTest : TestCase() {
         }
 
         step("Verify both exercises appear in stats") {
+            composeTestRule.onNodeWithTag("TimberAppLogo").performClick()
             composeTestRule.onNodeWithText("Stats").performClick()
-            composeTestRule.onNodeWithText("Exercise").performClick()
-            
+            tryClickBeforeScrollClick(composeTestRule,"Exercise")
+
             try {
                 // Both exercises should be available in dropdown
                 composeTestRule.onNodeWithText("Barbell Squat").assertIsDisplayed()
@@ -295,34 +299,40 @@ class CrossScreenDataFlowTest : TestCase() {
 
     @Test
     fun navigationState_preservesDataAcrossSessions() = run {
+        val exerciseName = "FooBar"
+        val templateName = "Session Template"
+
         step("Create data in multiple screens") {
             // Create custom exercise
             composeTestRule.onNodeWithText("Templates").performClick()
             composeTestRule.onNodeWithText("Manage Exercises").performClick()
             composeTestRule.onNodeWithContentDescription("Add Exercise").performClick()
-            
-            val exerciseName = "Session Test Exercise"
+
             composeTestRule.onNodeWithText("Exercise Name").performTextInput(exerciseName)
             composeTestRule.onNodeWithText("Chest").performClick()
             composeTestRule.onNodeWithText("Save Exercise").performClick()
-            
+            Espresso.pressBack()
+
             // Create template
             composeTestRule.onNodeWithText("Templates").performClick()
             composeTestRule.onNodeWithText("Workout Templates").performClick()
             composeTestRule.onNodeWithContentDescription("Create Template").performClick()
-            
-            val templateName = "Session Template"
+
             composeTestRule.onNodeWithText("Template Name").performTextInput(templateName)
+            composeTestRule.onNodeWithText("Add Exercise").performClick()
+            composeTestRule.onNodeWithText("Select Exercise...").performClick()
+            tryClickBeforeScrollClick(composeTestRule, "Barbell $exerciseName")
             composeTestRule.onNodeWithText("Save Template").performClick()
-            
+            Espresso.pressBack()
+
             // Change settings
-            composeTestRule.onNodeWithText("Settings").performClick()
+            composeTestRule.onNodeWithText("Settings").assertIsDisplayed().performClick()
             composeTestRule.onNodeWithText("LB").performClick()
         }
 
         step("Navigate through all screens multiple times") {
-            val screens = listOf("Workout", "History", "Stats", "Templates", "Settings")
-            
+            val screens = listOf("History", "Stats", "Templates", "Settings")
+
             repeat(3) {
                 screens.forEach { screen ->
                     composeTestRule.onNodeWithText(screen).performClick()
@@ -333,24 +343,27 @@ class CrossScreenDataFlowTest : TestCase() {
 
         step("Verify all data persists") {
             // Check exercise exists
+            composeTestRule.waitForIdle()
             composeTestRule.onNodeWithText("Templates").performClick()
             composeTestRule.onNodeWithText("Manage Exercises").performClick()
-            composeTestRule.onNodeWithText("Barbell Session Test Exercise").assertIsDisplayed()
-            
+            scrollToAndAssertElement(composeTestRule,"Barbell $exerciseName")
+            Espresso.pressBack()
+
+            composeTestRule.waitForIdle()
             // Check template exists
             composeTestRule.onNodeWithText("Templates").performClick()
             composeTestRule.onNodeWithText("Workout Templates").performClick()
-            composeTestRule.onNodeWithText("Session Template").assertIsDisplayed()
-            
+            composeTestRule.onNodeWithText(templateName).assertIsDisplayed()
+            Espresso.pressBack()
+
             // Check settings persist
             composeTestRule.onNodeWithText("Settings").performClick()
             composeTestRule.onNodeWithText("LB").assertIsSelected()
-            
+
             // Verify workout screen reflects settings
             composeTestRule.onNodeWithText("Workout").performClick()
             composeTestRule.onNodeWithText("Select Exercise...").performClick()
-            composeTestRule.onNodeWithText("Barbell Session Test Exercise").assertIsDisplayed()
-            composeTestRule.onNodeWithText("Barbell Session Test Exercise").performClick()
+            tryClickBeforeScrollClick(composeTestRule, "Barbell $exerciseName")
             composeTestRule.onNodeWithText("Weight (LB)").assertIsDisplayed()
         }
     }
@@ -360,40 +373,53 @@ class CrossScreenDataFlowTest : TestCase() {
         step("Perform operations that might cause edge cases") {
             // Try to complete workout without exercises
             composeTestRule.onNodeWithText("Workout").performClick()
-            
-            try {
-                composeTestRule.onNodeWithText("Complete workout").performClick()
-                // Should either be disabled or show error
-            } catch (_: AssertionError) {
-                // Button might be disabled, which is correct behavior
-                composeTestRule.onNodeWithText("Add Exercise").assertIsDisplayed()
+            composeTestRule.onNodeWithText("Complete workout").assertIsNotEnabled()
+            var keepClicking = true
+            while (keepClicking) {
+                try {
+                    composeTestRule.onNodeWithTag("DiscardWorkoutBin", useUnmergedTree = true)
+                        .assertIsDisplayed()
+                        .performClick()
+                    composeTestRule.waitForIdle()
+                } catch (_: AssertionError) {
+                    keepClicking = false
+                }
             }
-            
+        }
+
+
             // Navigate rapidly between screens
             repeat(5) {
                 composeTestRule.onNodeWithText("History").performClick()
                 composeTestRule.onNodeWithText("Stats").performClick()
                 composeTestRule.onNodeWithText("Templates").performClick()
+            }
+
+
+            step("Verify app remains stable and functional") {
+                // All screens should still be accessible
+                composeTestRule.onNodeWithText("History").assertIsDisplayed()
+                composeTestRule.onNodeWithText("History").performClick()
+
+                composeTestRule.onNodeWithText("Stats").performClick()
+                composeTestRule.onNodeWithText("Progression").assertIsDisplayed()
+
+                composeTestRule.onNodeWithTag("TimberAppLogo", useUnmergedTree = true).assertIsDisplayed()
+                composeTestRule.onNodeWithTag("TimberAppLogo", useUnmergedTree = true).performClick()
+
+                composeTestRule.onNodeWithText("Templates").performClick()
+                composeTestRule.onNodeWithText("Workout Templates").assertIsDisplayed()
+
+                Espresso.pressBack()
+
+                composeTestRule.onNodeWithText("Settings").performClick()
+                composeTestRule.onNodeWithText("KG").assertIsDisplayed()
+
+                composeTestRule.onNodeWithTag("TimberAppLogo", useUnmergedTree = true).assertIsDisplayed()
+                composeTestRule.onNodeWithTag("TimberAppLogo", useUnmergedTree = true).performClick()
+
                 composeTestRule.onNodeWithText("Workout").performClick()
+                composeTestRule.onNodeWithText("Add Exercise").assertIsDisplayed()
             }
         }
-
-        step("Verify app remains stable and functional") {
-            // All screens should still be accessible
-            composeTestRule.onNodeWithText("History").performClick()
-            composeTestRule.onNodeWithText("History").assertIsDisplayed()
-            
-            composeTestRule.onNodeWithText("Stats").performClick()
-            composeTestRule.onNodeWithText("Progression").assertIsDisplayed()
-            
-            composeTestRule.onNodeWithText("Templates").performClick()
-            composeTestRule.onNodeWithText("Workout Templates").assertIsDisplayed()
-            
-            composeTestRule.onNodeWithText("Settings").performClick()
-            composeTestRule.onNodeWithText("KG").assertIsDisplayed()
-            
-            composeTestRule.onNodeWithText("Workout").performClick()
-            composeTestRule.onNodeWithText("Add Exercise").assertIsDisplayed()
-        }
-    }
 }

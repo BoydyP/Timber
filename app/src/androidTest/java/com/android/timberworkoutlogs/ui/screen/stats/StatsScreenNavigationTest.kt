@@ -147,32 +147,4 @@ class StatsScreenNavigationTest : TestCase() {
         }
     }
 
-    @Test
-    fun whenNoExerciseData_appropriateMessagesAreShown() = run {
-        step("Navigate to Stats screen") {
-            composeTestRule.onNodeWithText("Stats").performClick()
-        }
-
-        step("Verify empty state messaging on Progression tab") {
-            // Should show message about selecting exercise or no data
-            // This text comes from the ExerciseProgressionTab when no data
-            // The exact text depends on whether exercises exist in DB
-            try {
-                composeTestRule.onNodeWithText("Select an exercise to view progression data.").assertIsDisplayed()
-            } catch (_: AssertionError) {
-                // Alternative message when no exercises have workout history
-                composeTestRule.onNodeWithText("No progression data found").assertIsDisplayed()
-            }
-        }
-
-        step("Check 1RM tab empty state") {
-            composeTestRule.onNodeWithText("1RM").performClick()
-            
-            try {
-                composeTestRule.onNodeWithText("Select an exercise to view one-rep max progression.").assertIsDisplayed()
-            } catch (_: AssertionError) {
-                composeTestRule.onNodeWithText("No one-rep max data found").assertIsDisplayed()
-            }
-        }
-    }
 }

@@ -13,6 +13,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -39,6 +40,7 @@ fun WorkoutTopAppBar(
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
                     .padding(end = 8.dp)
+                    .testTag("ImportFromTemplateButton")
             )
             IconButton(
                 onClick = {
@@ -48,6 +50,7 @@ fun WorkoutTopAppBar(
                         onConfirmDiscard()
                     }
                 },
+                modifier = Modifier.testTag("DiscardWorkoutBin")
             ) {
                 AnimatedTrashIcon(isConfirming = isConfirmingDiscard)
             }
