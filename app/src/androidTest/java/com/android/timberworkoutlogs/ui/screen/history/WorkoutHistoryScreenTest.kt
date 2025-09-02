@@ -210,6 +210,7 @@ class WorkoutHistoryScreenTest : TestCase() {
     fun historyScreen_handlesDataUpdatesFromOtherScreens() = run {
         step("Start with History screen") {
             composeTestRule.onNodeWithText("History").performClick()
+            composeTestRule.onNodeWithTag("TimberAppLogo").performClick()
         }
 
         step("Complete a workout to generate history data") {
