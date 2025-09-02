@@ -9,7 +9,10 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.rule.GrantPermissionRule
 import com.android.timberworkoutlogs.MainActivity
+import com.android.timberworkoutlogs.util.backPressUntilElementTextVisible
 import com.android.timberworkoutlogs.util.getGreetingByTime
+import com.android.timberworkoutlogs.util.scrollToAndAssertElement
+import com.android.timberworkoutlogs.util.tryClickBeforeScrollClick
 import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -27,7 +30,7 @@ class WorkoutTemplatesListScreenTest : TestCase() {
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
     @get:Rule(order = 2)
-    val grantPermissionRul_: GrantPermissionRule = GrantPermissionRule.grant(
+    val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
         android.Manifest.permission.POST_NOTIFICATIONS
     )
 
@@ -36,6 +39,7 @@ class WorkoutTemplatesListScreenTest : TestCase() {
         hiltRule.inject()
         // Navigate to templates screen
         composeTestRule.onNodeWithText("Templates").performClick()
+        composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Workout Templates").performClick()
     }
 
@@ -119,40 +123,37 @@ class WorkoutTemplatesListScreenTest : TestCase() {
 
     @Test
     fun templatesListScreen_handlesTemplateSelection() = run {
+        val templateName = "Full Body Workout"
         step("Create a template with exercises") {
             composeTestRule.onNodeWithContentDescription("Create Template").performClick()
-            
-            val templateName = "Full Body Workout"
             composeTestRule.onNodeWithText("Template Name").performTextInput(templateName)
             
             // Add multiple exercises
             composeTestRule.onNodeWithText("Add Exercise").performClick()
             composeTestRule.onNodeWithText("Select Exercise...").performClick()
-            composeTestRule.onNodeWithText("Barbell Squat").performClick()
+            tryClickBeforeScrollClick(composeTestRule,"Barbell Squat")
             
             composeTestRule.onNodeWithText("Add Exercise").performClick()
             composeTestRule.onNodeWithText("Select Exercise...").performClick()
-            composeTestRule.onNodeWithText("Barbell Bench Press").performClick()
-            
+            tryClickBeforeScrollClick(composeTestRule,"Barbell Bench Press")
             composeTestRule.onNodeWithText("Save Template").performClick()
         }
 
         step("Verify template can be selected and used") {
             // Template should be visible in list
-            composeTestRule.onNodeWithText("Full Body Workout").assertIsDisplayed()
+            scrollToAndAssertElement(composeTestRule, templateName)
             
             // Clicking should allow editing or using the template
-            composeTestRule.onNodeWithText("Full Body Workout").performClick()
+            composeTestRule.onNodeWithText(templateName).performClick()
             composeTestRule.onNodeWithText("Template Name").assertIsDisplayed()
         }
     }
 
     @Test
     fun templatesListScreen_displaysTemplateDetails() = run {
+        val templateName = "Leg Day Special"
         step("Create a template with specific details") {
             composeTestRule.onNodeWithContentDescription("Create Template").performClick()
-            
-            val templateName = "Leg Day Special"
             composeTestRule.onNodeWithText("Template Name").performTextInput(templateName)
             
             // Add exercises
@@ -188,6 +189,9 @@ class WorkoutTemplatesListScreenTest : TestCase() {
             templateNames.forEach { name ->
                 composeTestRule.onNodeWithContentDescription("Create Template").performClick()
                 composeTestRule.onNodeWithText("Template Name").performTextInput(name)
+                composeTestRule.onNodeWithText("Add Exercise").performClick()
+                composeTestRule.onNodeWithText("Select Exercise...").performClick()
+                tryClickBeforeScrollClick(composeTestRule, "Barbell Bench Press")
                 composeTestRule.onNodeWithText("Save Template").performClick()
             }
         }
@@ -204,6 +208,7 @@ class WorkoutTemplatesListScreenTest : TestCase() {
         step("Navigate to other screens from templates list") {
             composeTestRule.onNodeWithText("Workout").performClick()
             composeTestRule.onNodeWithText("Add Exercise").assertIsDisplayed()
+            backPressUntilElementTextVisible(composeTestRule, "Templates")
             
             composeTestRule.onNodeWithText("Templates").performClick()
             composeTestRule.onNodeWithText("Workout Templates").performClick()

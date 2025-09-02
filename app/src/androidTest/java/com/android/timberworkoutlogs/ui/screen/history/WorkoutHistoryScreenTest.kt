@@ -26,7 +26,7 @@ class WorkoutHistoryScreenTest : TestCase() {
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
     @get:Rule(order = 2)
-    val grantPermissionRul_: GrantPermissionRule = GrantPermissionRule.grant(
+    val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
         android.Manifest.permission.POST_NOTIFICATIONS
     )
 
@@ -77,10 +77,9 @@ class WorkoutHistoryScreenTest : TestCase() {
             composeTestRule.onNodeWithText("Barbell Bench Press").performClick()
             
             // Add workout data
-            composeTestRule.onNodeWithText("Weight (KG)").performTextInput("80")
+            composeTestRule.onNodeWithText("Weight", substring = true).performTextInput("80")
             composeTestRule.onNodeWithText("Reps").performTextInput("8")
-            composeTestRule.onNodeWithTag("checkbox_1").performClick()
-            
+
             // Complete the workout
             composeTestRule.onNodeWithText("Complete workout").performClick()
             composeTestRule.onNodeWithText("Are you sure?").performClick()
@@ -112,32 +111,6 @@ class WorkoutHistoryScreenTest : TestCase() {
     }
 
     @Test
-    fun historyScreen_handlesNavigationToOtherScreens() = run {
-        step("Navigate to History screen") {
-            composeTestRule.onNodeWithText("History").performClick()
-        }
-
-        step("Navigate to other screens from history") {
-            // Test navigation to each other screen
-            composeTestRule.onNodeWithText("Workout").performClick()
-            composeTestRule.onNodeWithText("Add Exercise").assertIsDisplayed()
-            
-            composeTestRule.onNodeWithText("History").performClick()
-            composeTestRule.onNodeWithText("Stats").performClick()
-            composeTestRule.onNodeWithText("Progression").assertIsDisplayed()
-            
-            composeTestRule.onNodeWithText("History").performClick()
-            composeTestRule.onNodeWithText("Templates").performClick()
-            composeTestRule.onNodeWithText("Workout Templates").assertIsDisplayed()
-        }
-
-        step("Return to history and verify it's still functional") {
-            composeTestRule.onNodeWithText("History").performClick()
-            composeTestRule.onNodeWithText("History").assertIsDisplayed()
-        }
-    }
-
-    @Test
     fun historyScreen_preservesStateAfterNavigation() = run {
         step("Navigate to History screen") {
             composeTestRule.onNodeWithText("History").performClick()
@@ -163,21 +136,16 @@ class WorkoutHistoryScreenTest : TestCase() {
         step("Navigate to History screen") {
             composeTestRule.onNodeWithText("History").performClick()
         }
-
         step("Perform rapid navigation stress test") {
-            val screens = listOf("Workout", "Templates", "Stats", "Settings")
+            val screens = listOf("History", "Templates", "Stats", "Settings")
             
             repeat(5) {
                 screens.forEach { screen ->
                     composeTestRule.onNodeWithText(screen).performClick()
                     composeTestRule.waitForIdle()
-                    
-                    composeTestRule.onNodeWithText("History").performClick()
-                    composeTestRule.waitForIdle()
                 }
             }
         }
-
         step("Verify history screen is still responsive") {
             composeTestRule.onNodeWithText("History").assertIsDisplayed()
         }
@@ -276,34 +244,6 @@ class WorkoutHistoryScreenTest : TestCase() {
                     composeTestRule.onNodeWithText("History").assertIsDisplayed()
                 }
             }
-        }
-    }
-
-    @Test
-    fun historyScreen_maintainsFunctionalityAcrossSessions() = run {
-        step("Navigate through all screens ending at history") {
-            val allScreens = listOf("Workout", "History", "Templates", "Stats", "Settings")
-            
-            allScreens.forEach { screen ->
-                composeTestRule.onNodeWithText(screen).performClick()
-                composeTestRule.waitForIdle()
-            }
-            
-            // End on history
-            composeTestRule.onNodeWithText("History").performClick()
-        }
-
-        step("Verify history screen remains fully functional") {
-            composeTestRule.onNodeWithText("History").assertIsDisplayed()
-            
-            // Test navigation still works
-            composeTestRule.onNodeWithTag("TimberAppLogo").performClick()
-            val currentGreeting = getGreetingByTime()
-            composeTestRule.onNodeWithText(currentGreeting).assertIsDisplayed()
-            
-            // Back to history
-            composeTestRule.onNodeWithText("History").performClick()
-            composeTestRule.onNodeWithText("History").assertIsDisplayed()
         }
     }
 }

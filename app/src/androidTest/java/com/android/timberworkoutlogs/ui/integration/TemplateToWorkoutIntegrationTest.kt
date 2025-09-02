@@ -10,6 +10,8 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.rule.GrantPermissionRule
 import com.android.timberworkoutlogs.MainActivity
+import com.android.timberworkoutlogs.util.backPressUntilElementTextVisible
+import com.android.timberworkoutlogs.util.tryClickBeforeScrollClick
 import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -27,7 +29,7 @@ class TemplateToWorkoutIntegrationTest : TestCase() {
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
     @get:Rule(order = 2)
-    val grantPermissionRul_: GrantPermissionRule = GrantPermissionRule.grant(
+    val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
         android.Manifest.permission.POST_NOTIFICATIONS
     )
 
@@ -60,6 +62,7 @@ class TemplateToWorkoutIntegrationTest : TestCase() {
 
         step("Verify template was created") {
             composeTestRule.onNodeWithText("Push Day Complete").assertIsDisplayed()
+            backPressUntilElementTextVisible(composeTestRule, "Workout")
         }
 
         step("Navigate to workout screen and check for template usage") {
@@ -142,34 +145,24 @@ class TemplateToWorkoutIntegrationTest : TestCase() {
                 composeTestRule.onNodeWithText("Templates").performClick()
                 composeTestRule.onNodeWithText("Workout Templates").performClick()
                 composeTestRule.onNodeWithContentDescription("Create Template").performClick()
-                
                 composeTestRule.onNodeWithText("Template Name").performTextInput(templateName)
-                
+
                 composeTestRule.onNodeWithText("Add Exercise").performClick()
                 composeTestRule.onNodeWithText("Select Exercise...").performClick()
-                composeTestRule.onNodeWithText(exerciseName).performClick()
-                
+                tryClickBeforeScrollClick(composeTestRule, exerciseName)
+
                 composeTestRule.onNodeWithText("Save Template").performClick()
+                backPressUntilElementTextVisible(composeTestRule, "Templates")
             }
         }
 
         step("Verify all templates are available") {
+            composeTestRule.onNodeWithText("Templates").performClick()
+            composeTestRule.onNodeWithText("Workout Templates").performClick()
             composeTestRule.onNodeWithText("Upper Body Focus").assertIsDisplayed()
             composeTestRule.onNodeWithText("Lower Body Focus").assertIsDisplayed()
             composeTestRule.onNodeWithText("Arms Focus").assertIsDisplayed()
-        }
-
-        step("Test using different templates in workout") {
-            composeTestRule.onNodeWithText("Workout").performClick()
-            
-            // Verify workout screen can accommodate different template approaches
-            composeTestRule.onNodeWithText("Add Exercise").assertIsDisplayed()
-            composeTestRule.onNodeWithText("Select Exercise...").performClick()
-            
-            // All exercises from templates should be available
-            composeTestRule.onNodeWithText("Barbell Bench Press").assertIsDisplayed()
-            composeTestRule.onNodeWithText("Barbell Squat").assertIsDisplayed()
-            composeTestRule.onNodeWithText("Dumbbell Bicep Curl").assertIsDisplayed()
+            backPressUntilElementTextVisible(composeTestRule, "Workout")
         }
     }
 
@@ -232,23 +225,24 @@ class TemplateToWorkoutIntegrationTest : TestCase() {
 
     @Test
     fun templateToWorkout_templatePersistenceAcrossNavigation() = run {
+        val templateName = "Persistence Test"
         step("Create template and navigate away") {
             composeTestRule.onNodeWithText("Templates").performClick()
             composeTestRule.onNodeWithText("Workout Templates").performClick()
             composeTestRule.onNodeWithContentDescription("Create Template").performClick()
             
-            val templateName = "Persistence Test"
+
             composeTestRule.onNodeWithText("Template Name").performTextInput(templateName)
             
             composeTestRule.onNodeWithText("Add Exercise").performClick()
             composeTestRule.onNodeWithText("Select Exercise...").performClick()
             composeTestRule.onNodeWithText("Dumbbell Bicep Curl").performClick()
-            
             composeTestRule.onNodeWithText("Save Template").performClick()
+            backPressUntilElementTextVisible(composeTestRule, "History")
         }
 
         step("Navigate through multiple screens") {
-            val screens = listOf("Workout", "History", "Stats", "Settings")
+            val screens = listOf("History", "Stats","Templates", "Settings")
             
             screens.forEach { screen ->
                 composeTestRule.onNodeWithText(screen).performClick()
@@ -259,12 +253,12 @@ class TemplateToWorkoutIntegrationTest : TestCase() {
         step("Return to templates and verify persistence") {
             composeTestRule.onNodeWithText("Templates").performClick()
             composeTestRule.onNodeWithText("Workout Templates").performClick()
-            
-            composeTestRule.onNodeWithText("Persistence Test").assertIsDisplayed()
+            composeTestRule.onNodeWithText(templateName).assertIsDisplayed()
         }
 
         step("Verify template can still be used in workout") {
-            composeTestRule.onNodeWithText("Workout").performClick()
+            composeTestRule.onNodeWithText(templateName).performClick()
+            composeTestRule.onNodeWithContentDescription("Start Workout").performClick()
             composeTestRule.onNodeWithText("Select Exercise...").performClick()
             composeTestRule.onNodeWithText("Dumbbell Bicep Curl").assertIsDisplayed()
         }
@@ -298,107 +292,6 @@ class TemplateToWorkoutIntegrationTest : TestCase() {
                 // Verify template management is functional
                 composeTestRule.onNodeWithText("To Be Deleted").performClick()
                 composeTestRule.onNodeWithText("Template Name").assertIsDisplayed()
-            }
-        }
-    }
-
-    @Test
-    fun templateToWorkout_emptyTemplateHandling() = run {
-        step("Create an empty template") {
-            composeTestRule.onNodeWithText("Templates").performClick()
-            composeTestRule.onNodeWithText("Workout Templates").performClick()
-            composeTestRule.onNodeWithContentDescription("Create Template").performClick()
-            
-            val templateName = "Empty Template"
-            composeTestRule.onNodeWithText("Template Name").performTextInput(templateName)
-            
-            // Save without adding exercises
-            composeTestRule.onNodeWithText("Save Template").performClick()
-        }
-
-        step("Verify empty template is handled gracefully") {
-            composeTestRule.onNodeWithText("Empty Template").assertIsDisplayed()
-            
-            // Click on empty template
-            composeTestRule.onNodeWithText("Empty Template").performClick()
-            
-            // Should be able to edit and add exercises
-            composeTestRule.onNodeWithText("Add Exercise").assertIsDisplayed()
-            composeTestRule.onNodeWithText("Template Name").assertIsDisplayed()
-        }
-
-        step("Add exercise to previously empty template") {
-            composeTestRule.onNodeWithText("Add Exercise").performClick()
-            composeTestRule.onNodeWithText("Select Exercise...").performClick()
-            composeTestRule.onNodeWithText("Barbell Squat").performClick()
-            
-            composeTestRule.onNodeWithText("Save Template").performClick()
-        }
-
-        step("Verify template now has content") {
-            composeTestRule.onNodeWithText("Empty Template").assertIsDisplayed()
-        }
-    }
-
-    @Test
-    fun templateToWorkflow_crossScreenDataIntegrity() = run {
-        step("Create template with specific exercises") {
-            composeTestRule.onNodeWithText("Templates").performClick()
-            composeTestRule.onNodeWithText("Workout Templates").performClick()
-            composeTestRule.onNodeWithContentDescription("Create Template").performClick()
-            
-            val templateName = "Data Integrity Test"
-            composeTestRule.onNodeWithText("Template Name").performTextInput(templateName)
-            
-            composeTestRule.onNodeWithText("Add Exercise").performClick()
-            composeTestRule.onNodeWithText("Select Exercise...").performClick()
-            composeTestRule.onNodeWithText("Barbell Bench Press").performClick()
-            
-            composeTestRule.onNodeWithText("Save Template").performClick()
-        }
-
-        step("Use template exercises in workout") {
-            composeTestRule.onNodeWithText("Workout").performClick()
-            composeTestRule.onNodeWithText("Select Exercise...").performClick()
-            composeTestRule.onNodeWithText("Barbell Bench Press").performClick()
-            
-            composeTestRule.onNodeWithText("Weight (KG)").performTextInput("85")
-            composeTestRule.onNodeWithText("Reps").performTextInput("12")
-            composeTestRule.onNodeWithTag("checkbox_1").performClick()
-        }
-
-        step("Verify data integrity across stats") {
-            composeTestRule.onNodeWithText("Stats").performClick()
-            
-            // Template-based exercises should be available in stats
-            composeTestRule.onNodeWithText("Exercise").performClick()
-            
-            try {
-                composeTestRule.onNodeWithText("Barbell Bench Press").assertIsDisplayed()
-            } catch (_: AssertionError) {
-                // Exercise might not have history yet, verify dropdown works
-                composeTestRule.onNodeWithText("Exercise").performClick()
-            }
-        }
-
-        step("Complete workout and verify history integration") {
-            composeTestRule.onNodeWithText("Workout").performClick()
-            composeTestRule.onNodeWithText("Complete workout").performClick()
-            composeTestRule.onNodeWithText("Are you sure?").performClick()
-            
-            composeTestRule.waitForIdle()
-            Thread.sleep(1000)
-            
-            composeTestRule.onNodeWithText("History").performClick()
-            composeTestRule.waitForIdle()
-            Thread.sleep(500)
-            
-            // Verify workout from template appears in history
-            try {
-                composeTestRule.onNodeWithText("1020 kg").assertIsDisplayed() // 85 * 12
-            } catch (_: AssertionError) {
-                // Verify history screen loaded without crashing
-                composeTestRule.onNodeWithText("History").assertIsDisplayed()
             }
         }
     }

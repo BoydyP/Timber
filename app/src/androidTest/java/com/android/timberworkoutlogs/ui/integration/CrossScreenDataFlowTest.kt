@@ -225,14 +225,12 @@ class CrossScreenDataFlowTest : TestCase() {
 
     @Test
     fun templateWorkflow_maintainsDataConsistency() = run {
-        val templateName = "Full Body Integration"
+        val templateName = "maintainsDataConsistency"
 
         step("Create template with multiple exercises") {
             composeTestRule.onNodeWithText("Templates").performClick()
             composeTestRule.onNodeWithText("Workout Templates").performClick()
             composeTestRule.onNodeWithContentDescription("Create Template").performClick()
-
-            val templateName = "Full Body Integration"
             composeTestRule.onNodeWithText("Template Name").performTextInput(templateName)
 
             // Add multiple exercises
@@ -244,12 +242,12 @@ class CrossScreenDataFlowTest : TestCase() {
             composeTestRule.onNodeWithText("Select Exercise...").performClick()
             tryClickBeforeScrollClick(composeTestRule, "Barbell Bench Press")
             composeTestRule.onNodeWithText("Save Template").performClick()
-            Espresso.pressBack()
+            backPressUntilElementTextVisible(composeTestRule, "Workout")
         }
 
         step("Use template exercises in workout") {
             composeTestRule.onNodeWithText("Workout").performClick()
-            composeTestRule.onNodeWithContentDescription("Import from Template", useUnmergedTree = true)
+            composeTestRule.onNodeWithContentDescription("Import from Template")
                 .assertIsDisplayed()
                 .performClick()
 
@@ -311,7 +309,7 @@ class CrossScreenDataFlowTest : TestCase() {
             composeTestRule.onNodeWithText("Exercise Name").performTextInput(exerciseName)
             composeTestRule.onNodeWithText("Chest").performClick()
             composeTestRule.onNodeWithText("Save Exercise").performClick()
-            Espresso.pressBack()
+            backPressUntilElementTextVisible(composeTestRule, "Templates")
 
             // Create template
             composeTestRule.onNodeWithText("Templates").performClick()
@@ -323,7 +321,7 @@ class CrossScreenDataFlowTest : TestCase() {
             composeTestRule.onNodeWithText("Select Exercise...").performClick()
             tryClickBeforeScrollClick(composeTestRule, "Barbell $exerciseName")
             composeTestRule.onNodeWithText("Save Template").performClick()
-            Espresso.pressBack()
+            backPressUntilElementTextVisible(composeTestRule, "Settings")
 
             // Change settings
             composeTestRule.onNodeWithText("Settings").assertIsDisplayed().performClick()
@@ -347,14 +345,14 @@ class CrossScreenDataFlowTest : TestCase() {
             composeTestRule.onNodeWithText("Templates").performClick()
             composeTestRule.onNodeWithText("Manage Exercises").performClick()
             scrollToAndAssertElement(composeTestRule,"Barbell $exerciseName")
-            Espresso.pressBack()
+            backPressUntilElementTextVisible(composeTestRule, "Templates")
 
             composeTestRule.waitForIdle()
             // Check template exists
             composeTestRule.onNodeWithText("Templates").performClick()
             composeTestRule.onNodeWithText("Workout Templates").performClick()
             composeTestRule.onNodeWithText(templateName).assertIsDisplayed()
-            Espresso.pressBack()
+            backPressUntilElementTextVisible(composeTestRule, "Settings")
 
             // Check settings persist
             composeTestRule.onNodeWithText("Settings").performClick()

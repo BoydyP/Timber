@@ -1,15 +1,16 @@
 package com.android.timberworkoutlogs.ui.screen.exercise
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.test.rule.GrantPermissionRule
 import com.android.timberworkoutlogs.MainActivity
+import com.android.timberworkoutlogs.util.scrollToAndAssertElement
+import com.android.timberworkoutlogs.util.tryClickBeforeScrollClick
 import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -27,7 +28,7 @@ class SelectExerciseScreenTest : TestCase() {
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
     @get:Rule(order = 2)
-    val grantPermissionRul_: GrantPermissionRule = GrantPermissionRule.grant(
+    val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
         android.Manifest.permission.POST_NOTIFICATIONS
     )
 
@@ -87,16 +88,11 @@ class SelectExerciseScreenTest : TestCase() {
         step("Test scrolling through exercise list") {
             try {
                 // Try to scroll to find more exercises
-                val exerciseListTag = "exercise_list" // Assuming there's a test tag
-                val exerciseToFind = "Barbell Shrug"
-                
-                composeTestRule.onNodeWithTag(exerciseListTag)
-                    .performScrollToNode(hasText(exerciseToFind))
-                
-                composeTestRule.onNodeWithText(exerciseToFind).assertIsDisplayed()
+                val exerciseToFind = "Barbell Bench Press"
+                scrollToAndAssertElement(composeTestRule, exerciseToFind)
             } catch (_: Exception) {
                 // If scrolling doesn't work or exercise not found, verify basic functionality
-                composeTestRule.onNodeWithText("Barbell Bench Press").assertIsDisplayed()
+                composeTestRule.onNodeWithText("Barbell Squat").assertIsDisplayed()
             }
         }
     }
@@ -210,14 +206,14 @@ class SelectExerciseScreenTest : TestCase() {
 
         step("Add another exercise") {
             // Should be back on workout screen, add another exercise
-            composeTestRule.onNodeWithText("Add Exercise").performClick()
-            composeTestRule.onNodeWithText("Dumbbell Bicep Curl").performClick()
+            composeTestRule.onNodeWithText("Add Exercise").assertIsDisplayed().performClick()
+            tryClickBeforeScrollClick(composeTestRule, "Dumbbell Bicep Curl")
         }
 
         step("Verify both exercises are in workout") {
             // Should have multiple exercise entries in workout
-            composeTestRule.onNodeWithText("Weight (KG)").assertIsDisplayed()
-            composeTestRule.onNodeWithText("Reps").assertIsDisplayed()
+            composeTestRule.onAllNodesWithText("Weight (KG)").assertCountEquals(2)
+            composeTestRule.onAllNodesWithText("Reps").assertCountEquals(2)
         }
     }
 

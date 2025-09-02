@@ -9,6 +9,8 @@ import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.test.rule.GrantPermissionRule
 import com.android.timberworkoutlogs.MainActivity
+import com.android.timberworkoutlogs.util.scrollToAndAssertElement
+import com.android.timberworkoutlogs.util.tryClickBeforeScrollClick
 import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -37,6 +39,7 @@ class TemplateE2ETest : TestCase() {
 
     @Test
     fun createTemplateFlow_isSuccessful() = run {
+        val templateName = "A Test Workout Name"
         step("Navigate to create template screen") {
             composeTestRule.onNodeWithText("Templates").performClick()
             composeTestRule.onNodeWithText("Workout Templates").performClick()
@@ -44,16 +47,16 @@ class TemplateE2ETest : TestCase() {
         }
 
         step("Create template") {
-            val templateName = "A Test Workout Name"
             composeTestRule.onNodeWithText("Template Name").performTextInput(templateName)
             composeTestRule.onNodeWithText("Add Exercise").performClick()
             composeTestRule.onNodeWithText("Select Exercise...").performClick()
-            composeTestRule.onNodeWithText("Barbell Bench Press").performClick()
+            tryClickBeforeScrollClick(composeTestRule,"Barbell Bench Press")
             composeTestRule.onNodeWithText("Save Template").performClick()
         }
 
         step("Verify template created") {
-            composeTestRule.onNodeWithText("A Test Workout Name").assertIsDisplayed()
+            composeTestRule.waitForIdle()
+            scrollToAndAssertElement(composeTestRule,templateName)
         }
     }
 

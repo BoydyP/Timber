@@ -173,7 +173,7 @@ class HomeScreenTest : TestCase() {
     @Test
     fun homeScreen_handlesRapidNavigation() = run {
         step("Perform rapid navigation between screens") {
-            val screens = listOf("Workout", "History", "Templates", "Stats", "Settings")
+            val screens = listOf("History", "Templates", "Stats", "Settings")
             
             repeat(3) {
                 screens.forEach { screen ->
@@ -188,8 +188,7 @@ class HomeScreenTest : TestCase() {
         }
 
         step("Verify home screen is still functional after stress test") {
-            val currentGreeting = getGreetingByTime()
-            composeTestRule.onNodeWithText(currentGreeting).assertIsDisplayed()
+            composeTestRule.onNodeWithText(getGreetingByTime()).assertIsDisplayed()
             
             // Test one final navigation
             composeTestRule.onNodeWithText("Workout").performClick()

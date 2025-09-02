@@ -50,7 +50,7 @@ class StatsScreenE2ETest : TestCase() {
             // Look for any exercise or "No exercises found"
             try {
                 // Check for common exercises from database seeding
-                val found = listOf("Barbell Shrug", "Bodyweight Pull Up", "Barbell Squat")
+                val found = listOf("Barbell Shrug", "Bodyweight Pull Up", "Barbell Squat", "Barbell Bench Press")
                     .any { exercise ->
                         try {
                             composeTestRule.onNodeWithText(text = exercise, substring = true)
