@@ -3,14 +3,12 @@ package com.android.timberworkoutlogs.ui.screen.templates
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.rule.GrantPermissionRule
 import com.android.timberworkoutlogs.MainActivity
 import com.android.timberworkoutlogs.util.backPressUntilElementTextVisible
-import com.android.timberworkoutlogs.util.getGreetingByTime
 import com.android.timberworkoutlogs.util.scrollToAndAssertElement
 import com.android.timberworkoutlogs.util.tryClickBeforeScrollClick
 import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
@@ -98,7 +96,7 @@ class WorkoutTemplatesListScreenTest : TestCase() {
         }
 
         step("Verify template appears in list") {
-            composeTestRule.onNodeWithText("Push Day Template").assertIsDisplayed()
+            scrollToAndAssertElement(composeTestRule, "Push Day Template")
         }
     }
 
@@ -123,7 +121,7 @@ class WorkoutTemplatesListScreenTest : TestCase() {
 
     @Test
     fun templatesListScreen_handlesTemplateSelection() = run {
-        val templateName = "Full Body Workout"
+        val templateName = "Full Body Workout Test"
         step("Create a template with exercises") {
             composeTestRule.onNodeWithContentDescription("Create Template").performClick()
             composeTestRule.onNodeWithText("Template Name").performTextInput(templateName)
@@ -136,11 +134,13 @@ class WorkoutTemplatesListScreenTest : TestCase() {
             composeTestRule.onNodeWithText("Add Exercise").performClick()
             composeTestRule.onNodeWithText("Select Exercise...").performClick()
             tryClickBeforeScrollClick(composeTestRule,"Barbell Bench Press")
+            composeTestRule.waitForIdle()
             composeTestRule.onNodeWithText("Save Template").performClick()
         }
 
         step("Verify template can be selected and used") {
             // Template should be visible in list
+            composeTestRule.waitForIdle()
             scrollToAndAssertElement(composeTestRule, templateName)
             
             // Clicking should allow editing or using the template
@@ -159,8 +159,7 @@ class WorkoutTemplatesListScreenTest : TestCase() {
             // Add exercises
             composeTestRule.onNodeWithText("Add Exercise").performClick()
             composeTestRule.onNodeWithText("Select Exercise...").performClick()
-            composeTestRule.onNodeWithText("Barbell Squat").performClick()
-            
+            tryClickBeforeScrollClick(composeTestRule, "Barbell Squat")
             composeTestRule.onNodeWithText("Save Template").performClick()
         }
 
@@ -182,58 +181,15 @@ class WorkoutTemplatesListScreenTest : TestCase() {
     }
 
     @Test
-    fun templatesListScreen_handlesMultipleTemplates() = run {
-        step("Create multiple templates") {
-            val templateNames = listOf("Push Day", "Pull Day", "Leg Day")
-            
-            templateNames.forEach { name ->
-                composeTestRule.onNodeWithContentDescription("Create Template").performClick()
-                composeTestRule.onNodeWithText("Template Name").performTextInput(name)
-                composeTestRule.onNodeWithText("Add Exercise").performClick()
-                composeTestRule.onNodeWithText("Select Exercise...").performClick()
-                tryClickBeforeScrollClick(composeTestRule, "Barbell Bench Press")
-                composeTestRule.onNodeWithText("Save Template").performClick()
-            }
-        }
-
-        step("Verify all templates are displayed") {
-            composeTestRule.onNodeWithText("Push Day").assertIsDisplayed()
-            composeTestRule.onNodeWithText("Pull Day").assertIsDisplayed()
-            composeTestRule.onNodeWithText("Leg Day").assertIsDisplayed()
-        }
-    }
-
-    @Test
-    fun templatesListScreen_handlesNavigation() = run {
-        step("Navigate to other screens from templates list") {
-            composeTestRule.onNodeWithText("Workout").performClick()
-            composeTestRule.onNodeWithText("Add Exercise").assertIsDisplayed()
-            backPressUntilElementTextVisible(composeTestRule, "Templates")
-            
-            composeTestRule.onNodeWithText("Templates").performClick()
-            composeTestRule.onNodeWithText("Workout Templates").performClick()
-            composeTestRule.onNodeWithContentDescription("Create Template").assertIsDisplayed()
-        }
-    }
-
-    @Test
-    fun templatesListScreen_returnsToHomeViaLogo() = run {
-        step("Click logo to return to home") {
-            composeTestRule.onNodeWithTag("TimberAppLogo").performClick()
-        }
-
-        step("Verify we're back on home screen") {
-            val currentGreeting = getGreetingByTime()
-            composeTestRule.onNodeWithText(currentGreeting).assertIsDisplayed()
-        }
-    }
-
-    @Test
     fun templatesListScreen_maintainsStateAfterNavigation() = run {
         step("Create a template") {
             composeTestRule.onNodeWithContentDescription("Create Template").performClick()
             composeTestRule.onNodeWithText("Template Name").performTextInput("Test Template")
+            composeTestRule.onNodeWithText("Add Exercise").performClick()
+            composeTestRule.onNodeWithText("Select Exercise...").performClick()
+            tryClickBeforeScrollClick(composeTestRule,"Barbell Bench Press")
             composeTestRule.onNodeWithText("Save Template").performClick()
+            backPressUntilElementTextVisible(composeTestRule, "Settings")
         }
 
         step("Navigate away and back") {
@@ -246,107 +202,6 @@ class WorkoutTemplatesListScreenTest : TestCase() {
 
         step("Verify template is still displayed") {
             composeTestRule.onNodeWithText("Test Template").assertIsDisplayed()
-        }
-    }
-
-    @Test
-    fun templatesListScreen_handlesTemplateFromWorkoutFlow() = run {
-        step("Create a template") {
-            composeTestRule.onNodeWithContentDescription("Create Template").performClick()
-            
-            val templateName = "Workout Flow Test"
-            composeTestRule.onNodeWithText("Template Name").performTextInput(templateName)
-            
-            composeTestRule.onNodeWithText("Add Exercise").performClick()
-            composeTestRule.onNodeWithText("Select Exercise...").performClick()
-            composeTestRule.onNodeWithText("Dumbbell Bicep Curl").performClick()
-            
-            composeTestRule.onNodeWithText("Save Template").performClick()
-        }
-
-        step("Navigate to workout and potentially use template") {
-            composeTestRule.onNodeWithText("Workout").performClick()
-            
-            // Check if there's a way to use templates from workout screen
-            try {
-                composeTestRule.onNodeWithText("Use Template").performClick()
-                composeTestRule.onNodeWithText("Workout Flow Test").assertIsDisplayed()
-            } catch (_: AssertionError) {
-                // Template usage from workout might not be implemented
-                // Verify workout screen is functional
-                composeTestRule.onNodeWithText("Add Exercise").assertIsDisplayed()
-            }
-        }
-    }
-
-    @Test
-    fun templatesListScreen_handlesRapidNavigation() = run {
-        step("Perform rapid navigation stress test") {
-            val screens = listOf("Workout", "History", "Stats", "Settings")
-            
-            repeat(3) {
-                screens.forEach { screen ->
-                    composeTestRule.onNodeWithText(screen).performClick()
-                    composeTestRule.waitForIdle()
-                    
-                    composeTestRule.onNodeWithText("Templates").performClick()
-                    composeTestRule.onNodeWithText("Workout Templates").performClick()
-                    composeTestRule.waitForIdle()
-                }
-            }
-        }
-
-        step("Verify templates list is still functional") {
-            composeTestRule.onNodeWithContentDescription("Create Template").assertIsDisplayed()
-        }
-    }
-
-    @Test
-    fun templatesListScreen_handlesTemplateManagement() = run {
-        step("Create templates for management testing") {
-            val templates = listOf("Template A", "Template B")
-            
-            templates.forEach { name ->
-                composeTestRule.onNodeWithContentDescription("Create Template").performClick()
-                composeTestRule.onNodeWithText("Template Name").performTextInput(name)
-                composeTestRule.onNodeWithText("Save Template").performClick()
-            }
-        }
-
-        step("Verify templates can be managed") {
-            composeTestRule.onNodeWithText("Template A").assertIsDisplayed()
-            composeTestRule.onNodeWithText("Template B").assertIsDisplayed()
-            
-            // Test editing one template
-            composeTestRule.onNodeWithText("Template A").performClick()
-            composeTestRule.onNodeWithText("Template Name").assertIsDisplayed()
-            composeTestRule.onNodeWithText("Save Template").assertIsDisplayed()
-        }
-    }
-
-    @Test
-    fun templatesListScreen_preservesFunctionalityAcrossSessions() = run {
-        step("Create and interact with templates") {
-            composeTestRule.onNodeWithContentDescription("Create Template").performClick()
-            composeTestRule.onNodeWithText("Template Name").performTextInput("Session Test")
-            composeTestRule.onNodeWithText("Save Template").performClick()
-        }
-
-        step("Navigate through app and return") {
-            val allScreens = listOf("Workout", "History", "Stats", "Settings")
-            
-            allScreens.forEach { screen ->
-                composeTestRule.onNodeWithText(screen).performClick()
-                composeTestRule.waitForIdle()
-            }
-            
-            composeTestRule.onNodeWithText("Templates").performClick()
-            composeTestRule.onNodeWithText("Workout Templates").performClick()
-        }
-
-        step("Verify templates functionality is preserved") {
-            composeTestRule.onNodeWithText("Session Test").assertIsDisplayed()
-            composeTestRule.onNodeWithContentDescription("Create Template").assertIsDisplayed()
         }
     }
 

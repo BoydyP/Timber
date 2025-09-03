@@ -253,15 +253,12 @@ class CrossScreenDataFlowTest : TestCase() {
 
             composeTestRule.waitForIdle()
             tryClickBeforeScrollClick(composeTestRule, templateName)
-            composeTestRule.onAllNodesWithText("Weight", substring = true).onLast().performTextInput("120")
-            composeTestRule.onAllNodesWithText("Reps").onLast().performTextInput("10")
-
             composeTestRule.onAllNodesWithText("Weight", substring = true).onFirst().performTextInput("80")
             composeTestRule.onAllNodesWithText("Reps").onFirst().performTextInput("12")
-
+            composeTestRule.onAllNodesWithText("Weight", substring = true).onLast().performTextInput("120")
+            composeTestRule.onAllNodesWithText("Reps").onLast().performTextInput("10")
             composeTestRule.onNodeWithText("Complete workout").performClick()
             composeTestRule.onNodeWithText("Are you sure?").performClick()
-
             composeTestRule.waitForIdle()
             Thread.sleep(1000)
         }
@@ -283,7 +280,7 @@ class CrossScreenDataFlowTest : TestCase() {
         step("Verify both exercises appear in stats") {
             composeTestRule.onNodeWithTag("TimberAppLogo").performClick()
             composeTestRule.onNodeWithText("Stats").performClick()
-            tryClickBeforeScrollClick(composeTestRule,"Exercise")
+            composeTestRule.onNodeWithText("Exercise").performClick()
 
             try {
                 // Both exercises should be available in dropdown

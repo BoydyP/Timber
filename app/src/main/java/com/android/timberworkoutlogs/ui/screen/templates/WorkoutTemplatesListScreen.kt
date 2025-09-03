@@ -28,6 +28,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.android.timberworkoutlogs.models.WorkoutTemplateWithExerciseCount
 import com.android.timberworkoutlogs.ui.common.SwipeToDeleteContainer
@@ -83,6 +84,7 @@ fun WorkoutTemplatesListScreen(
                             modifier = Modifier.clickable {
                                 onNavigateToEditTemplate(templateItem.workoutTemplate.id)
                             }
+                                .testTag("WorkoutTemplateCard")
                         )
                     }
                 }
@@ -118,10 +120,17 @@ private fun WorkoutTemplateCard(
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = "${template.exerciseCount} exercises",
+                    text = getExerciseCountString(template.exerciseCount),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
         }
     }
 }
+
+private fun getExerciseCountString(exerciseCount: Int): String {
+    if (exerciseCount == 1) {
+        return "$exerciseCount exercise"
+    }
+    return "$exerciseCount exercises"
+    }

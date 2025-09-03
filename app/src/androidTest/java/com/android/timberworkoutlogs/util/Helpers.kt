@@ -35,10 +35,11 @@ fun backPressUntilElementTextVisible(composeTestRule: ComposeTestRule, elementTe
 }
 fun scrollToAndAssertElement(composeTestRule: ComposeTestRule, elementText: String) {
     try {
+        composeTestRule.onNodeWithText(elementText).assertIsDisplayed()
+
+    } catch (_: Exception) {
         composeTestRule.onNode(hasScrollAction())
             .performScrollToNode(hasText(elementText))
-        composeTestRule.onNodeWithText(elementText).assertIsDisplayed()
-    } catch (_: Exception) {
         composeTestRule.onNodeWithText(elementText).assertIsDisplayed()
     }
 }

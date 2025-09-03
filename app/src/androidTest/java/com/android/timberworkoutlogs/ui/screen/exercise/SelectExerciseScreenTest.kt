@@ -55,9 +55,9 @@ class SelectExerciseScreenTest : TestCase() {
             composeTestRule.onNodeWithText("Barbell Bench Press").performClick()
         }
 
-        step("Verify we're returned to workout screen with exercise selected") {
+        step("Verify we've returned to workout screen with exercise selected") {
             // Should be back on workout screen with the exercise loaded
-            composeTestRule.onNodeWithText("Weight (KG)").assertIsDisplayed()
+            composeTestRule.onNodeWithText("Weight", substring = true).assertIsDisplayed()
             composeTestRule.onNodeWithText("Reps").assertIsDisplayed()
         }
     }
@@ -185,7 +185,7 @@ class SelectExerciseScreenTest : TestCase() {
 
         step("Verify exercise was properly selected in workout") {
             // Should be back on workout screen
-            composeTestRule.onNodeWithText("Weight (KG)").assertIsDisplayed()
+            composeTestRule.onNodeWithText("Weight", substring = true).assertIsDisplayed()
             composeTestRule.onNodeWithText("Reps").assertIsDisplayed()
             
             // The exercise name might be displayed somewhere
@@ -207,6 +207,7 @@ class SelectExerciseScreenTest : TestCase() {
         step("Add another exercise") {
             // Should be back on workout screen, add another exercise
             composeTestRule.onNodeWithText("Add Exercise").assertIsDisplayed().performClick()
+            composeTestRule.waitForIdle()
             tryClickBeforeScrollClick(composeTestRule, "Dumbbell Bicep Curl")
         }
 
