@@ -49,4 +49,10 @@ interface ExerciseDefinitionDao {
      */
     @Delete
     suspend fun deleteExerciseDefinition(exercise: ExerciseDefinition)
+
+    /**
+     * Gets the count of all exercise definitions synchronously (for testing/debugging).
+     */
+    @Query("SELECT COUNT(*) FROM exercise_definitions")
+    suspend fun getExerciseCount(): Int
 }

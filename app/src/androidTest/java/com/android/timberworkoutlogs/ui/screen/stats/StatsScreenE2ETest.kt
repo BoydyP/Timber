@@ -6,6 +6,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.android.timberworkoutlogs.MainActivity
+import com.android.timberworkoutlogs.rules.DatabaseSeedingRule
 import com.android.timberworkoutlogs.util.getGreetingByTime
 import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -21,6 +22,9 @@ class StatsScreenE2ETest : TestCase() {
     val hiltRule = HiltAndroidRule(this)
 
     @get:Rule(order = 1)
+    val databaseSeedingRule = DatabaseSeedingRule()
+
+    @get:Rule(order = 2)
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
     @Before

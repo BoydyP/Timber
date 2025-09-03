@@ -30,14 +30,17 @@ fun backPressUntilElementTextVisible(composeTestRule: ComposeTestRule, elementTe
             elementVisible = true
         } catch (_: AssertionError) {
             Espresso.pressBack()
+            composeTestRule.waitForIdle()
         }
     }
 }
 fun scrollToAndAssertElement(composeTestRule: ComposeTestRule, elementText: String) {
     try {
+        composeTestRule.onNode(hasScrollAction())
+            .performScrollToNode(hasText(elementText))
         composeTestRule.onNodeWithText(elementText).assertIsDisplayed()
-
     } catch (_: Exception) {
+        composeTestRule.waitForIdle()
         composeTestRule.onNode(hasScrollAction())
             .performScrollToNode(hasText(elementText))
         composeTestRule.onNodeWithText(elementText).assertIsDisplayed()

@@ -9,6 +9,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.rule.GrantPermissionRule
 import com.android.timberworkoutlogs.MainActivity
+import com.android.timberworkoutlogs.rules.DatabaseSeedingRule
 import com.android.timberworkoutlogs.util.scrollToAndAssertElement
 import com.android.timberworkoutlogs.util.tryClickBeforeScrollClick
 import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
@@ -25,9 +26,12 @@ class SelectExerciseScreenTest : TestCase() {
     val hiltRule = HiltAndroidRule(this)
 
     @get:Rule(order = 1)
-    val composeTestRule = createAndroidComposeRule<MainActivity>()
+    val databaseSeedingRule = DatabaseSeedingRule()
 
     @get:Rule(order = 2)
+    val composeTestRule = createAndroidComposeRule<MainActivity>()
+
+    @get:Rule(order = 3)
     val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
         android.Manifest.permission.POST_NOTIFICATIONS
     )
@@ -207,13 +211,14 @@ class SelectExerciseScreenTest : TestCase() {
         step("Add another exercise") {
             // Should be back on workout screen, add another exercise
             composeTestRule.onNodeWithText("Add Exercise").assertIsDisplayed().performClick()
+            composeTestRule.onNodeWithText("Select Exercise...").performClick()
             composeTestRule.waitForIdle()
             tryClickBeforeScrollClick(composeTestRule, "Dumbbell Bicep Curl")
         }
 
         step("Verify both exercises are in workout") {
             // Should have multiple exercise entries in workout
-            composeTestRule.onAllNodesWithText("Weight (KG)").assertCountEquals(2)
+            composeTestRule.onAllNodesWithText("Weight", substring = true).assertCountEquals(2)
             composeTestRule.onAllNodesWithText("Reps").assertCountEquals(2)
         }
     }

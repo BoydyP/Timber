@@ -1,5 +1,6 @@
-package com.android.timberworkoutlogs.ui.screen.template
+package com.android.timberworkoutlogs.ui.screen.templates
 
+import android.Manifest
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -29,7 +30,7 @@ class TemplateE2ETest : TestCase() {
 
     @get:Rule(order = 2)
     val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
-        android.Manifest.permission.POST_NOTIFICATIONS
+        Manifest.permission.POST_NOTIFICATIONS
     )
 
     @Before

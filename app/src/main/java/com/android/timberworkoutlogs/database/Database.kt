@@ -107,6 +107,15 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private fun isInTestEnvironment(): Boolean {
+            return try {
+                Class.forName("androidx.test.espresso.Espresso")
+                true
+            } catch (_: ClassNotFoundException) {
+                false
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -118,18 +127,10 @@ abstract class AppDatabase : RoomDatabase() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)
                             INSTANCE?.let { database ->
-                                // Use appropriate data seeding based on environment
-                                // Check if running in test environment (instrumented tests have .test. in package)
-                                if (context.packageName.contains(".test") || 
-                                    context.applicationInfo.processName.contains("test")) {
-                                    // Test data: exercises, templates, and 20 workouts for testing
-                                    DatabaseSeeder.seedTestData(database)
-                                } else {
-                                    // Full realistic data for development (90 days of workouts)
-                                    // Prod:
+                                // Only seed automatically if not in test environment
+                                // Tests using DatabaseSeedingRule will handle their own seeding
+                                if (!isInTestEnvironment()) {
                                     DatabaseSeeder.seedProdData(database)
-                                    // Realistic:
-                                    // DatabaseSeeder.seedRealisticData(database)
                                 }
                             }
                         }

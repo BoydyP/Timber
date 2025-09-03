@@ -218,7 +218,7 @@ class WorkoutHistoryScreenTest : TestCase() {
             composeTestRule.onNodeWithText("Select Exercise...").performClick()
             composeTestRule.onNodeWithText("Dumbbell Bicep Curl").performClick()
             
-            composeTestRule.onNodeWithText("Weight (KG)").performTextInput("25")
+            composeTestRule.onNodeWithText("Weight", substring = true).performTextInput("25")
             composeTestRule.onNodeWithText("Reps").performTextInput("12")
             composeTestRule.onNodeWithTag("checkbox_1").performClick()
             

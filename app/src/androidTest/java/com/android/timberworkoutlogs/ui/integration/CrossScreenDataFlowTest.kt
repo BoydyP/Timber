@@ -15,6 +15,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.espresso.Espresso
 import androidx.test.rule.GrantPermissionRule
 import com.android.timberworkoutlogs.MainActivity
+import com.android.timberworkoutlogs.rules.DatabaseSeedingRule
 import com.android.timberworkoutlogs.util.backPressUntilElementTextVisible
 import com.android.timberworkoutlogs.util.scrollToAndAssertElement
 import com.android.timberworkoutlogs.util.tryClickBeforeScrollClick
@@ -34,7 +35,10 @@ class CrossScreenDataFlowTest : TestCase() {
     @get:Rule(order = 1)
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
-    @get:Rule(order = 2)
+    @get:Rule(order = 1)
+    val databaseSeedingRule = DatabaseSeedingRule()
+
+    @get:Rule(order = 3)
     val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
         android.Manifest.permission.POST_NOTIFICATIONS
     )
@@ -341,10 +345,10 @@ class CrossScreenDataFlowTest : TestCase() {
             composeTestRule.waitForIdle()
             composeTestRule.onNodeWithText("Templates").performClick()
             composeTestRule.onNodeWithText("Manage Exercises").performClick()
+            composeTestRule.waitForIdle()
             scrollToAndAssertElement(composeTestRule,"Barbell $exerciseName")
             backPressUntilElementTextVisible(composeTestRule, "Templates")
 
-            composeTestRule.waitForIdle()
             // Check template exists
             composeTestRule.onNodeWithText("Templates").performClick()
             composeTestRule.onNodeWithText("Workout Templates").performClick()

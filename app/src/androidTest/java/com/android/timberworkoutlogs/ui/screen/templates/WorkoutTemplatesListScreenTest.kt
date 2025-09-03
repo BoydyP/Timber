@@ -8,6 +8,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.rule.GrantPermissionRule
 import com.android.timberworkoutlogs.MainActivity
+import com.android.timberworkoutlogs.rules.DatabaseSeedingRule
 import com.android.timberworkoutlogs.util.backPressUntilElementTextVisible
 import com.android.timberworkoutlogs.util.scrollToAndAssertElement
 import com.android.timberworkoutlogs.util.tryClickBeforeScrollClick
@@ -25,9 +26,12 @@ class WorkoutTemplatesListScreenTest : TestCase() {
     val hiltRule = HiltAndroidRule(this)
 
     @get:Rule(order = 1)
-    val composeTestRule = createAndroidComposeRule<MainActivity>()
+    val databaseSeedingRule = DatabaseSeedingRule()
 
     @get:Rule(order = 2)
+    val composeTestRule = createAndroidComposeRule<MainActivity>()
+
+    @get:Rule(order = 3)
     val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
         android.Manifest.permission.POST_NOTIFICATIONS
     )

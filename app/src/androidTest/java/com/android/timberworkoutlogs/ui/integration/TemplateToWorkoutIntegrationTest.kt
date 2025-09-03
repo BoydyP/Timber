@@ -14,6 +14,7 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.test.rule.GrantPermissionRule
 import com.android.timberworkoutlogs.MainActivity
+import com.android.timberworkoutlogs.rules.DatabaseSeedingRule
 import com.android.timberworkoutlogs.util.backPressUntilElementTextVisible
 import com.android.timberworkoutlogs.util.scrollToAndAssertElement
 import com.android.timberworkoutlogs.util.tryClickBeforeScrollClick
@@ -34,6 +35,9 @@ class TemplateToWorkoutIntegrationTest : TestCase() {
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
     @get:Rule(order = 2)
+    val databaseSeedingRule = DatabaseSeedingRule()
+
+    @get:Rule(order = 3)
     val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
         android.Manifest.permission.POST_NOTIFICATIONS
     )
@@ -79,7 +83,7 @@ class TemplateToWorkoutIntegrationTest : TestCase() {
                 .performClick()
             composeTestRule.onNodeWithText(templateName).performClick()
             // Verify template exercises are loaded into workout
-            composeTestRule.onAllNodesWithText("Weight (KG)").assertCountEquals(2)
+            composeTestRule.onAllNodesWithText("Weight", substring = true).assertCountEquals(2)
             composeTestRule.onAllNodesWithText("Reps").assertCountEquals(2)
         }
     }
@@ -101,11 +105,12 @@ class TemplateToWorkoutIntegrationTest : TestCase() {
         step("Edit the template to add more exercises") {
             composeTestRule.waitForIdle()
             try {
-                composeTestRule.onNodeWithText(templateName).assertIsDisplayed().performClick()
+                tryClickBeforeScrollClick(composeTestRule,templateName)
             } catch (_: AssertionError) {
                 // Template might be formatted differently, verify history screen loaded
+                backPressUntilElementTextVisible(composeTestRule, "Templates")
                 composeTestRule.onNodeWithText("Templates").performClick()
-                composeTestRule.onNodeWithText(templateName).performClick()
+                tryClickBeforeScrollClick(composeTestRule, templateName)
             }
 
             // Add another exercise to the template
@@ -128,7 +133,7 @@ class TemplateToWorkoutIntegrationTest : TestCase() {
             tryClickBeforeScrollClick(composeTestRule, templateName)
 
             // Verify template exercises are loaded into workout
-            composeTestRule.onAllNodesWithText("Weight (KG)").assertCountEquals(2)
+            composeTestRule.onAllNodesWithText("Weight", substring = true).assertCountEquals(2)
             composeTestRule.onAllNodesWithText("Reps").assertCountEquals(2)
         }
     }
@@ -188,7 +193,7 @@ class TemplateToWorkoutIntegrationTest : TestCase() {
             composeTestRule.onNodeWithText("Barbell Bench Press").performClick()
             
             // Fill in workout data
-            composeTestRule.onNodeWithText("Weight (KG)").performTextInput("100")
+            composeTestRule.onNodeWithText("Weight", substring = true).performTextInput("100")
             composeTestRule.onNodeWithText("Reps").performTextInput("10")
             composeTestRule.onNodeWithTag("checkbox_1").performClick()
             
