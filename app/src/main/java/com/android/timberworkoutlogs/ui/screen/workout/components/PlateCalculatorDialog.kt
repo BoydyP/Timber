@@ -121,13 +121,13 @@ fun PlateCalculatorDialog(
             HorizontalDivider()
 
             Text("Required Plates", style = MaterialTheme.typography.titleMedium)
-            Barbell(plates = uiState.platesOnBar)
+            Barbell(plates = uiState.platesOnBar, unit = uiState.unit)
         }
     }
 }
 
 @Composable
-fun Barbell(plates: List<Double>) {
+fun Barbell(plates: List<Double>, unit: WeightUnit) {
     val defaultPlateWidth = 20.dp
     val minPlateWidth = 10.dp
     val maxPlatesBeforeShrink = 7
@@ -154,7 +154,7 @@ fun Barbell(plates: List<Double>) {
                 horizontalArrangement = Arrangement.Start // Start in RTL means flush right
             ) {
                 plates.sortedDescending()
-                    .forEach { plateWeight -> Plate(weight = plateWeight, width = plateWidth) }
+                    .forEach { plateWeight -> Plate(weight = plateWeight, width = plateWidth, unit = unit) }
             }
         }
 
@@ -185,20 +185,31 @@ fun Barbell(plates: List<Double>) {
             horizontalArrangement = Arrangement.Start
         ) {
             plates.sortedDescending()
-                .forEach { plateWeight -> Plate(weight = plateWeight, width = plateWidth) }
+                .forEach { plateWeight -> Plate(weight = plateWeight, width = plateWidth, unit = unit) }
         }
     }
 }
 
 @Composable
-fun Plate(weight: Double, width: Dp) {
-    val height = when (weight) {
-        25.0, 45.0 -> 120.dp
-        20.0, 35.0 -> 110.dp
-        15.0 -> 100.dp
-        10.0 -> 85.dp
-        5.0 -> 70.dp
-        else -> 50.dp
+fun Plate(weight: Double, width: Dp, unit: WeightUnit) {
+    val height = if (unit == WeightUnit.KG) {
+        when (weight) {
+            25.0 -> 120.dp
+            20.0 -> 110.dp
+            15.0 -> 100.dp
+            10.0 -> 85.dp
+            5.0 -> 70.dp
+            else -> 50.dp
+        }
+    } else { // LB
+        when (weight) {
+            45.0 -> 120.dp
+            35.0 -> 110.dp
+            25.0 -> 100.dp
+            10.0 -> 85.dp
+            5.0 -> 70.dp
+            else -> 50.dp
+        }
     }
 
     val (backgroundColor, textColor) = when (weight) {
