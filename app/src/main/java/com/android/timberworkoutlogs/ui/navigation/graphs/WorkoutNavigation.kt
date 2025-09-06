@@ -1,7 +1,5 @@
 package com.android.timberworkoutlogs.ui.navigation.graphs
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,7 +25,6 @@ private val workoutInitRoutes = setOf(
     AppDestinations.TEMPLATES_LIST_ROUTE
 )
 
-@RequiresApi(Build.VERSION_CODES.Q)
 @OptIn(ExperimentalMaterial3Api::class)
 fun NavGraphBuilder.workoutGraph(navController: NavController) {
     workoutComposable(

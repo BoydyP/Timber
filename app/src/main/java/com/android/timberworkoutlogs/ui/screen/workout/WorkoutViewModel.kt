@@ -5,10 +5,8 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -65,7 +63,6 @@ class WorkoutViewModel @Inject constructor(
 
 
     private val serviceConnection = object : ServiceConnection {
-        @RequiresApi(Build.VERSION_CODES.Q)
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val binder = service as TimerService.TimerBinder
             timerService = binder.getService()
@@ -145,7 +142,6 @@ class WorkoutViewModel @Inject constructor(
         super.onCleared()
     }
 
-    @RequiresApi(Build.VERSION_CODES.Q)
     fun startTimer() {
         if (isBound) {
             timerService?.startTimer()

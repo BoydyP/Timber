@@ -8,7 +8,6 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -88,7 +87,6 @@ data class WorkoutScreenActions(
     val stopTimer: () -> Unit
 )
 
-@RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun WorkoutScreen(
     workoutViewModel: WorkoutViewModel,

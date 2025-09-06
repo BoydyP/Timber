@@ -130,7 +130,8 @@ abstract class AppDatabase : RoomDatabase() {
                                 // Only seed automatically if not in test environment
                                 // Tests using DatabaseSeedingRule will handle their own seeding
                                 if (!isInTestEnvironment()) {
-                                    DatabaseSeeder.seedProdData(database)
+//                                    DatabaseSeeder.seedProdData(database)
+                                    DatabaseSeeder.seedRealisticData(database)
                                 }
                             }
                         }

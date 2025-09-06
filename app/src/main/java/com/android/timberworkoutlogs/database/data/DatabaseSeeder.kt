@@ -1,7 +1,5 @@
 package com.android.timberworkoutlogs.database.data
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.android.timberworkoutlogs.database.AppDatabase
 import com.android.timberworkoutlogs.models.DistanceAndTimeSet
 import com.android.timberworkoutlogs.models.ExerciseSet
@@ -52,7 +50,6 @@ object DatabaseSeeder {
     /**
      * "Test" seeder. Populates exercises, templates, AND 20 days of workout history for testing.
      */
-    @RequiresApi(Build.VERSION_CODES.O)
     fun seedTestData(db: AppDatabase) {
         val exerciseDefDao = db.exerciseDefinitionDao()
         val templateDao = db.workoutTemplateDao()
@@ -141,7 +138,6 @@ object DatabaseSeeder {
     /**
      * "Dev" seeder. Populates exercises, templates, AND 60 days of realistic workout history.
      */
-    @RequiresApi(Build.VERSION_CODES.O)
     fun seedRealisticData(db: AppDatabase) {
         val exerciseDefDao = db.exerciseDefinitionDao()
         val templateDao = db.workoutTemplateDao()
