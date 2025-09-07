@@ -30,7 +30,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import java.util.Calendar
 import java.util.UUID
 
 @ExperimentalCoroutinesApi
@@ -292,10 +291,49 @@ class StatsViewModelTest {
     }
 
     @Test
+    fun `processProgressionData correctly calculates max weight, total volume, and best set`() = runTest {
+        // Arrange
+        // Ensure the ViewModel is initialized with KG as the weight unit for this test
+        every { settingsRepository.weightUnit } returns MutableStateFlow(WeightUnit.KG)
+        viewModel = StatsViewModel(workoutDao, settingsRepository)
+
+        val mockHistory = listOf(
+            createWorkoutExerciseWithDate(1724967353000L, listOf(
+                WeightAndRepsSet(weight = 100.0, reps = 5, isDone = true), // Best set
+                WeightAndRepsSet(weight = 90.0, reps = 8, isDone = true)
+            ), WeightUnit.KG),
+            createWorkoutExerciseWithDate(1725053753000L, listOf(
+                WeightAndRepsSet(weight = 105.0, reps = 4, isDone = true)
+            ), WeightUnit.KG),
+            createWorkoutExerciseWithDate(1725140153000L, listOf(
+                WeightAndRepsSet(weight = 0.0, reps = 10, isDone = true) // Zero weight
+            ), WeightUnit.KG)
+        )
+
+        // Act
+        val result = viewModel.processProgressionData(mockHistory)
+
+        // Assert
+        assertEquals(2, result.size)
+
+        val day1Point = result[0]
+        assertEquals(1724967353000L, day1Point.date)
+        assertEquals(100.0, day1Point.maxWeight, 0.01)
+        assertEquals(1220.0, day1Point.totalVolume, 0.01)
+        assertEquals(100.0, day1Point.bestSet.weight, 0.01)
+        assertEquals(5, day1Point.bestSet.reps)
+
+        val day2Point = result[1]
+        assertEquals(1725053753000L, day2Point.date)
+        assertEquals(105.0, day2Point.maxWeight, 0.01)
+        assertEquals(420.0, day2Point.totalVolume, 0.01)
+        assertEquals(105.0, day2Point.bestSet.weight, 0.01)
+        assertEquals(4, day2Point.bestSet.reps)
+    }
+
+    @Test
     fun `calculates time range boundaries correctly`() = runTest {
-        // Given: Current time for reference
-        val now = Calendar.getInstance()
-        
+
         // When: Test different time ranges
         viewModel = StatsViewModel(workoutDao, settingsRepository)
         

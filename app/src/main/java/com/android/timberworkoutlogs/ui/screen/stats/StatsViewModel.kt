@@ -1,5 +1,6 @@
 package com.android.timberworkoutlogs.ui.screen.stats
 
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.timberworkoutlogs.database.ExerciseDefinitionWithCount
@@ -151,34 +152,30 @@ class StatsViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    private fun processProgressionData(exerciseHistory: List<WorkoutExerciseWithDate>): List<ExerciseProgressionPoint> {
+    @VisibleForTesting
+    internal fun processProgressionData(exerciseHistory: List<WorkoutExerciseWithDate>): List<ExerciseProgressionPoint> {
         val weightUnit = _uiState.value.weightUnit
-        
         return exerciseHistory
             .groupBy { it.workoutStartTime }
             .map { (workoutDate, exercisesInWorkout) ->
                 var maxWeight = 0.0
                 var totalVolume = 0.0
                 var bestSet: WeightAndRepsSet? = null
-
                 exercisesInWorkout.forEach { exerciseWithDate ->
                     exerciseWithDate.workoutExercise.sets.forEach { set ->
                         if (set is WeightAndRepsSet && set.isDone && set.reps > 0 && set.weight > 0) {
                             // Convert weight to kg for calculations
                             val weightInKg = WeightUnitConverter.toKg(set.weight, exerciseWithDate.workoutExercise.unit)
-
                             // Track max weight
                             if (weightInKg > maxWeight) {
                                 maxWeight = weightInKg
                                 bestSet = set
                             }
-
                             // Add to volume
                             totalVolume += weightInKg * set.reps
                         }
                     }
                 }
-
                 // Convert final values to user's preferred unit
                 val finalMaxWeight = WeightUnitConverter.fromKg(maxWeight, weightUnit)
                 val finalTotalVolume = WeightUnitConverter.fromKg(totalVolume, weightUnit)
@@ -195,7 +192,8 @@ class StatsViewModel @Inject constructor(
             .sortedBy { it.date }
     }
 
-    private fun processOneRepMaxData(exerciseHistory: List<WorkoutExerciseWithDate>): List<OneRepMaxPoint> {
+    @VisibleForTesting
+    internal fun processOneRepMaxData(exerciseHistory: List<WorkoutExerciseWithDate>): List<OneRepMaxPoint> {
         val selectedFormula = _uiState.value.selectedOneRMFormula
         val weightUnit = _uiState.value.weightUnit
         
@@ -204,7 +202,6 @@ class StatsViewModel @Inject constructor(
                 if (set is WeightAndRepsSet && set.isDone && set.reps > 0 && set.weight > 0) {
                     // Convert to kg for calculation
                     val weightInKg = WeightUnitConverter.toKg(set.weight, exerciseWithDate.workoutExercise.unit)
-
                     val oneRMInKg = when (selectedFormula) {
                         OneRMFormula.EPLEY -> OneRepMaxCalculator.epley(weightInKg, set.reps)
                         OneRMFormula.BRZYCKI -> OneRepMaxCalculator.brzycki(weightInKg, set.reps)
@@ -214,11 +211,9 @@ class StatsViewModel @Inject constructor(
                             estimates.average
                         }
                     }
-
                     // Convert final 1RM to user's preferred unit
                     val finalOneRM = WeightUnitConverter.fromKg(oneRMInKg, weightUnit)
                     val finalActualWeight = WeightUnitConverter.convert(set.weight, exerciseWithDate.workoutExercise.unit, weightUnit)
-
                     OneRepMaxPoint(
                         date = exerciseWithDate.workoutStartTime,
                         estimatedOneRM = finalOneRM,
