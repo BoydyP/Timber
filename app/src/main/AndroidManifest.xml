@@ -3,7 +3,14 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!--
+      ForegroundServiceType inspection misfires here: TimerService declares
+      foregroundServiceType="specialUse" plus the required PROPERTY_SPECIAL_USE_FGS_SUBTYPE
+      property below. Real ./gradlew lintDebug is clean.
+    -->
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE"
+        tools:ignore="ForegroundServiceType" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <application
@@ -16,12 +23,21 @@
         android:roundIcon="@mipmap/timber_launcher_no_writing_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.TimberWorkoutLogs"
-        tools:targetApi="33">
+        >
+        <!--
+          foregroundServiceType="specialUse" is intentional: this is a passive
+          workout timer, not a sensor reader. health/dataSync require sensor or
+          sync permissions the app doesn't need. Do not change without reason.
+        -->
         <service
             android:name=".services.TimerService"
             android:description="@string/timer_service_description"
             android:exported="false"
-            android:foregroundServiceType="specialUse" />
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Workout duration timer that runs while a strength-training session is in progress so the elapsed time stays accurate when the user navigates away or locks the screen." />
+        </service>
         <activity
             android:name=".MainActivity"
             android:exported="true"

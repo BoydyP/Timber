@@ -33,7 +33,11 @@ import com.android.timberworkoutlogs.models.Workout
 import com.android.timberworkoutlogs.models.WorkoutExercise
 import com.android.timberworkoutlogs.ui.common.SwipeToDeleteContainer
 import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.emptyPreferences
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import java.util.UUID
 
@@ -168,7 +172,14 @@ fun WorkoutHistoryScreenPreview() {
 
     // 2. Create a Fake Repository using the Fakes.
     val fakeWorkoutRepository = WorkoutRepository(FakeWorkoutDao(), FakeWorkoutExerciseDao())
-    val fakeSettingsRepository = SettingsRepository()
+    val fakeDataStore = object : DataStore<Preferences> {
+        private val state = MutableStateFlow(emptyPreferences())
+        override val data: Flow<Preferences> = state
+        override suspend fun updateData(
+            transform: suspend (Preferences) -> Preferences
+        ): Preferences = transform(state.value).also { state.value = it }
+    }
+    val fakeSettingsRepository = SettingsRepository(fakeDataStore)
 
     // 3. Create a real ViewModel with the fake repository.
     // Note: Creating a ViewModel directly in a Composable is generally an anti-pattern,

@@ -17,7 +17,7 @@ android {
 
     defaultConfig {
         applicationId = "com.android.timberworkoutlogs"
-        minSdk = 33
+        minSdk = 34
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"

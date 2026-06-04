@@ -2,7 +2,6 @@ package com.android.timberworkoutlogs.ui.screen.workout
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -137,16 +136,12 @@ private fun WorkoutScreenContent(
 ) {
     val context = LocalContext.current
     var hasNotificationPermission by remember {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            mutableStateOf(
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) == PackageManager.PERMISSION_GRANTED
-            )
-        } else {
-            mutableStateOf(true)
-        }
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        )
     }
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -184,14 +179,10 @@ private fun WorkoutScreenContent(
     }
 
     LaunchedEffect(key1 = Unit) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (hasNotificationPermission) {
-                actions.onStartTimer()
-            } else {
-                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-        } else {
+        if (hasNotificationPermission) {
             actions.onStartTimer()
+        } else {
+            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 

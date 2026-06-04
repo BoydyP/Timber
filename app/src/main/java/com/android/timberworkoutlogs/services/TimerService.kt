@@ -8,9 +8,7 @@ import android.app.Service
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Binder
-import android.os.Build
 import android.os.IBinder
-import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import com.android.timberworkoutlogs.MainActivity
@@ -44,10 +42,10 @@ class TimerService : Service() {
 
     override fun onBind(intent: Intent): IBinder = binder
 
-    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     fun startTimer() {
         createNotificationChannel()
         val notification = createNotification("00:00")
+        // SPECIAL_USE is intentional — see manifest comment on TimerService.
         ServiceCompat.startForeground(
             this,
             1,
