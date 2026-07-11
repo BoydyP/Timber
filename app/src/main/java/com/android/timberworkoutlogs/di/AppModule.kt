@@ -40,11 +40,15 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideWorkoutTemplateRepository(db: AppDatabase): WorkoutTemplateRepository {
+    fun provideWorkoutTemplateRepository(
+        db: AppDatabase,
+        settingsRepository: SettingsRepository
+    ): WorkoutTemplateRepository {
         return WorkoutTemplateRepository(
             db.workoutTemplateDao(),
             db.workoutDao(),
             db.workoutExerciseDao(),
+            settingsRepository,
         )
     }
 

@@ -11,11 +11,13 @@ import com.android.timberworkoutlogs.models.WorkoutTemplate
 import com.android.timberworkoutlogs.models.WorkoutTemplateWithExerciseCount
 import com.android.timberworkoutlogs.models.WorkoutTemplateWithExercises
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 
 class WorkoutTemplateRepository(
     private val workoutTemplateDao: WorkoutTemplateDao,
     private val workoutDao: WorkoutDao,
     private val workoutExerciseDao: WorkoutExerciseDao,
+    private val settingsRepository: SettingsRepository,
 ) {
 
     suspend fun getTemplateWithExercises(templateId: Long): WorkoutTemplateWithExercises {
@@ -59,11 +61,18 @@ class WorkoutTemplateRepository(
         val newWorkout = Workout(name = templateWithExercises.template.name)
         val newWorkoutId = workoutDao.insertWorkout(newWorkout)
 
+        // TemplateExercise has no unit of its own (see TemplateExercise.kt), so the new
+        // WorkoutExercises must be tagged with the user's current weight-unit preference.
+        // Without this, WorkoutExercise's default (WeightUnit.KG) is used regardless of the
+        // user's actual setting, silently mislabeling the weight unit for LB users.
+        val currentUnit = settingsRepository.weightUnit.first()
+
         // 3. Convert every TemplateExercise into a new WorkoutExercise.
         val newWorkoutExercises = templateWithExercises.exercises.map { templateExercise ->
             WorkoutExercise(
                 workoutId = newWorkoutId,
                 definitionId = templateExercise.definitionId,
+                unit = currentUnit,
                 // 4. Reset the 'isDone' flag for each set.
                 sets = templateExercise.sets.map { set ->
                     when (set) {
