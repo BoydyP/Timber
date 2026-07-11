@@ -360,6 +360,44 @@ class StatsViewModelTest {
         assertEquals(Int.MAX_VALUE, TimeRange.ALL_TIME.daysBack)
     }
 
+    @Test
+    fun `switching exercises cancels the previous data collection`() = runTest {
+        // Given: two exercises backed by independently-controllable flows
+        val exerciseA = mockExerciseDefinition
+        val exerciseB = mockExerciseDefinition.copy(id = UUID.randomUUID(), name = "Squat")
+
+        val flowA = MutableStateFlow<List<WorkoutExerciseWithDate>>(emptyList())
+        val flowB = MutableStateFlow<List<WorkoutExerciseWithDate>>(emptyList())
+
+        every { workoutDao.getExerciseHistoryData(exerciseA.id, any()) } returns flowA
+        every { workoutDao.getExerciseHistoryData(exerciseB.id, any()) } returns flowB
+
+        viewModel = StatsViewModel(workoutDao, settingsRepository)
+
+        // When: selecting exercise A then switching to exercise B
+        viewModel.selectExercise(exerciseA)
+        viewModel.selectExercise(exerciseB)
+
+        // A late emission on the now-stale flow for exercise A must not leak into the UI
+        // state; if the previous collector wasn't cancelled it would overwrite the data
+        // that belongs to the currently-selected exercise B.
+        flowA.value = listOf(
+            createWorkoutExerciseWithDate(
+                System.currentTimeMillis(),
+                listOf(WeightAndRepsSet(weight = 999.0, reps = 5, isDone = true)),
+                WeightUnit.KG
+            )
+        )
+
+        // Then
+        val state = viewModel.uiState.value
+        assertEquals(exerciseB, state.selectedExercise)
+        assertTrue(
+            "Stale data from the previous exercise's collector should not appear",
+            state.progressionData.none { it.maxWeight == 999.0 }
+        )
+    }
+
     // Helper function to create test data
     private fun createWorkoutExerciseWithDate(
         workoutStartTime: Long,

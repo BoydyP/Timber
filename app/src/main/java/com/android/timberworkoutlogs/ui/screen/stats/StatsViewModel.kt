@@ -14,6 +14,7 @@ import com.android.timberworkoutlogs.ui.screen.stats.utils.OneRepMaxCalculator
 import com.android.timberworkoutlogs.ui.screen.stats.utils.OneRMFormula
 import com.android.timberworkoutlogs.util.WeightUnitConverter
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -77,6 +78,8 @@ class StatsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(StatsUiState())
     val uiState: StateFlow<StatsUiState> = _uiState.asStateFlow()
 
+    private var loadExerciseDataJob: Job? = null
+
     init {
         // Load available exercises and weight unit
         combine(
@@ -129,13 +132,16 @@ class StatsViewModel @Inject constructor(
 
     private fun loadExerciseData(exerciseDefinition: ExerciseDefinition) {
         val fromTime = getTimeRangeStartMillis(_uiState.value.selectedTimeRange)
-        
-        workoutDao.getExerciseHistoryData(exerciseDefinition.id, fromTime)
+
+        // Cancel any previous collection so switching exercise/time range/formula doesn't
+        // leak collectors that keep racing to overwrite the UI state with stale data.
+        loadExerciseDataJob?.cancel()
+        loadExerciseDataJob = workoutDao.getExerciseHistoryData(exerciseDefinition.id, fromTime)
             .onEach { exerciseHistory ->
                 try {
                     val progressionData = processProgressionData(exerciseHistory)
                     val oneRepMaxData = processOneRepMaxData(exerciseHistory)
-                    
+
                     _uiState.value = _uiState.value.copy(
                         progressionData = progressionData,
                         oneRepMaxData = oneRepMaxData,
