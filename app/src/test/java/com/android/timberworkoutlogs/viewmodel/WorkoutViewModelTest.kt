@@ -262,6 +262,27 @@ class WorkoutViewModelTest {
             assertEquals(WeightUnit.KG, viewModel.workoutExercises[1].unit)
         }
 
+    @Test
+    fun `onExerciseUnitChange converts existing set weights so the logged value stays physically correct`() =
+        runTest(testDispatcher) {
+            advanceUntilIdle()
+            coEvery { exerciseDefinitionRepository.getExerciseDefinition(benchPressDef.id) } returns
+                benchPressDef
+            viewModel.onExerciseSelected(0, benchPressDef.id)
+            advanceUntilIdle()
+
+            val id = viewModel.workoutExercises[0].id
+            viewModel.onSetChanged(id, 0, WeightAndRepsSet(weight = 100.0, reps = 5, isDone = true))
+
+            viewModel.onExerciseUnitChange(id, WeightUnit.LB)
+
+            val convertedSet = viewModel.workoutExercises[0].sets[0] as WeightAndRepsSet
+            assertEquals(WeightUnit.LB, viewModel.workoutExercises[0].unit)
+            assertEquals(220.46, convertedSet.weight, 0.01)
+            assertEquals(5, convertedSet.reps)
+            assertTrue(convertedSet.isDone)
+        }
+
     // ---------- onFinishWorkout ----------
 
     @Test

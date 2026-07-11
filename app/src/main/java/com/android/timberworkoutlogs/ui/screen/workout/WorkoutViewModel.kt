@@ -31,6 +31,7 @@ import com.android.timberworkoutlogs.models.WorkoutExercise
 import com.android.timberworkoutlogs.models.WorkoutTemplateWithExerciseCount
 import com.android.timberworkoutlogs.services.TimerService
 import com.android.timberworkoutlogs.services.WorkoutStateHolder
+import com.android.timberworkoutlogs.util.WeightUnitConverter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -286,7 +287,20 @@ class WorkoutViewModel @Inject constructor(
     fun onExerciseUnitChange(exerciseId: UUID, newUnit: WeightUnit) {
         val index = workoutExercises.indexOfFirst { it.id == exerciseId }
         if (index != -1) {
-            workoutExercises[index] = workoutExercises[index].copy(unit = newUnit)
+            val exercise = workoutExercises[index]
+            val oldUnit = exercise.unit
+            // Converting the unit label alone would silently reinterpret already-entered
+            // weight values in the new unit (e.g. "100 kg" becoming "100 lb"), corrupting
+            // the logged weight. Convert every existing set's weight so the numeric value
+            // still represents the same physical weight under the new unit.
+            val convertedSets = exercise.sets.map { set ->
+                if (set is WeightAndRepsSet) {
+                    set.copy(weight = WeightUnitConverter.convert(set.weight, oldUnit, newUnit))
+                } else {
+                    set
+                }
+            }
+            workoutExercises[index] = exercise.copy(unit = newUnit, sets = convertedSets)
         }
         Log.d(TAG, "Exercise unit changed to $newUnit for exercise with ID: $exerciseId")
     }
