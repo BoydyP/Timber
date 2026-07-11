@@ -10,7 +10,7 @@
     -->
     <uses-permission
         android:name="android.permission.FOREGROUND_SERVICE"
-        tools:ignore="ForegroundServiceType" />
+        tools:ignore="ForegroundServiceType,ForegroundServicesPolicy" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <application

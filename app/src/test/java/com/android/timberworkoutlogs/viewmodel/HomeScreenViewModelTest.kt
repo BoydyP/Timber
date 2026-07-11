@@ -17,6 +17,7 @@ import com.android.timberworkoutlogs.services.WorkoutStateHolder
 import com.android.timberworkoutlogs.ui.screen.home.HomeScreenViewModel
 import com.android.timberworkoutlogs.ui.screen.home.PersonalRecordsUiState
 import com.android.timberworkoutlogs.ui.screen.home.WeeklyVolumeUiState
+import com.android.timberworkoutlogs.ui.screen.stats.utils.OneRepMaxCalculator
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -476,11 +477,59 @@ class HomeScreenViewModelTest {
         assertEquals(1, state.lifts.size)
         val lift = state.lifts[0]
         assertEquals(100.0, lift.currentMax, 0.1)
-        
-        // Brzycki formula: 1RM = weight / (1.0278 - 0.0278 * reps)
-        // 100 / (1.0278 - 0.0278 * 5) = 100 / (1.0278 - 0.139) = 100 / 0.8888 ≈ 112.5
-        assertEquals(112.5, lift.oneRepMax, 1.0)
+
+        // Brzycki: 1RM = weight × 36 / (37 - reps); pin against the shared calculator.
+        assertEquals(OneRepMaxCalculator.brzycki(100.0, 5), lift.oneRepMax, 0.1)
     }
+
+    @Test
+    fun `personalRecordsUiState clamps 1RM at very high rep counts instead of going negative`() =
+        runTest {
+            // Given - reps >= 37 made the inline Brzycki formula divide by zero / go
+            // negative. Pin that the shared calculator's clamp (returns weight) wins.
+            val pushUpId = UUID.randomUUID()
+            exerciseCountsFlow.value = listOf(
+                ExerciseDefinitionWithCount(
+                    ExerciseDefinition(
+                        id = pushUpId,
+                        name = "Push Up",
+                        equipment = ExerciseEquipment.BARBELL,
+                        muscleGroups = listOf(MuscleGroup.CHEST),
+                        logType = LogType.WEIGHT_AND_REPS
+                    ),
+                    workoutCount = 1
+                )
+            )
+            val workout = Workout(
+                id = 1L,
+                name = "Test",
+                startTime = System.currentTimeMillis(),
+                durationSeconds = 3600
+            )
+            val exercise = WorkoutExercise(
+                id = UUID.randomUUID(),
+                workoutId = 1L,
+                definitionId = pushUpId,
+                unit = WeightUnit.KG,
+                sets = mutableListOf(WeightAndRepsSet(weight = 50.0, reps = 40, isDone = true))
+            )
+            workoutsFlow.value = listOf(WorkoutWithExercises(workout, listOf(exercise)))
+
+            val state = viewModel.personalRecordsUiState.first()
+
+            assertTrue(state is PersonalRecordsUiState.Success)
+            state as PersonalRecordsUiState.Success
+            assertEquals(1, state.lifts.size)
+            assertTrue(
+                "1RM must not go negative for reps >= 37",
+                state.lifts[0].oneRepMax > 0.0
+            )
+            assertEquals(
+                OneRepMaxCalculator.brzycki(50.0, 40),
+                state.lifts[0].oneRepMax,
+                0.1
+            )
+        }
 
     @Test
     fun `personalRecordsUiState handles 1RM sets correctly`() = runTest {

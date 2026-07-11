@@ -7,6 +7,7 @@ import com.android.timberworkoutlogs.database.WorkoutDao
 import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.services.WorkoutStateHolder
+import com.android.timberworkoutlogs.ui.screen.stats.utils.OneRepMaxCalculator
 import com.android.timberworkoutlogs.util.WeightUnitConverter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -176,12 +177,7 @@ class HomeScreenViewModel @Inject constructor(
                             // Convert weight to consistent unit (KG) for comparison
                             val weightInKg = WeightUnitConverter.toKg(set.weight, exercise.unit)
 
-                            // Calculate estimated 1RM using Brzycki formula
-                            val oneRepMax = if (set.reps == 1) {
-                                weightInKg
-                            } else {
-                                weightInKg / (1.0278 - 0.0278 * set.reps)
-                            }
+                            val oneRepMax = OneRepMaxCalculator.brzycki(weightInKg, set.reps)
 
                             // Track the best lift for this exercise in this workout
                             if (oneRepMax > maxOneRepMax) {

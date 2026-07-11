@@ -32,6 +32,7 @@ import com.android.timberworkoutlogs.models.WorkoutTemplateWithExerciseCount
 import com.android.timberworkoutlogs.services.TimerService
 import com.android.timberworkoutlogs.services.WorkoutStateHolder
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -61,33 +62,58 @@ class WorkoutViewModel @Inject constructor(
     private val _timerText = MutableStateFlow("00:00:00")
     val timerText = _timerText.asStateFlow()
 
+    private var serviceConnection: ServiceConnection? = null
+    private val collectionJobs = mutableListOf<Job>()
 
-    private val serviceConnection = object : ServiceConnection {
+    private fun newServiceConnection() = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val binder = service as TimerService.TimerBinder
-            timerService = binder.getService()
+            val boundService = binder.getService()
+            timerService = boundService
             isBound = true
             if (startTimerWhenReady) {
-                timerService?.startTimer()
+                boundService.startTimer()
                 startTimerWhenReady = false
             }
-            viewModelScope.launch {
-                timerService?.isTimerRunning?.collect {
-                    workoutStateHolder.setTimerRunning(it)
-                }
+            cancelCollectionJobs()
+            collectionJobs += viewModelScope.launch {
+                boundService.isTimerRunning.collect { workoutStateHolder.setTimerRunning(it) }
             }
-            viewModelScope.launch {
-                timerService?.timerText?.collect {
-                    _timerText.value = it
-                }
+            collectionJobs += viewModelScope.launch {
+                boundService.timerText.collect { _timerText.value = it }
             }
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             isBound = false
             timerService = null
+            cancelCollectionJobs()
             workoutStateHolder.setTimerRunning(false)
         }
+    }
+
+    private fun cancelCollectionJobs() {
+        collectionJobs.forEach { it.cancel() }
+        collectionJobs.clear()
+    }
+
+    private fun bindTimerService() {
+        if (isBound || serviceConnection != null) return
+        val connection = newServiceConnection()
+        serviceConnection = connection
+        Intent(application, TimerService::class.java).also { intent ->
+            application.bindService(intent, connection, Context.BIND_AUTO_CREATE)
+        }
+    }
+
+    private fun unbindTimerService() {
+        val connection = serviceConnection ?: return
+        if (isBound) {
+            application.unbindService(connection)
+        }
+        serviceConnection = null
+        isBound = false
+        cancelCollectionJobs()
     }
 
     val workoutExercises = mutableStateListOf<WorkoutExercise>()
@@ -128,17 +154,12 @@ class WorkoutViewModel @Inject constructor(
     init {
         Log.d(TAG, "ViewModel initialized")
         startNewWorkoutSession()
-        Intent(application, TimerService::class.java).also { intent ->
-            application.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
-        }
+        bindTimerService()
     }
 
     override fun onCleared() {
-        if (isBound) {
-            application.unbindService(serviceConnection)
-            isBound = false
-            workoutStateHolder.setTimerRunning(false)
-        }
+        unbindTimerService()
+        workoutStateHolder.setTimerRunning(false)
         super.onCleared()
     }
 
@@ -306,22 +327,23 @@ class WorkoutViewModel @Inject constructor(
 
     fun onDiscardWorkout(onNavigateBack: () -> Unit) {
         Log.d(TAG, "onDiscardWorkout called.")
-        currentWorkoutId?.let { id ->
-            viewModelScope.launch {
-                Log.d(TAG, "Workout count before delete: ${workoutRepository.getAllWorkoutCount()}.")
-                workoutRepository.getWorkout(id)?.let { workoutToDelete ->
-                    workoutRepository.deleteWorkout(workoutToDelete)
-                    Log.d(TAG, "Discarded and deleted workout ID: $id")
-                }
-                Log.d(TAG, "Workout count after delete: ${workoutRepository.getAllWorkoutCount()}.")
-                
-                resetWorkoutSession()
-                onNavigateBack()
-            }
-        } ?: {
+        val id = currentWorkoutId
+        if (id == null) {
             resetWorkoutSession()
             onNavigateBack()
-        }()
+            return
+        }
+        viewModelScope.launch {
+            Log.d(TAG, "Workout count before delete: ${workoutRepository.getAllWorkoutCount()}.")
+            workoutRepository.getWorkout(id)?.let { workoutToDelete ->
+                workoutRepository.deleteWorkout(workoutToDelete)
+                Log.d(TAG, "Discarded and deleted workout ID: $id")
+            }
+            Log.d(TAG, "Workout count after delete: ${workoutRepository.getAllWorkoutCount()}.")
+
+            resetWorkoutSession()
+            onNavigateBack()
+        }
     }
 
     fun importExercisesFromTemplate(templateId: Long) {
@@ -356,15 +378,10 @@ class WorkoutViewModel @Inject constructor(
      */
     private fun resetWorkoutSession() {
         Log.d(TAG, "resetWorkoutSession called - cleaning up workout state")
-        
-        // Stop and cleanup timer service
+
         timerService?.stopTimer()
-        if (isBound) {
-            application.unbindService(serviceConnection)
-            isBound = false
-        }
-        timerService = null
-        
+        unbindTimerService()
+
         _timerText.value = "00:00"
         workoutStateHolder.setTimerRunning(false)
         
@@ -388,11 +405,7 @@ class WorkoutViewModel @Inject constructor(
         if (currentWorkoutId == null && !isInitializingSession) {
             Log.d(TAG, "No active workout session, starting new one")
             startNewWorkoutSession()
-            
-            // Rebind to timer service
-            Intent(application, TimerService::class.java).also { intent ->
-                application.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
-            }
+            bindTimerService()
         } else if (currentWorkoutId != null) {
             Log.d(TAG, "Active workout session already exists with ID: $currentWorkoutId")
         } else {
