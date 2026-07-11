@@ -1,5 +1,6 @@
 package com.android.timberworkoutlogs.database.data
 
+import com.android.timberworkoutlogs.models.DistanceAndTimeSet
 import com.android.timberworkoutlogs.models.TemplateExercise
 import com.android.timberworkoutlogs.models.WorkoutTemplate
 import com.android.timberworkoutlogs.models.WeightAndRepsSet
@@ -27,6 +28,24 @@ object DefaultTemplates {
         val lunge =
             defaultExercises.first { it.name == "Lunge" && it.equipment.name.lowercase() == "dumbbell" }
 
+        // --- Hypertrophy + Cardio blueprint lookups ---
+        val inclineDbPress =
+            defaultExercises.first { it.name == "Incline Bench Press" && it.equipment.name.lowercase() == "dumbbell" }
+        val cableFly = defaultExercises.first { it.name == "Fly" && it.equipment.name.lowercase() == "cable" }
+        val treadmillRun = defaultExercises.first { it.name == "Treadmill Run" }
+        val dbShoulderPress = defaultExercises.first { it.name == "Shoulder Press" }
+        val dbLateralRaise =
+            defaultExercises.first { it.name == "Lateral Raise" && it.equipment.name.lowercase() == "dumbbell" }
+        val closeGripBenchPress = defaultExercises.first { it.name == "Close Grip Bench Press" }
+        val bbBicepCurl =
+            defaultExercises.first { it.name == "Bicep Curl" && it.equipment.name.lowercase() == "barbell" }
+        val legPressHeavy = defaultExercises.first { it.name == "Leg Press" }
+        val dbRomanianDeadlift =
+            defaultExercises.first { it.name == "Romanian Deadlift" && it.equipment.name.lowercase() == "dumbbell" }
+        val legExtension = defaultExercises.first { it.name == "Leg Extension" }
+        val standingCalfRaise =
+            defaultExercises.first { it.name == "Calf Raise" && it.equipment.name.lowercase() == "machine" }
+        val cyclingBike = defaultExercises.first { it.name == "Cycling" }
 
         // The templateId is set to 0 as a placeholder. It will be replaced with the real ID during insertion.
         return mapOf(
@@ -251,6 +270,134 @@ object DefaultTemplates {
                         WeightAndRepsSet(0.0, 15),
                         WeightAndRepsSet(0.0, 15)
                     )
+                )
+            ),
+            WorkoutTemplate(name = "Hypertrophy Day 1") to listOf(
+                TemplateExercise(
+                    templateId = 0,
+                    definitionId = inclineDbPress.id,
+                    sets = listOf(
+                        WeightAndRepsSet(0.0, 8),
+                        WeightAndRepsSet(0.0, 8),
+                        WeightAndRepsSet(0.0, 8)
+                    )
+                ),
+                TemplateExercise(
+                    templateId = 0,
+                    definitionId = latPulldown.id,
+                    sets = listOf(
+                        WeightAndRepsSet(0.0, 6),
+                        WeightAndRepsSet(0.0, 6),
+                        WeightAndRepsSet(0.0, 6)
+                    )
+                ),
+                TemplateExercise(
+                    templateId = 0,
+                    definitionId = barbellRow.id,
+                    sets = listOf(
+                        WeightAndRepsSet(0.0, 10),
+                        WeightAndRepsSet(0.0, 10),
+                        WeightAndRepsSet(0.0, 10)
+                    )
+                ),
+                TemplateExercise(
+                    templateId = 0,
+                    definitionId = cableFly.id,
+                    sets = listOf(
+                        WeightAndRepsSet(0.0, 12),
+                        WeightAndRepsSet(0.0, 12),
+                        WeightAndRepsSet(0.0, 12)
+                    )
+                ),
+                TemplateExercise(
+                    templateId = 0,
+                    definitionId = treadmillRun.id,
+                    sets = listOf(DistanceAndTimeSet(0.0, 20 * 60))
+                )
+            ),
+            WorkoutTemplate(name = "Hypertrophy Day 2") to listOf(
+                TemplateExercise(
+                    templateId = 0,
+                    definitionId = dbShoulderPress.id,
+                    sets = listOf(
+                        WeightAndRepsSet(0.0, 8),
+                        WeightAndRepsSet(0.0, 8),
+                        WeightAndRepsSet(0.0, 8)
+                    )
+                ),
+                TemplateExercise(
+                    templateId = 0,
+                    definitionId = dbLateralRaise.id,
+                    sets = listOf(
+                        WeightAndRepsSet(0.0, 12),
+                        WeightAndRepsSet(0.0, 12),
+                        WeightAndRepsSet(0.0, 12)
+                    )
+                ),
+                TemplateExercise(
+                    templateId = 0,
+                    definitionId = closeGripBenchPress.id,
+                    sets = listOf(
+                        WeightAndRepsSet(0.0, 8),
+                        WeightAndRepsSet(0.0, 8),
+                        WeightAndRepsSet(0.0, 8)
+                    )
+                ),
+                TemplateExercise(
+                    templateId = 0,
+                    definitionId = bbBicepCurl.id,
+                    sets = listOf(
+                        WeightAndRepsSet(0.0, 10),
+                        WeightAndRepsSet(0.0, 10),
+                        WeightAndRepsSet(0.0, 10)
+                    )
+                ),
+                TemplateExercise(
+                    templateId = 0,
+                    definitionId = treadmillRun.id,
+                    sets = listOf(DistanceAndTimeSet(0.0, 20 * 60))
+                )
+            ),
+            WorkoutTemplate(name = "Hypertrophy Day 3") to listOf(
+                TemplateExercise(
+                    templateId = 0,
+                    definitionId = legPressHeavy.id,
+                    sets = listOf(
+                        WeightAndRepsSet(0.0, 5),
+                        WeightAndRepsSet(0.0, 5),
+                        WeightAndRepsSet(0.0, 5)
+                    )
+                ),
+                TemplateExercise(
+                    templateId = 0,
+                    definitionId = dbRomanianDeadlift.id,
+                    sets = listOf(
+                        WeightAndRepsSet(0.0, 8),
+                        WeightAndRepsSet(0.0, 8),
+                        WeightAndRepsSet(0.0, 8)
+                    )
+                ),
+                TemplateExercise(
+                    templateId = 0,
+                    definitionId = legExtension.id,
+                    sets = listOf(
+                        WeightAndRepsSet(0.0, 10),
+                        WeightAndRepsSet(0.0, 10)
+                    )
+                ),
+                TemplateExercise(
+                    templateId = 0,
+                    definitionId = standingCalfRaise.id,
+                    sets = listOf(
+                        WeightAndRepsSet(0.0, 12),
+                        WeightAndRepsSet(0.0, 12),
+                        WeightAndRepsSet(0.0, 12)
+                    )
+                ),
+                TemplateExercise(
+                    templateId = 0,
+                    definitionId = cyclingBike.id,
+                    sets = listOf(DistanceAndTimeSet(0.0, 30 * 60))
                 )
             )
         )
