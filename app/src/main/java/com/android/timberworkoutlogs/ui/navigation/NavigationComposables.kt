@@ -98,7 +98,10 @@ fun NavGraphBuilder.slideComposable(
     },
     popEnterTransition: (@JvmSuppressWildcards
     AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition?)? = {
-        if (initialState.destination.route == AppDestinations.WORKOUT_ROUTE && targetState.destination.route?.startsWith(
+        val initialRoute = initialState.destination.route
+        val isFromWorkoutScreen =
+            initialRoute == AppDestinations.WORKOUT_ROUTE || initialRoute?.startsWith("${AppDestinations.WORKOUT_ROUTE}?") == true
+        if (isFromWorkoutScreen && targetState.destination.route?.startsWith(
                 AppDestinations.CREATE_TEMPLATE_ROUTE
             ) == true
         ) {

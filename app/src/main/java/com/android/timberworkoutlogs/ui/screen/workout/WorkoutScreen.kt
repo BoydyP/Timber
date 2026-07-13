@@ -89,14 +89,15 @@ data class WorkoutScreenActions(
 @Composable
 fun WorkoutScreen(
     workoutViewModel: WorkoutViewModel,
+    workoutId: Long? = null,
     onNavigateBack: () -> Unit,
     onNavigateToSelectExercise: (exerciseIndex: Int) -> Unit,
     onOpenNotes: () -> Unit,
     onOpenPlateCalculator: () -> Unit
 ) {
     // Ensure we have an active workout session when entering the screen
-    LaunchedEffect(Unit) {
-        workoutViewModel.ensureWorkoutSession()
+    LaunchedEffect(workoutId) {
+        workoutViewModel.ensureWorkoutSession(workoutId)
     }
 
     val state = WorkoutScreenState(

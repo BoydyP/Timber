@@ -12,6 +12,8 @@ import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import com.android.timberworkoutlogs.ui.navigation.AppDestinations
 import com.android.timberworkoutlogs.ui.navigation.workoutComposable
 import com.android.timberworkoutlogs.ui.screen.workout.WorkoutScreen
@@ -28,7 +30,11 @@ private val workoutInitRoutes = setOf(
 @OptIn(ExperimentalMaterial3Api::class)
 fun NavGraphBuilder.workoutGraph(navController: NavController) {
     workoutComposable(
-        route = AppDestinations.WORKOUT_ROUTE,
+        route = "${AppDestinations.WORKOUT_ROUTE}?workoutId={workoutId}",
+        arguments = listOf(navArgument("workoutId") {
+            type = NavType.LongType
+            defaultValue = -1L
+        }),
         exitTransition = {
             if (workoutInitRoutes.any { targetState.destination.route?.startsWith(it) == true }) {
                 slideOutOfContainer(
@@ -70,8 +76,10 @@ fun NavGraphBuilder.workoutGraph(navController: NavController) {
             backStackEntry.savedStateHandle.remove<String>("selected_exercise_id")
             backStackEntry.savedStateHandle.remove<Int>("exercise_index")
         }
+        val workoutId = backStackEntry.arguments?.getLong("workoutId", -1L)?.takeIf { it != -1L }
         WorkoutScreen(
             workoutViewModel = workoutViewModel,
+            workoutId = workoutId,
             onNavigateBack = { navController.popBackStack() },
             onNavigateToSelectExercise = { index ->
                 navController.currentBackStackEntry?.savedStateHandle?.set(

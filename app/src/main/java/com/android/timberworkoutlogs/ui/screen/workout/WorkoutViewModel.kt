@@ -41,6 +41,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.util.UUID
 import javax.inject.Inject
 
@@ -59,6 +61,7 @@ class WorkoutViewModel @Inject constructor(
     private var isBound by mutableStateOf(false)
     private var startTimerWhenReady = false
     private var isInitializingSession = false
+    private val sessionSwitchMutex = Mutex()
 
     private val _timerText = MutableStateFlow("00:00:00")
     val timerText = _timerText.asStateFlow()
@@ -410,12 +413,18 @@ class WorkoutViewModel @Inject constructor(
     }
 
     /**
-     * Starts a new workout session if one is not already active.
-     * This ensures we have a fresh session when navigating back to workout screen.
+     * Starts a new workout session if one is not already active, or switches to the
+     * workout identified by [workoutId] (e.g. one just created from a template).
+     * This ensures we have the right session active when navigating to the workout screen.
      */
-    fun ensureWorkoutSession() {
-        Log.d(TAG, "ensureWorkoutSession called, currentWorkoutId: $currentWorkoutId, isInitializing: $isInitializingSession")
-        
+    fun ensureWorkoutSession(workoutId: Long? = null) {
+        Log.d(TAG, "ensureWorkoutSession called, workoutId: $workoutId, currentWorkoutId: $currentWorkoutId, isInitializing: $isInitializingSession")
+
+        if (workoutId != null && workoutId != currentWorkoutId) {
+            switchToWorkoutSession(workoutId)
+            return
+        }
+
         if (currentWorkoutId == null && !isInitializingSession) {
             Log.d(TAG, "No active workout session, starting new one")
             startNewWorkoutSession()
@@ -425,5 +434,39 @@ class WorkoutViewModel @Inject constructor(
         } else {
             Log.d(TAG, "Workout session initialization in progress, skipping")
         }
+    }
+
+    /**
+     * Switches the active session to an already-persisted workout (e.g. one created via
+     * [importExercisesFromTemplate]'s sibling, `createWorkoutFromTemplate`). The previously
+     * active session is only discarded if it was still an untouched placeholder, so a session
+     * the user was actively logging into is never silently dropped.
+     */
+    private fun switchToWorkoutSession(workoutId: Long) {
+        viewModelScope.launch {
+            sessionSwitchMutex.withLock {
+                if (workoutId == currentWorkoutId) return@withLock
+
+                currentWorkoutId?.let { staleId ->
+                    if (isWorkoutEmpty.value) {
+                        workoutRepository.getWorkout(staleId)
+                            ?.let { workoutRepository.deleteWorkout(it) }
+                    }
+                }
+
+                val exercises = workoutRepository.getExercisesForWorkout(workoutId)
+                workoutExercises.clear()
+                exerciseDefinitions.clear()
+                exercises.forEach { exercise ->
+                    workoutExercises.add(exercise)
+                    exerciseDefinitions.add(
+                        exerciseDefinitionRepository.getExerciseDefinition(exercise.definitionId)
+                    )
+                }
+                currentWorkoutId = workoutId
+                Log.d(TAG, "Switched to workout session with ID: $workoutId (${exercises.size} exercises)")
+            }
+        }
+        bindTimerService()
     }
 }

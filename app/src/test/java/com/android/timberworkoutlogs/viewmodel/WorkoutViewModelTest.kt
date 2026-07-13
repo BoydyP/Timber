@@ -16,6 +16,7 @@ import com.android.timberworkoutlogs.models.TemplateExercise
 import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.Workout
+import com.android.timberworkoutlogs.models.WorkoutExercise
 import com.android.timberworkoutlogs.models.WorkoutTemplate
 import com.android.timberworkoutlogs.models.WorkoutTemplateWithExercises
 import com.android.timberworkoutlogs.services.WorkoutStateHolder
@@ -410,5 +411,56 @@ class WorkoutViewModelTest {
             assertEquals(pushUpDef.id, viewModel.workoutExercises[1].definitionId)
             assertNotNull(viewModel.exerciseDefinitions[0])
             assertNotNull(viewModel.exerciseDefinitions[1])
+        }
+
+    // ---------- ensureWorkoutSession(workoutId) ----------
+
+    @Test
+    fun `ensureWorkoutSession with a workoutId switches to that workout's exercises`() =
+        runTest(testDispatcher) {
+            advanceUntilIdle()
+            // The template-started workout (id 99) already has a persisted exercise.
+            val templateStartedExercise = WorkoutExercise(
+                workoutId = 99L,
+                definitionId = benchPressDef.id,
+                sets = listOf(WeightAndRepsSet(weight = 60.0, reps = 5)),
+            )
+            coEvery { workoutRepository.getExercisesForWorkout(99L) } returns
+                listOf(templateStartedExercise)
+            coEvery { exerciseDefinitionRepository.getExerciseDefinition(benchPressDef.id) } returns
+                benchPressDef
+
+            viewModel.ensureWorkoutSession(99L)
+            advanceUntilIdle()
+
+            assertEquals(1, viewModel.workoutExercises.size)
+            assertEquals(benchPressDef.id, viewModel.workoutExercises[0].definitionId)
+            assertEquals(benchPressDef, viewModel.exerciseDefinitions[0])
+        }
+
+    @Test
+    fun `ensureWorkoutSession with a workoutId discards the stale empty placeholder session`() =
+        runTest(testDispatcher) {
+            advanceUntilIdle()
+            // The auto-started session (id 1) is still an empty placeholder.
+            coEvery { workoutRepository.getWorkout(1L) } returns Workout(id = 1L)
+            coEvery { workoutRepository.getExercisesForWorkout(99L) } returns emptyList()
+
+            viewModel.ensureWorkoutSession(99L)
+            advanceUntilIdle()
+
+            coVerify { workoutRepository.deleteWorkout(match { it.id == 1L }) }
+        }
+
+    @Test
+    fun `ensureWorkoutSession with the already-active workoutId is a no-op`() =
+        runTest(testDispatcher) {
+            advanceUntilIdle()
+
+            viewModel.ensureWorkoutSession(1L)
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { workoutRepository.getExercisesForWorkout(any()) }
+            coVerify(exactly = 0) { workoutRepository.deleteWorkout(any()) }
         }
 }
