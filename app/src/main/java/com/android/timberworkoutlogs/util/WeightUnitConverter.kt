@@ -13,12 +13,17 @@ object WeightUnitConverter {
     /**
      * Converts weight from pounds to kilograms.
      */
-    fun lbsToKg(weightInLbs: Double): Double = weightInLbs * LBS_TO_KG_FACTOR
+    fun lbsToKg(weightInLbs: Double): Double = roundTo2Decimals(weightInLbs * LBS_TO_KG_FACTOR)
 
     /**
      * Converts weight from kilograms to pounds.
      */
-    fun kgToLbs(weightInKg: Double): Double = weightInKg * KG_TO_LBS_FACTOR
+    fun kgToLbs(weightInKg: Double): Double = roundTo2Decimals(weightInKg * KG_TO_LBS_FACTOR)
+
+    // Raw multiplication by the conversion factors leaves floating-point noise (e.g. 18kg ->
+    // 39.683207159999995lb), which then fails to round-trip back to 18kg. Rounding to 2 decimal
+    // places - already finer than any plate/dumbbell increment - keeps kg<->lb toggling stable.
+    private fun roundTo2Decimals(value: Double): Double = Math.round(value * 100) / 100.0
 
     /**
      * Converts weight to kilograms based on the source unit.
