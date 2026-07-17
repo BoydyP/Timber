@@ -103,7 +103,7 @@ fun WorkoutScreen(
     val state = WorkoutScreenState(
         workoutExercises = workoutViewModel.workoutExercises,
         exerciseDefinitions = workoutViewModel.exerciseDefinitions,
-        isWorkoutEmpty = workoutViewModel.isWorkoutEmpty.collectAsStateWithLifecycle(initialValue = true).value,
+        isWorkoutEmpty = workoutViewModel.isWorkoutEmpty.collectAsStateWithLifecycle().value,
         templates = workoutViewModel.templates.collectAsStateWithLifecycle().value,
         timerText = workoutViewModel.timerText.collectAsState().value
     )

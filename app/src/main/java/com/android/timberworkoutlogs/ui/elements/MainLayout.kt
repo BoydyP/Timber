@@ -22,7 +22,19 @@ fun MainLayout(
 
     Scaffold(
         topBar = {
-            TimberTopAppBar(onIconClick = { navController.navigate(AppDestinations.HOME_ROUTE) })
+            TimberTopAppBar(
+                onIconClick = {
+                    if (currentRoute != AppDestinations.HOME_ROUTE) {
+                        navController.navigate(AppDestinations.HOME_ROUTE) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                }
+            )
         },
         bottomBar = {
             TimberBottomNavigationBar(
