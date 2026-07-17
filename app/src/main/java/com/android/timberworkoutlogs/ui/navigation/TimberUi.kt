@@ -12,6 +12,7 @@ object AppDestinations {
     const val HOME_ROUTE = "home"
     const val STATS_ROUTE = "stats"
     const val HISTORY_ROUTE = "history"
+    const val HISTORY_DETAIL_ROUTE = "history_detail"
     const val WORKOUT_ROUTE = "workout"
     const val TEMPLATES_ROUTE = "templates"
     const val SETTINGS_ROUTE = "settings"

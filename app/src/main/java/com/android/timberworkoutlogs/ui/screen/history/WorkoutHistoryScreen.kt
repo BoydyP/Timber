@@ -1,6 +1,7 @@
 package com.android.timberworkoutlogs.ui.screen.history
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,7 +45,7 @@ import java.util.UUID
 @Composable
 fun WorkoutHistoryScreen(
     viewModel: WorkoutHistoryViewModel,
-    onNavigateToWorkout: () -> Unit, // TODO: This might be used to navigate to a workout details screen
+    onNavigateToWorkout: (workoutId: Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val workoutDisplayItems by viewModel.allWorkoutDisplayItems.collectAsState()
@@ -79,7 +80,12 @@ fun WorkoutHistoryScreen(
                         item = displayItem,
                         onDismiss = { viewModel.deleteWorkout(it) }
                     ) {
-                        WorkoutHistoryItemCard(displayItem = displayItem)
+                        WorkoutHistoryItemCard(
+                            displayItem = displayItem,
+                            modifier = Modifier.clickable {
+                                onNavigateToWorkout(displayItem.workout.id)
+                            }
+                        )
                     }
                 }
             }
