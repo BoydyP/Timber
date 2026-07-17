@@ -117,6 +117,14 @@ class CreateWorkoutTemplateViewModel @Inject constructor(
         }
     }
 
+    fun onExercisesReordered(fromIndex: Int, toIndex: Int) {
+        _uiState.update {
+            val exercises = it.templateExercises.toMutableList()
+            exercises.add(toIndex, exercises.removeAt(fromIndex))
+            it.copy(templateExercises = exercises)
+        }
+    }
+
     fun onAddSet(exerciseIndex: Int) {
         _uiState.update {
             val exercise = it.templateExercises[exerciseIndex]
@@ -171,9 +179,11 @@ class CreateWorkoutTemplateViewModel @Inject constructor(
             val currentState = _uiState.value
             _uiState.update { it.copy(isSaving = true) }
 
-            val exercisesWithDefinitions = currentState.templateExercises.filter {
-                it.definitionId != PLACEHOLDER_DEFINITION_ID
-            }
+            // Stamp each exercise's current list position as its persisted order, so
+            // drag-to-reorder (which only mutates in-memory list order) survives a reload.
+            val exercisesWithDefinitions = currentState.templateExercises
+                .filter { it.definitionId != PLACEHOLDER_DEFINITION_ID }
+                .mapIndexed { index, exercise -> exercise.copy(order = index) }
 
             if (templateId == -1L) {
                 // Create new template

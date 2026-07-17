@@ -1,5 +1,6 @@
 package com.android.timberworkoutlogs.ui.screen.templates
 
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -31,6 +32,8 @@ import com.android.timberworkoutlogs.ui.common.SwipeToDeleteContainer
 import com.android.timberworkoutlogs.ui.elements.ContextualScaffold
 import com.android.timberworkoutlogs.ui.screen.templates.components.TemplateExerciseInputCard
 import com.android.timberworkoutlogs.ui.theme.TimberOrange
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @Composable
 fun CreateTemplateScreen(
@@ -59,7 +62,17 @@ fun CreateTemplateScreen(
         }
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
+            val lazyListState = rememberLazyListState()
+            val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
+                val fromIndex = uiState.templateExercises.indexOfFirst { it.id == from.key }
+                val toIndex = uiState.templateExercises.indexOfFirst { it.id == to.key }
+                if (fromIndex != -1 && toIndex != -1) {
+                    viewModel.onExercisesReordered(fromIndex, toIndex)
+                }
+            }
+
             LazyColumn(
+                state = lazyListState,
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.weight(1f)
@@ -73,32 +86,38 @@ fun CreateTemplateScreen(
                         singleLine = true
                     )
                 }
-                itemsIndexed(uiState.templateExercises) { index, exercise ->
+                itemsIndexed(
+                    items = uiState.templateExercises,
+                    key = { _, exercise -> exercise.id }
+                ) { index, exercise ->
                     val definition = uiState.exerciseDefinitions[exercise.definitionId]
-                    SwipeToDeleteContainer(
-                        item = exercise,
-                        onDismiss = { viewModel.removeExercise(index) }
-                    ) {
-                        TemplateExerciseInputCard(
-                            exerciseDefinition = definition,
-                            templateExercise = exercise,
-                            weightUnit = uiState.weightUnit,
-                            onAddSet = { viewModel.onAddSet(index) },
-                            onDeleteSet = { setToDelete: ExerciseSet ->
-                                val setIndex = exercise.sets.indexOf(setToDelete)
-                                if (setIndex != -1) {
-                                    viewModel.onDeleteSet(index, setIndex)
-                                }
-                            },
-                            onSetChanged = { setIndex, newSet ->
-                                viewModel.onSetChanged(
-                                    index,
-                                    setIndex,
-                                    newSet
-                                )
-                            },
-                            onNavigateToSelectExercise = { onNavigateToSelectExercise(index) }
-                        )
+                    ReorderableItem(reorderableLazyListState, key = exercise.id) {
+                        SwipeToDeleteContainer(
+                            item = exercise,
+                            onDismiss = { viewModel.removeExercise(index) }
+                        ) {
+                            TemplateExerciseInputCard(
+                                exerciseDefinition = definition,
+                                templateExercise = exercise,
+                                weightUnit = uiState.weightUnit,
+                                onAddSet = { viewModel.onAddSet(index) },
+                                onDeleteSet = { setToDelete: ExerciseSet ->
+                                    val setIndex = exercise.sets.indexOf(setToDelete)
+                                    if (setIndex != -1) {
+                                        viewModel.onDeleteSet(index, setIndex)
+                                    }
+                                },
+                                onSetChanged = { setIndex, newSet ->
+                                    viewModel.onSetChanged(
+                                        index,
+                                        setIndex,
+                                        newSet
+                                    )
+                                },
+                                onNavigateToSelectExercise = { onNavigateToSelectExercise(index) },
+                                modifier = Modifier.longPressDraggableHandle()
+                            )
+                        }
                     }
                 }
                 item {

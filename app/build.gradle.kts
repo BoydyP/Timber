@@ -101,6 +101,9 @@ dependencies {
     implementation(libs.vico.compose)
     implementation(libs.vico.compose.m3)
 
+    // Drag-to-reorder lists
+    implementation(libs.reorderable)
+
     // Test
     testImplementation(libs.junit)
     testImplementation(libs.mockk)

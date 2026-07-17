@@ -21,7 +21,12 @@ class WorkoutTemplateRepository(
 ) {
 
     suspend fun getTemplateWithExercises(templateId: Long): WorkoutTemplateWithExercises {
-        return workoutTemplateDao.getTemplateWithExercises(templateId)
+        // Room's @Relation fetch (see WorkoutTemplateDao) has no ORDER BY on the child list,
+        // so the user's saved exercise order must be restored here for every consumer.
+        val templateWithExercises = workoutTemplateDao.getTemplateWithExercises(templateId)
+        return templateWithExercises.copy(
+            exercises = templateWithExercises.exercises.sortedBy { it.order }
+        )
     }
 
     fun getAllTemplatesWithExerciseCount(): Flow<List<WorkoutTemplateWithExerciseCount>> {
@@ -54,8 +59,8 @@ class WorkoutTemplateRepository(
      * @return The ID of the newly created Workout.
      */
     suspend fun createWorkoutFromTemplate(templateId: Long): Long {
-        // 1. Fetch the complete template with its exercises.
-        val templateWithExercises = workoutTemplateDao.getTemplateWithExercises(templateId)
+        // 1. Fetch the complete template with its exercises, in the user's saved order.
+        val templateWithExercises = getTemplateWithExercises(templateId)
 
         // 2. Create a new Workout instance.
         val newWorkout = Workout(name = templateWithExercises.template.name)

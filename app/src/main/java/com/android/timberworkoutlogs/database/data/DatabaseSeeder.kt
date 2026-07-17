@@ -41,7 +41,9 @@ object DatabaseSeeder {
                 DefaultTemplates.getTemplatesWithExercises(defaultExercises)
             templatesWithExercises.forEach { (template, exercises) ->
                 val templateId = templateDao.insertTemplate(template)
-                val exercisesWithCorrectId = exercises.map { it.copy(templateId = templateId) }
+                val exercisesWithCorrectId = exercises.mapIndexed { index, exercise ->
+                    exercise.copy(templateId = templateId, order = index)
+                }
                 templateDao.upsertTemplateExercises(exercisesWithCorrectId)
             }
         }
@@ -64,7 +66,9 @@ object DatabaseSeeder {
                 DefaultTemplates.getTemplatesWithExercises(defaultExercises)
             templatesWithExercises.forEach { (template, exercises) ->
                 val templateId = templateDao.insertTemplate(template)
-                val exercisesWithCorrectId = exercises.map { it.copy(templateId = templateId) }
+                val exercisesWithCorrectId = exercises.mapIndexed { index, exercise ->
+                    exercise.copy(templateId = templateId, order = index)
+                }
                 templateDao.upsertTemplateExercises(exercisesWithCorrectId)
             }
 
@@ -152,7 +156,9 @@ object DatabaseSeeder {
                 DefaultTemplates.getTemplatesWithExercises(defaultExercises)
             templatesWithExercises.forEach { (template, exercises) ->
                 val templateId = templateDao.insertTemplate(template)
-                val exercisesWithCorrectId = exercises.map { it.copy(templateId = templateId) }
+                val exercisesWithCorrectId = exercises.mapIndexed { index, exercise ->
+                    exercise.copy(templateId = templateId, order = index)
+                }
                 templateDao.upsertTemplateExercises(exercisesWithCorrectId)
             }
 

@@ -70,4 +70,25 @@ class WorkoutTemplateRepositoryTest {
                 })
             }
         }
+
+    @Test
+    fun `getTemplateWithExercises returns exercises sorted by their persisted order`() = runTest {
+        // Room's @Relation fetch has no ORDER BY, so the DAO can return exercises in any
+        // order (e.g. insertion/rowid order) - the repository must restore the user's
+        // saved drag-to-reorder order regardless of what the DAO hands back.
+        val templateId = 1L
+        val definitionId = squatExerciseFixture().id
+        val third = TemplateExercise(templateId = templateId, definitionId = definitionId, order = 2)
+        val first = TemplateExercise(templateId = templateId, definitionId = definitionId, order = 0)
+        val second = TemplateExercise(templateId = templateId, definitionId = definitionId, order = 1)
+        coEvery { workoutTemplateDao.getTemplateWithExercises(templateId) } returns
+            WorkoutTemplateWithExercises(
+                template = WorkoutTemplate(id = templateId, name = "Push Day"),
+                exercises = listOf(third, first, second)
+            )
+
+        val result = repository.getTemplateWithExercises(templateId)
+
+        org.junit.Assert.assertEquals(listOf(first, second, third), result.exercises)
+    }
 }

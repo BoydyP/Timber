@@ -28,7 +28,7 @@ import com.android.timberworkoutlogs.models.WorkoutTemplate
         WorkoutTemplate::class,
         TemplateExercise::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(
@@ -107,6 +107,12 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `template_exercises` ADD COLUMN `order` INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         private fun isInTestEnvironment(): Boolean {
             return try {
                 Class.forName("androidx.test.espresso.Espresso")
@@ -136,7 +142,7 @@ abstract class AppDatabase : RoomDatabase() {
                             }
                         }
                     })
-                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .build()
                 INSTANCE = instance
                 instance

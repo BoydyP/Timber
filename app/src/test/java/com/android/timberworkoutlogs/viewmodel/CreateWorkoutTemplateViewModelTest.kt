@@ -164,4 +164,40 @@ class CreateWorkoutTemplateViewModelTest {
 
         coVerify { workoutTemplateRepository.deleteTemplate(any()) }
     }
+
+    @Test
+    fun `onExercisesReordered moves an exercise to its new position`() {
+        createViewModel()
+        viewModel.addExercise()
+        viewModel.addExercise()
+        viewModel.addExercise()
+        val original = viewModel.uiState.value.templateExercises
+        val (first, second, third) = original
+
+        viewModel.onExercisesReordered(0, 2)
+
+        val reordered = viewModel.uiState.value.templateExercises
+        assertEquals(listOf(second, third, first), reordered)
+    }
+
+    @Test
+    fun `saveTemplate stamps each exercise's order to match its final list position`() = runTest {
+        createViewModel()
+        viewModel.onNameChanged("Push Day")
+        viewModel.addExercise()
+        viewModel.addExercise()
+        val definition: ExerciseDefinition = squatExerciseFixture()
+        viewModel.onExerciseSelected(0, definition.id)
+        viewModel.onExerciseSelected(1, definition.id)
+
+        // Reorder before saving - order should reflect final position, not insertion order.
+        viewModel.onExercisesReordered(0, 1)
+        viewModel.saveTemplate { }
+
+        coVerify {
+            workoutTemplateRepository.upsertTemplateExercises(match { exercises ->
+                exercises.size == 2 && exercises.map { it.order } == listOf(0, 1)
+            })
+        }
+    }
 }
