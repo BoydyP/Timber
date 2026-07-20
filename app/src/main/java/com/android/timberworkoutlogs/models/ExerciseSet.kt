@@ -27,3 +27,11 @@ data class DistanceAndTimeSet(
     val durationSeconds: Int = 0,
     val isDone: Boolean = false
 ) : ExerciseSet
+
+val ExerciseSet.isDone: Boolean
+    get() = when (this) {
+        is RepsOnlySet -> isDone
+        is WeightAndRepsSet -> isDone
+        is TimedSet -> isDone
+        is DistanceAndTimeSet -> isDone
+    }

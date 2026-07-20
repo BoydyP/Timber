@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -102,6 +103,38 @@ class WorkoutScreenTest : TestCase() {
             Thread.sleep(500) // Additional wait for Flow to emit new data
             
             composeTestRule.onNodeWithText("${(123 * 5)} kg").assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun completingAllSets_collapsesExerciseCard_andExpandIconRestoresIt() = run {
+        step("Navigate to workout screen and add an exercise with one set") {
+            navigateToWorkoutScreen()
+            composeTestRule.onNodeWithText("Select Exercise...").performClick()
+            composeTestRule.onNodeWithText("Barbell Bench Press").performClick()
+
+            composeTestRule.onNodeWithText("Weight", substring = true).performTextInput("100")
+            composeTestRule.onNodeWithText("Reps").performTextInput("5")
+        }
+
+        step("Sets are visible while incomplete") {
+            composeTestRule.onNodeWithTag("checkbox_1").assertIsDisplayed()
+        }
+
+        step("Marking the only set done auto-collapses the card") {
+            composeTestRule.onNodeWithTag("checkbox_1").performClick()
+            composeTestRule.waitForIdle()
+            composeTestRule.onNodeWithTag("checkbox_1").assertDoesNotExist()
+        }
+
+        step("Expand icon restores the sets list") {
+            composeTestRule.onNodeWithContentDescription("Expand sets").performClick()
+            composeTestRule.onNodeWithTag("checkbox_1").assertIsDisplayed()
+        }
+
+        step("Collapse icon hides the sets list again") {
+            composeTestRule.onNodeWithContentDescription("Collapse sets").performClick()
+            composeTestRule.onNodeWithTag("checkbox_1").assertDoesNotExist()
         }
     }
 

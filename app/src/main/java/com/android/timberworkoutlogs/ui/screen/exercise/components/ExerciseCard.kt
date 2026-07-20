@@ -1,5 +1,8 @@
 package com.android.timberworkoutlogs.ui.screen.exercise.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +16,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -21,6 +26,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -39,6 +48,7 @@ import com.android.timberworkoutlogs.models.TimedSet
 import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.WorkoutExercise
+import com.android.timberworkoutlogs.models.isDone
 import com.android.timberworkoutlogs.models.toStringResource
 import com.android.timberworkoutlogs.ui.common.SwipeToDeleteContainer
 import com.android.timberworkoutlogs.ui.theme.TimberWorkoutLogsTheme
@@ -56,101 +66,123 @@ fun ExerciseInputCard(
     onNavigateToSelectExercise: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val allSetsDone = workoutExercise.sets.isNotEmpty() && workoutExercise.sets.all { it.isDone }
+    var manuallyExpanded by remember(workoutExercise.id) { mutableStateOf<Boolean?>(null) }
+    val expanded = manuallyExpanded ?: !allSetsDone
+
     Card(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(onClick = onNavigateToSelectExercise),
-                shape = MaterialTheme.shapes.medium,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-            ) {
-                Row(
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Card(
                     modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                        .weight(1f)
+                        .clickable(onClick = onNavigateToSelectExercise),
+                    shape = MaterialTheme.shapes.medium,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                 ) {
-                    if (exerciseDefinition != null) {
-                        Icon(
-                            imageVector = getIconForEquipment(exerciseDefinition.equipment),
-                            contentDescription = "Equipment type",
-                            modifier = Modifier.size(24.dp)
+                    Row(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        if (exerciseDefinition != null) {
+                            Icon(
+                                imageVector = getIconForEquipment(exerciseDefinition.equipment),
+                                contentDescription = "Equipment type",
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                        Text(
+                            text = exerciseDefinition?.computedExerciseName ?: "Select Exercise...",
+                            style = MaterialTheme.typography.titleMedium,
+                            textAlign = TextAlign.Center
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
                     }
-                    Text(
-                        text = exerciseDefinition?.computedExerciseName ?: "Select Exercise...",
-                        style = MaterialTheme.typography.titleMedium,
-                        textAlign = TextAlign.Center
-                    )
+                }
+                if (exerciseDefinition != null && workoutExercise.sets.isNotEmpty()) {
+                    IconButton(onClick = { manuallyExpanded = !expanded }) {
+                        Icon(
+                            imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                            contentDescription = if (expanded) "Collapse sets" else "Expand sets"
+                        )
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             if (exerciseDefinition != null) {
-                workoutExercise.sets.forEachIndexed { index, set ->
-                    SwipeToDeleteContainer(
-                        item = set,
-                        onDismiss = onDeleteSet
-                    ) {
-                        when (set) {
-                            is WeightAndRepsSet -> WeightAndRepsInputRow(
-                                setNumber = index + 1,
-                                workoutSet = set,
-                                unit = workoutExercise.unit,
-                                onWeightChange = { newWeight ->
-                                    onSetChanged(index, set.copy(weight = newWeight))
-                                },
-                                onRepsChange = { newReps ->
-                                    onSetChanged(index, set.copy(reps = newReps))
-                                },
-                                onDoneChange = { isDone ->
-                                    onSetChanged(index, set.copy(isDone = isDone))
-                                }
-                            )
+                AnimatedVisibility(
+                    visible = expanded,
+                    enter = expandVertically(),
+                    exit = shrinkVertically()
+                ) {
+                    Column {
+                        workoutExercise.sets.forEachIndexed { index, set ->
+                            SwipeToDeleteContainer(
+                                item = set,
+                                onDismiss = onDeleteSet
+                            ) {
+                                when (set) {
+                                    is WeightAndRepsSet -> WeightAndRepsInputRow(
+                                        setNumber = index + 1,
+                                        workoutSet = set,
+                                        unit = workoutExercise.unit,
+                                        onWeightChange = { newWeight ->
+                                            onSetChanged(index, set.copy(weight = newWeight))
+                                        },
+                                        onRepsChange = { newReps ->
+                                            onSetChanged(index, set.copy(reps = newReps))
+                                        },
+                                        onDoneChange = { isDone ->
+                                            onSetChanged(index, set.copy(isDone = isDone))
+                                        }
+                                    )
 
-                            is RepsOnlySet -> RepsOnlyInputRow(
-                                setNumber = index + 1,
-                                workoutSet = set,
-                                onRepsChange = { newReps ->
-                                    onSetChanged(index, set.copy(reps = newReps))
-                                },
-                                onDoneChange = { isDone ->
-                                    onSetChanged(index, set.copy(isDone = isDone))
-                                }
-                            )
+                                    is RepsOnlySet -> RepsOnlyInputRow(
+                                        setNumber = index + 1,
+                                        workoutSet = set,
+                                        onRepsChange = { newReps ->
+                                            onSetChanged(index, set.copy(reps = newReps))
+                                        },
+                                        onDoneChange = { isDone ->
+                                            onSetChanged(index, set.copy(isDone = isDone))
+                                        }
+                                    )
 
-                            is TimedSet -> TimedInputRow(
-                                setNumber = index + 1,
-                                workoutSet = set,
-                                onDurationChange = { newDuration ->
-                                    onSetChanged(index, set.copy(durationSeconds = newDuration))
-                                },
-                                onDoneChange = { isDone ->
-                                    onSetChanged(index, set.copy(isDone = isDone))
-                                }
-                            )
+                                    is TimedSet -> TimedInputRow(
+                                        setNumber = index + 1,
+                                        workoutSet = set,
+                                        onDurationChange = { newDuration ->
+                                            onSetChanged(index, set.copy(durationSeconds = newDuration))
+                                        },
+                                        onDoneChange = { isDone ->
+                                            onSetChanged(index, set.copy(isDone = isDone))
+                                        }
+                                    )
 
-                            is DistanceAndTimeSet -> DistanceAndTimeInputRow(
-                                setNumber = index + 1,
-                                workoutSet = set,
-                                onDistanceChange = { newDistance ->
-                                    onSetChanged(index, set.copy(distance = newDistance))
-                                },
-                                onDurationChange = { newDuration ->
-                                    onSetChanged(index, set.copy(durationSeconds = newDuration))
-                                },
-                                onDoneChange = { isDone ->
-                                    onSetChanged(index, set.copy(isDone = isDone))
+                                    is DistanceAndTimeSet -> DistanceAndTimeInputRow(
+                                        setNumber = index + 1,
+                                        workoutSet = set,
+                                        onDistanceChange = { newDistance ->
+                                            onSetChanged(index, set.copy(distance = newDistance))
+                                        },
+                                        onDurationChange = { newDuration ->
+                                            onSetChanged(index, set.copy(durationSeconds = newDuration))
+                                        },
+                                        onDoneChange = { isDone ->
+                                            onSetChanged(index, set.copy(isDone = isDone))
+                                        }
+                                    )
                                 }
-                            )
+                            }
                         }
                     }
                 }
