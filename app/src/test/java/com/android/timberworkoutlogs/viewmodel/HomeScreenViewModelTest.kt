@@ -299,6 +299,33 @@ class HomeScreenViewModelTest {
     }
 
     @Test
+    fun `weeklyVolumeUiState ignores sets the user never marked done`() = runTest {
+        // A set with weight/reps entered but never confirmed with the "done" checkbox
+        // was never actually performed - it must not contribute to logged volume.
+        val fridayTime = getTimeForDayOfWeek(Calendar.FRIDAY)
+        val workout = Workout(id = 1L, name = "Test", startTime = fridayTime, durationSeconds = 3600)
+        val exercise = WorkoutExercise(
+            id = UUID.randomUUID(),
+            workoutId = 1L,
+            definitionId = UUID.randomUUID(),
+            unit = WeightUnit.KG,
+            sets = mutableListOf(
+                WeightAndRepsSet(weight = 100.0, reps = 5, isDone = true),  // Valid: 500 kg
+                WeightAndRepsSet(weight = 500.0, reps = 10, isDone = false) // Not done: must be ignored
+            )
+        )
+        workoutsFlow.value = listOf(WorkoutWithExercises(workout, listOf(exercise)))
+
+        // When
+        val state = viewModel.weeklyVolumeUiState.first()
+
+        // Then
+        assertTrue(state is WeeklyVolumeUiState.Success)
+        state as WeeklyVolumeUiState.Success
+        assertEquals(500.0f, state.chartData[4], 0.1f) // Friday - only the done set
+    }
+
+    @Test
     fun `weeklyVolumeUiState handles weekend workouts correctly`() = runTest {
         // Given - Saturday and Sunday workouts
         val saturdayTime = getTimeForDayOfWeek(Calendar.SATURDAY)
@@ -439,6 +466,47 @@ class HomeScreenViewModelTest {
         state as PersonalRecordsUiState.Success
         assertEquals(1, state.lifts.size)
         assertEquals("Barbell Bench Press", state.lifts[0].exerciseName)
+    }
+
+    @Test
+    fun `personalRecordsUiState ignores sets the user never marked done`() = runTest {
+        // A heavier exploratory/typo'd weight that was never confirmed with the "done"
+        // checkbox must not be surfaced as a personal record.
+        val benchPressId = UUID.randomUUID()
+        exerciseCountsFlow.value = listOf(
+            ExerciseDefinitionWithCount(
+                ExerciseDefinition(
+                    id = benchPressId,
+                    name = "Bench Press",
+                    equipment = ExerciseEquipment.BARBELL,
+                    muscleGroups = listOf(MuscleGroup.CHEST),
+                    logType = LogType.WEIGHT_AND_REPS
+                ),
+                workoutCount = 1
+            )
+        )
+
+        val workout = Workout(id = 1L, name = "Test", startTime = System.currentTimeMillis(), durationSeconds = 3600)
+        val exercise = WorkoutExercise(
+            id = UUID.randomUUID(),
+            workoutId = 1L,
+            definitionId = benchPressId,
+            unit = WeightUnit.KG,
+            sets = mutableListOf(
+                WeightAndRepsSet(weight = 100.0, reps = 5, isDone = true),
+                WeightAndRepsSet(weight = 300.0, reps = 5, isDone = false) // Not done - must be ignored
+            )
+        )
+        workoutsFlow.value = listOf(WorkoutWithExercises(workout, listOf(exercise)))
+
+        // When
+        val state = viewModel.personalRecordsUiState.first()
+
+        // Then
+        assertTrue(state is PersonalRecordsUiState.Success)
+        state as PersonalRecordsUiState.Success
+        assertEquals(1, state.lifts.size)
+        assertEquals(100.0, state.lifts[0].currentMax, 0.01)
     }
 
     @Test

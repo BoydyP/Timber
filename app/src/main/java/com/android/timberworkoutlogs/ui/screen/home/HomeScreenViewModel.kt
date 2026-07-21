@@ -94,7 +94,7 @@ class HomeScreenViewModel @Inject constructor(
                         var workoutTotalVolume = 0.0
                         item.exercises.forEach { exercise ->
                             exercise.sets.forEach { set ->
-                                if (set is WeightAndRepsSet) {
+                                if (set is WeightAndRepsSet && set.isDone) {
                                     // First convert to kg for calculation
                                     val weightInKg = WeightUnitConverter.toKg(set.weight, exercise.unit)
                                     if (set.reps > 0 && weightInKg > 0) {
@@ -171,7 +171,7 @@ class HomeScreenViewModel @Inject constructor(
                     var maxAchievedDate = 0L
                     
                     for (set in exercise.sets) {
-                        if (set is WeightAndRepsSet && set.weight > 0 && set.reps > 0) {
+                        if (set is WeightAndRepsSet && set.isDone && set.weight > 0 && set.reps > 0) {
                             hasValidSets = true
                             
                             // Convert weight to consistent unit (KG) for comparison
