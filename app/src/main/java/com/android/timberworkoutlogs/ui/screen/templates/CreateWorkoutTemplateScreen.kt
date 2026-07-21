@@ -27,7 +27,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.android.timberworkoutlogs.models.ExerciseSet
 import com.android.timberworkoutlogs.ui.common.SwipeToDeleteContainer
 import com.android.timberworkoutlogs.ui.elements.ContextualScaffold
 import com.android.timberworkoutlogs.ui.screen.templates.components.TemplateExerciseInputCard
@@ -101,12 +100,7 @@ fun CreateTemplateScreen(
                                 templateExercise = exercise,
                                 weightUnit = uiState.weightUnit,
                                 onAddSet = { viewModel.onAddSet(index) },
-                                onDeleteSet = { setToDelete: ExerciseSet ->
-                                    val setIndex = exercise.sets.indexOf(setToDelete)
-                                    if (setIndex != -1) {
-                                        viewModel.onDeleteSet(index, setIndex)
-                                    }
-                                },
+                                onDeleteSet = { setIndex -> viewModel.onDeleteSet(index, setIndex) },
                                 onSetChanged = { setIndex, newSet ->
                                     viewModel.onSetChanged(
                                         index,

@@ -247,6 +247,63 @@ class WorkoutViewModelTest {
             assertEquals(before, viewModel.workoutExercises[0].sets.size)
         }
 
+    // ---------- deleteSet ----------
+
+    @Test
+    fun `deleteSet removes the set at the given index even when other sets have identical values`() =
+        runTest(testDispatcher) {
+            advanceUntilIdle()
+            coEvery { exerciseDefinitionRepository.getExerciseDefinition(benchPressDef.id) } returns
+                benchPressDef
+            viewModel.onExerciseSelected(0, benchPressDef.id)
+            advanceUntilIdle()
+
+            val id = viewModel.workoutExercises[0].id
+            // Pyramid pattern: sets 0 and 2 are value-identical, so a naive
+            // value-based removal would delete set 0 instead of the targeted set 2.
+            viewModel.onSetChanged(id, 0, WeightAndRepsSet(weight = 100.0, reps = 5, isDone = true))
+            viewModel.onAddSet(id)
+            viewModel.onSetChanged(id, 1, WeightAndRepsSet(weight = 80.0, reps = 10, isDone = false))
+            viewModel.onAddSet(id)
+            viewModel.onSetChanged(id, 2, WeightAndRepsSet(weight = 100.0, reps = 5, isDone = true))
+            advanceUntilIdle()
+            assertEquals(3, viewModel.workoutExercises[0].sets.size)
+
+            viewModel.deleteSet(id, 2)
+            advanceUntilIdle()
+
+            val remaining = viewModel.workoutExercises[0].sets
+            assertEquals(2, remaining.size)
+            assertEquals(WeightAndRepsSet(weight = 100.0, reps = 5, isDone = true), remaining[0])
+            assertEquals(WeightAndRepsSet(weight = 80.0, reps = 10, isDone = false), remaining[1])
+        }
+
+    @Test
+    fun `deleteSet is a no-op when exerciseId is unknown`() = runTest(testDispatcher) {
+        advanceUntilIdle()
+        val before = viewModel.workoutExercises[0].sets.size
+        viewModel.deleteSet(UUID.randomUUID(), 0)
+        advanceUntilIdle()
+        assertEquals(before, viewModel.workoutExercises[0].sets.size)
+    }
+
+    @Test
+    fun `deleteSet is a no-op when setIndex is out of bounds`() = runTest(testDispatcher) {
+        advanceUntilIdle()
+        coEvery { exerciseDefinitionRepository.getExerciseDefinition(benchPressDef.id) } returns
+            benchPressDef
+        viewModel.onExerciseSelected(0, benchPressDef.id)
+        advanceUntilIdle()
+
+        val id = viewModel.workoutExercises[0].id
+        val before = viewModel.workoutExercises[0].sets.size
+
+        viewModel.deleteSet(id, before)
+        advanceUntilIdle()
+
+        assertEquals(before, viewModel.workoutExercises[0].sets.size)
+    }
+
     // ---------- onExerciseUnitChange ----------
 
     @Test

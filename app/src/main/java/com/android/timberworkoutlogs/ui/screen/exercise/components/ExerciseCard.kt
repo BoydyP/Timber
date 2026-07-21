@@ -60,7 +60,7 @@ fun ExerciseInputCard(
     workoutExercise: WorkoutExercise,
     unit: WeightUnit,
     onAddSet: () -> Unit,
-    onDeleteSet: (ExerciseSet) -> Unit,
+    onDeleteSet: (setIndex: Int) -> Unit,
     onSetChanged: (setIndex: Int, updatedSet: ExerciseSet) -> Unit,
     onExerciseUnitChange: (newUnit: WeightUnit) -> Unit,
     onNavigateToSelectExercise: () -> Unit,
@@ -128,7 +128,7 @@ fun ExerciseInputCard(
                         workoutExercise.sets.forEachIndexed { index, set ->
                             SwipeToDeleteContainer(
                                 item = set,
-                                onDismiss = onDeleteSet
+                                onDismiss = { onDeleteSet(index) }
                             ) {
                                 when (set) {
                                     is WeightAndRepsSet -> WeightAndRepsInputRow(

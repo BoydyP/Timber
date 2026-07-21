@@ -256,13 +256,15 @@ class WorkoutViewModel @Inject constructor(
         val updatedSets = workoutExercises[exerciseIndex].sets.toMutableList().apply { add(newSet) }
         workoutExercises[exerciseIndex] = workoutExercises[exerciseIndex].copy(sets = updatedSets)
     }
-    fun deleteSet(exerciseId: UUID, set: ExerciseSet) {
+    fun deleteSet(exerciseId: UUID, setIndex: Int) {
         val exerciseIndex = workoutExercises.indexOfFirst { it.id == exerciseId }
         if (exerciseIndex != -1) {
             val currentSets = workoutExercises[exerciseIndex].sets.toMutableList()
-            currentSets.remove(set)
-            workoutExercises[exerciseIndex] =
-                workoutExercises[exerciseIndex].copy(sets = currentSets)
+            if (setIndex >= 0 && setIndex < currentSets.size) {
+                currentSets.removeAt(setIndex)
+                workoutExercises[exerciseIndex] =
+                    workoutExercises[exerciseIndex].copy(sets = currentSets)
+            }
         }
     }
 

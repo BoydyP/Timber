@@ -75,7 +75,7 @@ data class WorkoutScreenActions(
     val onOpenPlateCalculator: () -> Unit,
     val onAddSet: (UUID) -> Unit,
     val deleteExercise: (WorkoutExercise) -> Unit,
-    val deleteSet: (UUID, ExerciseSet) -> Unit,
+    val deleteSet: (UUID, Int) -> Unit,
     val onSetChanged: (UUID, Int, ExerciseSet) -> Unit,
     val onExerciseUnitChange: (UUID, WeightUnit) -> Unit,
     val onAddExercise: () -> Unit,
@@ -266,7 +266,7 @@ private fun WorkoutExerciseList(
     exerciseDefinitions: List<ExerciseDefinition?>,
     onAddSet: (UUID) -> Unit,
     onDeleteExercise: (WorkoutExercise) -> Unit,
-    onDeleteSet: (UUID, ExerciseSet) -> Unit,
+    onDeleteSet: (UUID, Int) -> Unit,
     onSetChanged: (UUID, Int, ExerciseSet) -> Unit,
     onExerciseUnitChange: (UUID, WeightUnit) -> Unit,
     onAddExercise: () -> Unit,
@@ -286,7 +286,7 @@ private fun WorkoutExerciseList(
                     exerciseDefinition = exerciseDefinitions.getOrNull(index),
                     workoutExercise = workoutExercise,
                     onAddSet = { onAddSet(workoutExercise.id) },
-                    onDeleteSet = { set -> onDeleteSet(workoutExercise.id, set) },
+                    onDeleteSet = { setIndex -> onDeleteSet(workoutExercise.id, setIndex) },
                     onSetChanged = { setIndex, updatedSet ->
                         onSetChanged(
                             workoutExercise.id,

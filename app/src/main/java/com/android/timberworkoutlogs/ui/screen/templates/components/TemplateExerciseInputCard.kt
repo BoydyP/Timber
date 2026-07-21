@@ -45,7 +45,7 @@ fun TemplateExerciseInputCard(
     templateExercise: TemplateExercise,
     weightUnit: WeightUnit,
     onAddSet: () -> Unit,
-    onDeleteSet: (ExerciseSet) -> Unit,
+    onDeleteSet: (setIndex: Int) -> Unit,
     onSetChanged: (setIndex: Int, updatedSet: ExerciseSet) -> Unit,
     onNavigateToSelectExercise: () -> Unit,
     modifier: Modifier = Modifier
@@ -92,7 +92,7 @@ fun TemplateExerciseInputCard(
                 templateExercise.sets.forEachIndexed { index, set ->
                     SwipeToDeleteContainer(
                         item = set,
-                        onDismiss = onDeleteSet
+                        onDismiss = { onDeleteSet(index) }
                     ) {
                         when (set) {
                             is WeightAndRepsSet -> WeightAndRepsInputRow(
