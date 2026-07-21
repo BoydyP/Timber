@@ -16,6 +16,7 @@ import io.mockk.every
 import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
@@ -164,6 +165,38 @@ class CreateWorkoutTemplateViewModelTest {
 
         coVerify { workoutTemplateRepository.deleteTemplate(any()) }
     }
+
+    @Test
+    fun `onExerciseSelected applies to the correct slot even if the list mutates while the definition loads`() =
+        runTest {
+            val definition: ExerciseDefinition = squatExerciseFixture()
+            val definitionId = definition.id
+            val definitionLoaded = CompletableDeferred<ExerciseDefinition>()
+            coEvery { exerciseDefinitionRepository.getExerciseDefinition(definitionId) } coAnswers {
+                definitionLoaded.await()
+            }
+
+            createViewModel()
+            viewModel.addExercise() // slot 0
+            viewModel.addExercise() // slot 1
+            viewModel.addExercise() // slot 2 - target
+            val targetExerciseId = viewModel.uiState.value.templateExercises[2].id
+
+            // Selection started for slot 2, but its DB lookup hasn't resolved yet.
+            viewModel.onExerciseSelected(2, definitionId)
+            assertTrue(viewModel.uiState.value.templateExercises[2].definitionId != definitionId)
+
+            // Slot 0 is deleted while that lookup is still in flight, shifting the target to index 1.
+            viewModel.removeExercise(0)
+            assertEquals(2, viewModel.uiState.value.templateExercises.size)
+
+            // The lookup now resolves - it must still land on the exercise the user actually picked.
+            definitionLoaded.complete(definition)
+
+            val updated = viewModel.uiState.value.templateExercises
+            assertEquals(definitionId, updated.first { it.id == targetExerciseId }.definitionId)
+            assertTrue(updated.none { it.id != targetExerciseId && it.definitionId == definitionId })
+        }
 
     @Test
     fun `onExercisesReordered moves an exercise to its new position`() {

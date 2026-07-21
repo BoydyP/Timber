@@ -84,14 +84,23 @@ class CreateWorkoutTemplateViewModel @Inject constructor(
     }
 
     fun onExerciseSelected(exerciseIndex: Int, definitionId: UUID) {
+        // Resolve the target slot by its stable id, captured before the suspend point below,
+        // since the list can be mutated (deleted/reordered) while the definition is loading.
+        val targetExerciseId = _uiState.value.templateExercises.getOrNull(exerciseIndex)?.id
+            ?: return
         viewModelScope.launch {
             val definition = exerciseDefinitionRepository.getExerciseDefinition(definitionId)
             _uiState.update {
+                val currentIndex = it.templateExercises.indexOfFirst { exercise ->
+                    exercise.id == targetExerciseId
+                }
+                if (currentIndex == -1) return@update it
+
                 val newDefinitions = it.exerciseDefinitions + (definitionId to definition)
                 val updatedExercise =
-                    it.templateExercises[exerciseIndex].copy(definitionId = definitionId)
+                    it.templateExercises[currentIndex].copy(definitionId = definitionId)
                 val newExercises = it.templateExercises.toMutableList().also { list ->
-                    list[exerciseIndex] = updatedExercise
+                    list[currentIndex] = updatedExercise
                 }
                 it.copy(
                     exerciseDefinitions = newDefinitions,
