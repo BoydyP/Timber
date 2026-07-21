@@ -60,7 +60,9 @@ class PlateCalculatorViewModel @Inject constructor(
         val maxPlatesWeight = _uiState.value.availablePlates.entries
             .sumOf { (plateValue, quantityStr) ->
                 val quantity = quantityStr.toIntOrNull() ?: 0
-                plateValue * quantity
+                // Plates are placed in pairs (one per side), so an odd plate can't be used.
+                val pairableQuantity = quantity - (quantity % 2)
+                plateValue * pairableQuantity
             }
         val maxPossibleWeight = barbellWeight + maxPlatesWeight
 

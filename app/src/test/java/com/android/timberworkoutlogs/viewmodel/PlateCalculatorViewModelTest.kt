@@ -64,6 +64,23 @@ class PlateCalculatorViewModelTest {
     }
 
     @Test
+    fun `onWeightChange clamps target to what an odd plate quantity can actually place`() = runTest {
+        // Only 3 plates of 45lb available (an odd count), and every other plate type zeroed out.
+        viewModel.uiState.value.availablePlates.keys.forEach { plateWeight ->
+            if (plateWeight != 45.0) {
+                viewModel.onPlateQuantityChange(plateWeight, "0")
+            }
+        }
+        viewModel.onPlateQuantityChange(45.0, "3")
+
+        // Bar (45) + 1 pairable 45lb plate per side (90) = 135, NOT 45 + 3*45 = 180.
+        viewModel.onWeightChange("180")
+
+        assertEquals("135", viewModel.uiState.value.targetWeight)
+        assertEquals(listOf(45.0), viewModel.uiState.value.platesOnBar)
+    }
+
+    @Test
     fun `calculatePlates - weight less than barbell`() = runTest {
         viewModel.onWeightChange("40")
         assertEquals(emptyList<Double>(), viewModel.uiState.value.platesOnBar)
