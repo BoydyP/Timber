@@ -332,6 +332,32 @@ class StatsViewModelTest {
     }
 
     @Test
+    fun `processProgressionData converts bestSet weight to the display unit, not the workout's own unit`() =
+        runTest {
+            // App-wide preferred unit is LB, but this workout was logged while the
+            // per-exercise unit switch was set to KG.
+            every { settingsRepository.weightUnit } returns MutableStateFlow(WeightUnit.LB)
+            viewModel = StatsViewModel(workoutDao, settingsRepository)
+
+            val mockHistory = listOf(
+                createWorkoutExerciseWithDate(
+                    1724967353000L,
+                    listOf(WeightAndRepsSet(weight = 100.0, reps = 5, isDone = true)),
+                    WeightUnit.KG
+                )
+            )
+
+            val result = viewModel.processProgressionData(mockHistory)
+
+            assertEquals(1, result.size)
+            val point = result[0]
+            // 100kg -> ~220.46lb. maxWeight/totalVolume already convert correctly;
+            // bestSet.weight must match maxWeight, not stay as the raw 100 (kg) value.
+            assertEquals(point.maxWeight, point.bestSet.weight, 0.01)
+            assertEquals(220.46, point.bestSet.weight, 0.1)
+        }
+
+    @Test
     fun `calculates time range boundaries correctly`() = runTest {
 
         // When: Test different time ranges

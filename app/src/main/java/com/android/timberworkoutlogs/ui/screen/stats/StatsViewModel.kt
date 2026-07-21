@@ -185,12 +185,13 @@ class StatsViewModel @Inject constructor(
                 // Convert final values to user's preferred unit
                 val finalMaxWeight = WeightUnitConverter.fromKg(maxWeight, weightUnit)
                 val finalTotalVolume = WeightUnitConverter.fromKg(totalVolume, weightUnit)
+                val finalBestSet = bestSet?.copy(weight = finalMaxWeight) ?: WeightAndRepsSet()
 
                 ExerciseProgressionPoint(
                     date = workoutDate,
                     maxWeight = finalMaxWeight,
                     totalVolume = finalTotalVolume,
-                    bestSet = bestSet ?: WeightAndRepsSet(),
+                    bestSet = finalBestSet,
                     workoutDate = workoutDate
                 )
             }
