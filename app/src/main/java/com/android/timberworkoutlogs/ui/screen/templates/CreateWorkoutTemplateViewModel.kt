@@ -207,8 +207,7 @@ class CreateWorkoutTemplateViewModel @Inject constructor(
                 workoutTemplateRepository.updateTemplate(updatedTemplate)
                 val exercisesToSave =
                     exercisesWithDefinitions.map { it.copy(templateId = templateId) }
-                workoutTemplateRepository.deleteExercisesForTemplate(templateId)
-                workoutTemplateRepository.upsertTemplateExercises(exercisesToSave)
+                workoutTemplateRepository.replaceTemplateExercises(templateId, exercisesToSave)
             }
             onSuccess()
         }

@@ -45,8 +45,8 @@ class WorkoutTemplateRepository(
         workoutTemplateDao.upsertTemplateExercises(exercises)
     }
 
-    suspend fun deleteExercisesForTemplate(templateId: Long) {
-        workoutTemplateDao.deleteExercisesForTemplate(templateId)
+    suspend fun replaceTemplateExercises(templateId: Long, exercises: List<TemplateExercise>) {
+        workoutTemplateDao.replaceTemplateExercises(templateId, exercises)
     }
 
     suspend fun deleteTemplate(template: WorkoutTemplate) {

@@ -157,6 +157,25 @@ class CreateWorkoutTemplateViewModelTest {
     }
 
     @Test
+    fun `saveTemplate existing template replaces exercises atomically, not as separate delete-then-insert calls`() =
+        runTest {
+            // A delete and a separate insert as two independent repository calls can be
+            // interrupted between them (process death, scope cancellation), permanently
+            // wiping a template's exercises without ever writing the replacements. Saving
+            // must go through a single atomic replace instead.
+            val templateId = 1L
+            createViewModel(templateId)
+
+            viewModel.onNameChanged("Updated Workout")
+            viewModel.addExercise()
+            viewModel.saveTemplate { }
+
+            coVerify(exactly = 1) {
+                workoutTemplateRepository.replaceTemplateExercises(templateId, any())
+            }
+        }
+
+    @Test
     fun `deleteTemplate deletes correctly`() = runTest {
         val templateId = 1L
         createViewModel(templateId)

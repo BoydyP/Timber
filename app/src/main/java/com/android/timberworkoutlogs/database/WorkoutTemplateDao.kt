@@ -31,6 +31,15 @@ interface WorkoutTemplateDao {
     @Query("DELETE FROM template_exercises WHERE templateId = :templateId")
     suspend fun deleteExercisesForTemplate(templateId: Long)
 
+    // Runs the delete and insert as a single unit so an interruption (process death,
+    // scope cancellation) between them can't leave a template with its exercises wiped
+    // but the replacements never written.
+    @Transaction
+    suspend fun replaceTemplateExercises(templateId: Long, exercises: List<TemplateExercise>) {
+        deleteExercisesForTemplate(templateId)
+        upsertTemplateExercises(exercises)
+    }
+
     @Query("SELECT wt.*, (SELECT COUNT(*) FROM template_exercises WHERE templateId = wt.id) as exerciseCount FROM workout_templates wt")
     fun getAllTemplatesWithExerciseCount(): Flow<List<WorkoutTemplateWithExerciseCount>>
 
