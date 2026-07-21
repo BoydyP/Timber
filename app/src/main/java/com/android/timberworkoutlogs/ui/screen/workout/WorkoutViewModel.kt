@@ -197,13 +197,17 @@ class WorkoutViewModel @Inject constructor(
     }
 
     fun onExerciseSelected(exerciseIndex: Int, definitionId: UUID) {
+        // Resolve the target slot by its stable id, captured before the suspend point below,
+        // since the list can be mutated (deleted/added) while the definition is loading.
+        val targetExerciseId = workoutExercises.getOrNull(exerciseIndex)?.id ?: return
         viewModelScope.launch {
             val definition = exerciseDefinitionRepository.getExerciseDefinition(definitionId)
-            if (exerciseIndex >= 0 && exerciseIndex < workoutExercises.size) {
+            val currentIndex = workoutExercises.indexOfFirst { it.id == targetExerciseId }
+            if (currentIndex != -1) {
                 val initialSet = createDefaultSetForLogType(definition.logType)
 
-                exerciseDefinitions[exerciseIndex] = definition
-                workoutExercises[exerciseIndex] = workoutExercises[exerciseIndex].copy(
+                exerciseDefinitions[currentIndex] = definition
+                workoutExercises[currentIndex] = workoutExercises[currentIndex].copy(
                     definitionId = definitionId,
                     sets = listOf(initialSet)
                 )

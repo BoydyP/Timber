@@ -27,6 +27,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -182,6 +183,41 @@ class WorkoutViewModelTest {
             assertEquals(1, viewModel.workoutExercises.size)
             assertEquals(1, viewModel.exerciseDefinitions.size)
             assertFalse(viewModel.workoutExercises.any { it.id == toDelete.id })
+        }
+
+    // ---------- onExerciseSelected ----------
+
+    @Test
+    fun `onExerciseSelected applies to the correct slot even if the list mutates while the definition loads`() =
+        runTest(testDispatcher) {
+            advanceUntilIdle()
+            viewModel.onAddExercise() // slot 1
+            viewModel.onAddExercise() // slot 2 - target
+            advanceUntilIdle()
+            assertEquals(3, viewModel.workoutExercises.size)
+            val targetExerciseId = viewModel.workoutExercises[2].id
+
+            val definitionLoaded = CompletableDeferred<ExerciseDefinition>()
+            coEvery { exerciseDefinitionRepository.getExerciseDefinition(benchPressDef.id) } coAnswers {
+                definitionLoaded.await()
+            }
+
+            // Selection started for slot 2, but its DB lookup hasn't resolved yet.
+            viewModel.onExerciseSelected(2, benchPressDef.id)
+            advanceUntilIdle()
+
+            // Slot 0 is deleted while that lookup is still in flight, shifting the target to index 1.
+            viewModel.deleteExercise(viewModel.workoutExercises[0])
+            advanceUntilIdle()
+            assertEquals(2, viewModel.workoutExercises.size)
+
+            // The lookup now resolves - it must still land on the exercise the user actually picked.
+            definitionLoaded.complete(benchPressDef)
+            advanceUntilIdle()
+
+            val updated = viewModel.workoutExercises
+            assertEquals(benchPressDef.id, updated.first { it.id == targetExerciseId }.definitionId)
+            assertTrue(updated.none { it.id != targetExerciseId && it.definitionId == benchPressDef.id })
         }
 
     // ---------- onAddSet weight-carry behaviour ----------
