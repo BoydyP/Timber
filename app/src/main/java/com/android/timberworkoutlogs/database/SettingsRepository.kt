@@ -16,6 +16,7 @@ class SettingsRepository(
     private object PreferencesKeys {
         val WEIGHT_UNIT = stringPreferencesKey("weight_unit")
         val DYNAMIC_THEME = booleanPreferencesKey("dynamic_theme")
+        val WEIGHT_REP_PREDICTION = booleanPreferencesKey("weight_rep_prediction")
     }
 
     val weightUnit: Flow<WeightUnit> = dataStore.data.map { prefs ->
@@ -28,12 +29,20 @@ class SettingsRepository(
         prefs[PreferencesKeys.DYNAMIC_THEME] ?: true
     }
 
+    val weightRepPrediction: Flow<Boolean> = dataStore.data.map { prefs ->
+        prefs[PreferencesKeys.WEIGHT_REP_PREDICTION] ?: true
+    }
+
     suspend fun setWeightUnit(unit: WeightUnit) {
         dataStore.edit { it[PreferencesKeys.WEIGHT_UNIT] = unit.name }
     }
 
     suspend fun setDynamicTheme(enabled: Boolean) {
         dataStore.edit { it[PreferencesKeys.DYNAMIC_THEME] = enabled }
+    }
+
+    suspend fun setWeightRepPrediction(enabled: Boolean) {
+        dataStore.edit { it[PreferencesKeys.WEIGHT_REP_PREDICTION] = enabled }
     }
 
     suspend fun clearPreferences() {

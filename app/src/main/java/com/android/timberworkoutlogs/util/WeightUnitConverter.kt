@@ -59,7 +59,10 @@ object WeightUnitConverter {
      * @return Weight in the target unit
      */
     fun convert(weight: Double, sourceUnit: WeightUnit, targetUnit: WeightUnit): Double {
-        if (sourceUnit == targetUnit) return weight
+        // Round here too, not just on the cross-unit paths below - callers pass in weights from
+        // sources (e.g. seeded/demo data) that were never rounded to begin with, and this is the
+        // single place that guarantees the app's 2-decimal display precision.
+        if (sourceUnit == targetUnit) return roundTo2Decimals(weight)
         val weightInKg = toKg(weight, sourceUnit)
         return fromKg(weightInKg, targetUnit)
     }

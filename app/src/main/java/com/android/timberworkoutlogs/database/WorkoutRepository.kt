@@ -4,6 +4,7 @@ import android.util.Log
 import com.android.timberworkoutlogs.models.Workout
 import com.android.timberworkoutlogs.models.WorkoutExercise
 import kotlinx.coroutines.flow.Flow
+import java.util.UUID
 
 
 private const val TAG = "WorkoutRepository"
@@ -62,5 +63,9 @@ class WorkoutRepository(
 
     suspend fun getExercisesForWorkout(workoutId: Long): List<WorkoutExercise> {
         return workoutExerciseDao.getExercisesForWorkout(workoutId)
+    }
+
+    suspend fun getMostRecentWorkoutExercise(definitionId: UUID): WorkoutExercise? {
+        return workoutDao.getMostRecentWorkoutExercise(definitionId)
     }
 }

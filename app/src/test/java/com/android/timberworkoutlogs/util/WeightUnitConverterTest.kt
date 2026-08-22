@@ -74,6 +74,15 @@ class WeightUnitConverterTest {
     }
 
     @Test
+    fun `convert between same units rounds a dirty value to 2 decimals`() {
+        // Regression test: values that were never precision-clamped to begin with (e.g. the
+        // seeded demo data's Random.nextDouble weights) must still come out clean here, since
+        // this is the only conversion step a same-unit carry-forward passes through.
+        val result = WeightUnitConverter.convert(52.562496183, WeightUnit.KG, WeightUnit.KG)
+        assertEquals(52.56, result, 0.0)
+    }
+
+    @Test
     fun `converting lb to kg and back stays within a clean rounding tolerance`() {
         // Unlike kg -> lb -> kg, lb -> kg -> lb isn't always bit-exact: the two units' 2-decimal
         // rounding grids don't perfectly align in this direction. That's an acceptable, tiny

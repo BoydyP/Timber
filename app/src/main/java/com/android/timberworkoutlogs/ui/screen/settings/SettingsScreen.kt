@@ -20,6 +20,7 @@ fun SettingsScreen(
 ) {
     val selectedUnit by viewModel.weightUnit.collectAsState()
     val useDynamicTheme by viewModel.dynamicTheme.collectAsState()
+    val useWeightRepPrediction by viewModel.weightRepPrediction.collectAsState()
 
     Column(
         modifier = Modifier
@@ -40,6 +41,10 @@ fun SettingsScreen(
             DynamicThemeSetting(
                 useDynamicTheme = useDynamicTheme,
                 onDynamicThemeChanged = { viewModel.updateDynamicTheme(it) }
+            )
+            WeightRepPredictionSetting(
+                useWeightRepPrediction = useWeightRepPrediction,
+                onWeightRepPredictionChanged = { viewModel.updateWeightRepPrediction(it) }
             )
         }
     }
@@ -104,5 +109,25 @@ private fun DynamicThemeSetting(
                 onCheckedChange = onDynamicThemeChanged
             )
         }
+    }
+}
+
+@Composable
+private fun WeightRepPredictionSetting(
+    useWeightRepPrediction: Boolean,
+    onWeightRepPredictionChanged: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text("Weight / Rep Prediction", style = MaterialTheme.typography.bodyLarge)
+        Switch(
+            checked = useWeightRepPrediction,
+            onCheckedChange = onWeightRepPredictionChanged
+        )
     }
 }

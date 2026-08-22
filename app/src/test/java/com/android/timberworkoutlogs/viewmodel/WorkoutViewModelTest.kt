@@ -89,6 +89,7 @@ class WorkoutViewModelTest {
         application = mockk(relaxed = true)
 
         every { settingsRepository.weightUnit } returns MutableStateFlow(WeightUnit.KG)
+        every { settingsRepository.weightRepPrediction } returns MutableStateFlow(true)
         coEvery { workoutRepository.insertWorkout(any()) } returns 1L
         coEvery { workoutTemplateRepository.getAllTemplatesWithExerciseCount() } returns
             MutableStateFlow(emptyList())
@@ -218,6 +219,95 @@ class WorkoutViewModelTest {
             val updated = viewModel.workoutExercises
             assertEquals(benchPressDef.id, updated.first { it.id == targetExerciseId }.definitionId)
             assertTrue(updated.none { it.id != targetExerciseId && it.definitionId == benchPressDef.id })
+        }
+
+    // ---------- onExerciseSelected carry-forward pre-fill ----------
+
+    @Test
+    fun `onExerciseSelected pre-fills weight and reps from the last time this exercise was logged`() =
+        runTest(testDispatcher) {
+            advanceUntilIdle()
+            coEvery { exerciseDefinitionRepository.getExerciseDefinition(benchPressDef.id) } returns
+                benchPressDef
+            coEvery { workoutRepository.getMostRecentWorkoutExercise(benchPressDef.id) } returns
+                WorkoutExercise(
+                    workoutId = 5L,
+                    definitionId = benchPressDef.id,
+                    unit = WeightUnit.LB,
+                    sets = listOf(
+                        WeightAndRepsSet(weight = 60.0, reps = 10, isDone = true),
+                        WeightAndRepsSet(weight = 100.0, reps = 5, isDone = true)
+                    )
+                )
+
+            viewModel.onExerciseSelected(0, benchPressDef.id)
+            advanceUntilIdle()
+
+            val sets = viewModel.workoutExercises[0].sets
+            assertEquals(1, sets.size)
+            val prefilled = sets[0] as WeightAndRepsSet
+            // Placeholder slot's unit is KG (from settingsRepository default); the historical
+            // set was logged in LB, so the weight must be converted, not copied verbatim.
+            assertEquals(45.36, prefilled.weight, 0.01)
+            assertEquals(5, prefilled.reps)
+            assertFalse(prefilled.isDone)
+        }
+
+    @Test
+    fun `onExerciseSelected falls back to zero default when the exercise has never been logged`() =
+        runTest(testDispatcher) {
+            advanceUntilIdle()
+            coEvery { exerciseDefinitionRepository.getExerciseDefinition(benchPressDef.id) } returns
+                benchPressDef
+            coEvery { workoutRepository.getMostRecentWorkoutExercise(benchPressDef.id) } returns null
+
+            viewModel.onExerciseSelected(0, benchPressDef.id)
+            advanceUntilIdle()
+
+            val sets = viewModel.workoutExercises[0].sets
+            assertEquals(1, sets.size)
+            assertEquals(WeightAndRepsSet(), sets[0])
+        }
+
+    @Test
+    fun `onExerciseSelected falls back to zero default when the last set is not a WeightAndRepsSet`() =
+        runTest(testDispatcher) {
+            advanceUntilIdle()
+            coEvery { exerciseDefinitionRepository.getExerciseDefinition(pushUpDef.id) } returns
+                pushUpDef
+            coEvery { workoutRepository.getMostRecentWorkoutExercise(pushUpDef.id) } returns
+                WorkoutExercise(
+                    workoutId = 5L,
+                    definitionId = pushUpDef.id,
+                    sets = listOf(RepsOnlySet(reps = 20, isDone = true))
+                )
+
+            viewModel.onExerciseSelected(0, pushUpDef.id)
+            advanceUntilIdle()
+
+            val sets = viewModel.workoutExercises[0].sets
+            assertEquals(1, sets.size)
+            assertEquals(RepsOnlySet(), sets[0])
+        }
+
+    @Test
+    fun `onExerciseSelected skips the history lookup and uses zero default when prediction is disabled`() =
+        runTest(testDispatcher) {
+            advanceUntilIdle()
+            every { settingsRepository.weightRepPrediction } returns MutableStateFlow(false)
+            viewModel = createViewModel()
+            advanceUntilIdle()
+
+            coEvery { exerciseDefinitionRepository.getExerciseDefinition(benchPressDef.id) } returns
+                benchPressDef
+
+            viewModel.onExerciseSelected(0, benchPressDef.id)
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { workoutRepository.getMostRecentWorkoutExercise(any()) }
+            val sets = viewModel.workoutExercises[0].sets
+            assertEquals(1, sets.size)
+            assertEquals(WeightAndRepsSet(), sets[0])
         }
 
     // ---------- onAddSet weight-carry behaviour ----------

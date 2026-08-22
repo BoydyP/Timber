@@ -202,9 +202,16 @@ class WorkoutViewModel @Inject constructor(
         val targetExerciseId = workoutExercises.getOrNull(exerciseIndex)?.id ?: return
         viewModelScope.launch {
             val definition = exerciseDefinitionRepository.getExerciseDefinition(definitionId)
+            val previous = if (settingsRepository.weightRepPrediction.first()) {
+                workoutRepository.getMostRecentWorkoutExercise(definitionId)
+            } else {
+                null
+            }
             val currentIndex = workoutExercises.indexOfFirst { it.id == targetExerciseId }
             if (currentIndex != -1) {
-                val initialSet = createDefaultSetForLogType(definition.logType)
+                val currentUnit = workoutExercises[currentIndex].unit
+                val initialSet = carryForwardLastSet(previous, currentUnit)
+                    ?: createDefaultSetForLogType(definition.logType)
 
                 exerciseDefinitions[currentIndex] = definition
                 workoutExercises[currentIndex] = workoutExercises[currentIndex].copy(
@@ -213,6 +220,20 @@ class WorkoutViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    /**
+     * Builds a starting set from the last time this exercise was logged, so the user doesn't
+     * have to re-enter the same weight/reps. Only WeightAndRepsSet is carried forward - other
+     * log types fall back to the zero-value default.
+     */
+    private fun carryForwardLastSet(
+        previous: WorkoutExercise?,
+        targetUnit: WeightUnit
+    ): ExerciseSet? {
+        val lastSet = previous?.sets?.lastOrNull() as? WeightAndRepsSet ?: return null
+        val convertedWeight = WeightUnitConverter.convert(lastSet.weight, previous.unit, targetUnit)
+        return WeightAndRepsSet(weight = convertedWeight, reps = lastSet.reps, isDone = false)
     }
 
     fun onAddExercise() {

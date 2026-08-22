@@ -32,6 +32,7 @@ class SettingsViewModelTest {
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var weightUnitFlow: MutableStateFlow<WeightUnit>
     private lateinit var dynamicThemeFlow: MutableStateFlow<Boolean>
+    private lateinit var weightRepPredictionFlow: MutableStateFlow<Boolean>
 
     @Before
     fun setUp() {
@@ -41,9 +42,11 @@ class SettingsViewModelTest {
         settingsRepository = mockk(relaxed = true)
         weightUnitFlow = MutableStateFlow(WeightUnit.KG)
         dynamicThemeFlow = MutableStateFlow(false)
+        weightRepPredictionFlow = MutableStateFlow(true)
 
         every { settingsRepository.weightUnit } returns weightUnitFlow
         every { settingsRepository.dynamicTheme } returns dynamicThemeFlow
+        every { settingsRepository.weightRepPrediction } returns weightRepPredictionFlow
 
         viewModel = SettingsViewModel(settingsRepository)
     }
@@ -229,6 +232,45 @@ class SettingsViewModelTest {
 
         // Then - Should use the initial value from stateIn
         assertFalse(dynamicTheme)
+    }
+
+    @Test
+    fun `initial weightRepPrediction state is correct`() = runTest {
+        // Given & When
+        val enabled = viewModel.weightRepPrediction.first()
+
+        // Then
+        assertTrue(enabled)
+    }
+
+    @Test
+    fun `weightRepPrediction updates when repository flow changes`() = runTest {
+        // Given
+        assertTrue(viewModel.weightRepPrediction.first())
+
+        // When
+        weightRepPredictionFlow.value = false
+
+        // Then
+        assertFalse(viewModel.weightRepPrediction.first())
+    }
+
+    @Test
+    fun `updateWeightRepPrediction calls repository setWeightRepPrediction with false`() = runTest {
+        // When
+        viewModel.updateWeightRepPrediction(false)
+
+        // Then
+        coVerify { settingsRepository.setWeightRepPrediction(false) }
+    }
+
+    @Test
+    fun `updateWeightRepPrediction calls repository setWeightRepPrediction with true`() = runTest {
+        // When
+        viewModel.updateWeightRepPrediction(true)
+
+        // Then
+        coVerify { settingsRepository.setWeightRepPrediction(true) }
     }
 
     @Test

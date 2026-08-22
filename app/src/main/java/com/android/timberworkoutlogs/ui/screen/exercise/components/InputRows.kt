@@ -28,6 +28,13 @@ import com.android.timberworkoutlogs.models.TimedSet
 import com.android.timberworkoutlogs.models.WeightAndRepsSet
 import com.android.timberworkoutlogs.models.WeightUnit
 import com.android.timberworkoutlogs.models.toStringResource
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.util.Locale
+
+// Locale.US pins the decimal separator to '.', matching the input field's own validation
+// regex (which only accepts '.') regardless of the device's locale settings.
+private val weightDisplayFormat = DecimalFormat("#.##", DecimalFormatSymbols(Locale.US))
 
 @Composable
 fun WeightAndRepsInputRow(
@@ -39,7 +46,11 @@ fun WeightAndRepsInputRow(
     onDoneChange: (Boolean) -> Unit,
     showIsDoneCheckbox: Boolean = true
 ) {
-    var weightText by remember(workoutSet) { mutableStateOf(if (workoutSet.weight == 0.0) "" else workoutSet.weight.toString()) }
+    // Weights can arrive from sources that were never precision-clamped (e.g. seeded demo
+    // data), so format defensively rather than trusting the raw Double's toString().
+    var weightText by remember(workoutSet) {
+        mutableStateOf(if (workoutSet.weight == 0.0) "" else weightDisplayFormat.format(workoutSet.weight))
+    }
     var repsText by remember(workoutSet) { mutableStateOf(if (workoutSet.reps == 0) "" else workoutSet.reps.toString()) }
 
     Row(

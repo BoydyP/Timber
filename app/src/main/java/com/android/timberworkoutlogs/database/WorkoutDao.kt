@@ -107,6 +107,22 @@ interface WorkoutDao {
     fun getExerciseHistoryData(definitionId: UUID, fromTime: Long): Flow<List<WorkoutExerciseWithDate>>
 
     /**
+     * Get the most recently logged WorkoutExercise for a given exercise definition, so a newly
+     * added exercise slot can be pre-filled with what was lifted last time.
+     * @param definitionId The ID of the exercise definition to look up.
+     * @return The WorkoutExercise from the most recent workout that included this exercise, or
+     * null if it has never been logged before.
+     */
+    @Query("""
+        SELECT we.* FROM workout_exercises we
+        INNER JOIN workouts w ON we.workoutId = w.id
+        WHERE we.definitionId = :definitionId
+        ORDER BY w.startTime DESC
+        LIMIT 1
+    """)
+    suspend fun getMostRecentWorkoutExercise(definitionId: UUID): WorkoutExercise?
+
+    /**
      * Get count of workouts for each exercise (for display in exercise selection).
      * @return A Flow emitting exercise definitions with their workout counts.
      */

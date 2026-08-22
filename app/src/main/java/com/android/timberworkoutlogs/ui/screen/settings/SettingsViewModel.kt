@@ -31,6 +31,13 @@ class SettingsViewModel @Inject constructor(
             initialValue = false
         )
 
+    val weightRepPrediction: StateFlow<Boolean> = settingsRepository.weightRepPrediction
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = true
+        )
+
     fun updateWeightUnit(unit: WeightUnit) {
         Log.d("SettingsViewModel", "Updating weight unit to $unit")
         viewModelScope.launch {
@@ -41,6 +48,12 @@ class SettingsViewModel @Inject constructor(
     fun updateDynamicTheme(useDynamicTheme: Boolean) {
         viewModelScope.launch {
             settingsRepository.setDynamicTheme(useDynamicTheme)
+        }
+    }
+
+    fun updateWeightRepPrediction(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setWeightRepPrediction(enabled)
         }
     }
 }
