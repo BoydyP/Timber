@@ -168,7 +168,7 @@ class WorkoutTemplatesListScreenTest : TestCase() {
         }
 
         step("Verify template details are shown in list") {
-            composeTestRule.onNodeWithText("Leg Day Special").assertIsDisplayed()
+            scrollToAndAssertElement(composeTestRule, "Leg Day Special")
             
             // Template cards might show exercise count or other details
             try {
@@ -205,7 +205,7 @@ class WorkoutTemplatesListScreenTest : TestCase() {
         }
 
         step("Verify template is still displayed") {
-            composeTestRule.onNodeWithText("Test Template").assertIsDisplayed()
+            scrollToAndAssertElement(composeTestRule, "Test Template")
         }
     }
 

@@ -154,7 +154,9 @@ private fun WorkoutScreenContent(
         }
     )
     var showTemplateSheet by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState()
+    // Without this, the sheet defaults to its partially-expanded peek anchor, leaving templates
+    // further down the list clipped out of view until the user manually drags it open further.
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var isConfirmingFinish by remember { mutableStateOf(false) }
     var isConfirmingDiscard by remember { mutableStateOf(false) }
 

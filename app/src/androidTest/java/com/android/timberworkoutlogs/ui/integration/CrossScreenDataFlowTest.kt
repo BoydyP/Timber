@@ -352,7 +352,7 @@ class CrossScreenDataFlowTest : TestCase() {
             // Check template exists
             composeTestRule.onNodeWithText("Templates").performClick()
             composeTestRule.onNodeWithText("Workout Templates").performClick()
-            composeTestRule.onNodeWithText(templateName).assertIsDisplayed()
+            scrollToAndAssertElement(composeTestRule, templateName)
             backPressUntilElementTextVisible(composeTestRule, "Settings")
 
             // Check settings persist

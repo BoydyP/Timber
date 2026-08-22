@@ -70,7 +70,7 @@ class TemplateToWorkoutIntegrationTest : TestCase() {
         }
 
         step("Verify template was created") {
-            composeTestRule.onNodeWithText("Push Day Complete").assertIsDisplayed()
+            scrollToAndAssertElement(composeTestRule, templateName)
             backPressUntilElementTextVisible(composeTestRule, "Workout")
         }
 
@@ -122,7 +122,7 @@ class TemplateToWorkoutIntegrationTest : TestCase() {
         }
 
         step("Verify updated template reflects changes") {
-            composeTestRule.onNodeWithText(templateName).assertIsDisplayed()
+            scrollToAndAssertElement(composeTestRule, templateName)
             backPressUntilElementTextVisible(composeTestRule, "Workout")
             // Navigate to workout and verify template functionality
             composeTestRule.onNodeWithText("Workout").performClick()
@@ -255,7 +255,7 @@ class TemplateToWorkoutIntegrationTest : TestCase() {
         step("Return to templates and verify persistence") {
             composeTestRule.onNodeWithText("Templates").performClick()
             composeTestRule.onNodeWithText("Workout Templates").performClick()
-            composeTestRule.onNodeWithText(templateName).assertIsDisplayed()
+            scrollToAndAssertElement(composeTestRule, templateName)
         }
 
         step("Verify template can still be used in workout") {
