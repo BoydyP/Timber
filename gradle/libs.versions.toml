@@ -1,5 +1,5 @@
 [versions]
-agp = "9.2.1"
+agp = "9.3.1"
 vico = "2.3.6"
 coreSplashscreenVersion = "1.2.0"
 hiltAndroid = "2.57.2"
