@@ -44,9 +44,12 @@ fun TimeRangePicker(
                 value = selectedTimeRange.displayName,
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Time Range") },
+                label = { Text("Time Range", maxLines = 1) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                // Range names are two words ("4 weeks", "Last year"); without this they wrap and
+                // the field grows to double height in the narrow half of a side-by-side row.
+                singleLine = true,
                 modifier = Modifier
                     .menuAnchor(SecondaryEditable)
                     .fillMaxWidth()

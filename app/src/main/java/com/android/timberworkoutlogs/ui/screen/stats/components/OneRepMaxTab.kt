@@ -82,13 +82,13 @@ fun OneRepMaxTab(
                 selectedExercise = selectedExercise,
                 availableExercises = availableExercises,
                 onExerciseSelected = onExerciseSelected,
-                modifier = Modifier.weight(2f)
+                modifier = Modifier.weight(3f)
             )
 
             TimeRangePicker(
                 selectedTimeRange = selectedTimeRange,
                 onTimeRangeSelected = onTimeRangeSelected,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(2f)
             )
         }
 

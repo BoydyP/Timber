@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -20,6 +21,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.android.timberworkoutlogs.models.DistanceAndTimeSet
@@ -35,6 +37,11 @@ import java.util.Locale
 // Locale.US pins the decimal separator to '.', matching the input field's own validation
 // regex (which only accepts '.') regardless of the device's locale settings.
 private val weightDisplayFormat = DecimalFormat("#.##", DecimalFormatSymbols(Locale.US))
+
+// The weight field is only about half a row wide, so "Weight (KG)" at a fixed size wraps to two
+// lines on narrow screens or at a large system font scale, doubling the field's height next to
+// "Reps". Shrinking the label to fit keeps it on one line, at the original 14sp where there's room.
+private val weightLabelAutoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = 14.sp)
 
 @Composable
 fun WeightAndRepsInputRow(
@@ -74,8 +81,10 @@ fun WeightAndRepsInputRow(
             },
             label = {
                 Text(
-                    "Weight (${stringResource(id = unit.toStringResource())})",
-                    fontSize = 14.sp
+                    text = "Weight (${stringResource(id = unit.toStringResource())})",
+                    autoSize = weightLabelAutoSize,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
