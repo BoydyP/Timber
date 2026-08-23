@@ -1,0 +1,53 @@
+name: Bug report
+description: Something in the app doesn't behave the way it should
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you see, and what did you expect to see instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the Workout tab
+        2. Add "Barbell Bench Press"
+        3. ...
+    validations:
+      required: true
+
+  - type: input
+    id: android-version
+    attributes:
+      label: Android version / API level
+      description: minSdk is 34, so please confirm you're on API 34 or higher.
+      placeholder: e.g. Android 15 (API 35), Pixel 8 emulator
+    validations:
+      required: true
+
+  - type: dropdown
+    id: weight-unit
+    attributes:
+      label: Which weight unit were you in?
+      description: >
+        Several past bugs turned out to be unit-conversion edge cases, so this matters even when the
+        problem doesn't look weight-related.
+      options:
+        - KG
+        - LB
+        - A mix of both (per-exercise units)
+        - Not applicable
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logcat output
+      description: Optional, but a stack trace makes a crash far quicker to track down.
+      render: text

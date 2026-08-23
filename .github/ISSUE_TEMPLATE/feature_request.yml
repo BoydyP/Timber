@@ -1,0 +1,29 @@
+name: Feature request
+description: Suggest a new feature or an improvement to an existing one
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the gap you're hitting rather than the implementation you have in mind.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like it to do?
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Constraints
+      description: >
+        Timber is deliberately offline-first - the app declares no INTERNET permission and stores
+        everything locally. Requests that need a network connection or an account are out of scope.
+      options:
+        - label: This can work entirely offline, with no account and no server.
+          required: true

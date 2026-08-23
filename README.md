@@ -23,9 +23,19 @@ way to track their strength training progress, without the 'connected' nature im
 
 ## Screenshots
 
-| Workout List | Exercise Library | Logging Screen |
-| :----------: | :--------------: | :------------: |
-| *(Image of the main workout history screen)* | *(Image of the exercise library with search)* | *(Image of the screen where a user logs sets/reps)* |
+|                    Home                    |                  Log Workout                  |               Workout History               |
+|:------------------------------------------:|:---------------------------------------------:|:-------------------------------------------:|
+| ![Home screen](docs/screenshots/home.png)  | ![Log Workout](docs/screenshots/logging.png)  | ![Workout History](docs/screenshots/history.png) |
+|                 **Stats**                  |                 **Templates**                 |            **Exercise Library**             |
+| ![Stats](docs/screenshots/stats.png)       | ![Templates](docs/screenshots/templates.png)  | ![Exercise Library](docs/screenshots/exercise-library.png) |
+
+The plate calculator, available from the bottom bar while logging, works out which plates to load
+for a given total:
+
+<img width="260" alt="Plate calculator" src="docs/screenshots/plate-calculator.png" />
+
+> The figures shown are generated demo data, not real training logs. A fresh install starts with an
+> empty history; debug builds can generate a sample one from Settings → Developer.
 
 ## Tech Stack & Architecture
 
@@ -45,6 +55,19 @@ Timber is built using modern Android development practices and libraries.
   decoupling components.
 - **Navigation:** [Compose Navigation](https://developer.android.com/jetpack/compose/navigation) for
   handling screen transitions within the app.
+
+### Data model
+
+The core entities and how they relate are documented as a class diagram:
+
+[![Timber data model](docs/uml/timber_classes.png)](docs/uml/timber_classes.png)
+
+A `Workout` owns its `WorkoutExercise` rows, each of which points at a reusable
+`ExerciseDefinition` and holds a list of `ExerciseSet`. `ExerciseSet` is a sealed type
+(`WeightAndRepsSet`, `RepsOnlySet`, `TimedSet`, `DistanceAndTimeSet`) so that a barbell lift, a
+set of pull-ups, a plank and a row on the erg can all be logged through the same model. The diagram
+is generated from [`docs/uml/timber_classes.uml`](docs/uml/timber_classes.uml)
+([PlantUML](https://plantuml.com/)) - edit that file and re-render if you change the schema.
 
 ## Getting Started
 
@@ -70,11 +93,14 @@ To get the project up and running on your local machine, follow these steps:
 
 ## Contributing
 
-Contributions are welcome! If you have a suggestion or find a bug, please feel free to open an issue
-or submit a pull request.
+Contributions are welcome! If you have a suggestion or find a bug, please open an issue - there are
+templates for [bug reports](.github/ISSUE_TEMPLATE/bug_report.yml) and
+[feature requests](.github/ISSUE_TEMPLATE/feature_request.yml).
 
-Please follow the existing code style and ensure that all new features are covered by tests where
-applicable.
+Before opening a pull request, please read [CONTRIBUTING.md](CONTRIBUTING.md). It covers the toolchain
+(including why the Gradle wrapper is pinned), the build and test commands, the conventions this
+codebase follows, and the things that are easy to get wrong - Room migrations, weight-unit
+conversion, and writing instrumentation tests against the seeded data.
 
 ## License
 
