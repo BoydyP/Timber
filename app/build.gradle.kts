@@ -26,12 +26,18 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Unlocks the "Developer" section in Settings, which can generate and clear
+            // fake workout history. Kept out of release builds entirely.
+            buildConfigField("boolean", "DEVELOPER_TOOLS", "true")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("boolean", "DEVELOPER_TOOLS", "false")
         }
     }
     compileOptions {
@@ -45,6 +51,8 @@ android {
     }
     buildFeatures {
         compose = true
+        // Required for buildConfigField above; off by default in AGP 8+.
+        buildConfig = true
     }
     packaging {
         resources {

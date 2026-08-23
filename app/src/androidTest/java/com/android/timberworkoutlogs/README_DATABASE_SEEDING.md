@@ -6,7 +6,7 @@ This document explains how to use the `DatabaseSeedingRule` to ensure each test 
 
 The `DatabaseSeedingRule` is a JUnit rule that:
 - Clears all database tables before each test class runs
-- Re-seeds the database with `DatabaseSeeder.seedProdData()`
+- Re-seeds the database with `DatabaseSeeder.seedCatalog()`
 - Ensures consistent starting state for all tests in a class
 
 ## Usage
@@ -36,7 +36,7 @@ class MyTestClass : TestCase() {
 
     @Test
     fun myTest() = run {
-        // Your test will start with fresh seedProdData()
+        // Your test will start with fresh seedCatalog()
         // This includes default exercises and templates
     }
 }
@@ -52,7 +52,7 @@ class MyTestClass : TestCase() {
 
 ### What Gets Seeded
 
-The `DatabaseSeedingRule` calls `DatabaseSeeder.seedProdData()` which provides:
+The `DatabaseSeedingRule` calls `DatabaseSeeder.seedCatalog()` which provides:
 - **Default Exercises**: All predefined exercise definitions
 - **Default Templates**: Basic workout templates with exercises
 
@@ -65,7 +65,7 @@ See `WorkoutTemplatesListScreenTest.kt` for a complete example of how to use the
 ## Benefits
 
 - **Isolation**: Each test class gets a completely fresh database
-- **Consistency**: All tests start with the same `seedProdData()` state  
+- **Consistency**: All tests start with the same `seedCatalog()` state  
 - **Reliability**: No test pollution between classes
 - **Realistic Data**: Tests run against actual production-like data
 
@@ -93,7 +93,7 @@ To add database seeding to an existing test class:
 - **Injection errors**: Ensure `HiltAndroidRule` is order = 0 and `DatabaseSeedingRule` is order = 1
 - **Foreign key constraint errors**: The rule uses Room's built-in `clearAllTables()` for proper constraint handling
 - **Duplicate data**: The database auto-seeding is disabled in test environments to prevent double seeding
-- **Missing data**: Verify `seedProdData()` contains the data your tests expect
+- **Missing data**: Verify `seedCatalog()` contains the data your tests expect
 - **Performance**: Database clearing and seeding happens synchronously to guarantee data consistency
 
 ## Important Notes

@@ -70,6 +70,14 @@ interface WorkoutDao {
     suspend fun deleteWorkout(workout: Workout)
 
     /**
+     * Deletes every logged workout. The `workout_exercises` rows go with them, via the
+     * foreign key's CASCADE, so this clears all workout history while leaving the exercise
+     * and template catalog intact.
+     */
+    @Query("DELETE FROM workouts")
+    suspend fun deleteAllWorkouts()
+
+    /**
      * Retrieves all workouts with their exercises from a given start date.
      * @param startTimeMillis The start date in milliseconds.
      * @return A Flow emitting a list of Workouts with their associated exercises.

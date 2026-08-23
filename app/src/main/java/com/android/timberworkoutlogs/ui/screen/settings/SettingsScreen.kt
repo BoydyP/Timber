@@ -3,6 +3,8 @@ package com.android.timberworkoutlogs.ui.screen.settings
 import android.os.Build
 import android.util.Log
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -11,6 +13,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.android.timberworkoutlogs.BuildConfig
+import com.android.timberworkoutlogs.database.data.DatabaseSeeder
 import com.android.timberworkoutlogs.models.WeightUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,6 +30,7 @@ fun SettingsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
@@ -46,6 +52,46 @@ fun SettingsScreen(
                 useWeightRepPrediction = useWeightRepPrediction,
                 onWeightRepPredictionChanged = { viewModel.updateWeightRepPrediction(it) }
             )
+        }
+
+        // Compiled into debug builds only; the constant is false for release.
+        if (BuildConfig.DEVELOPER_TOOLS) {
+            DeveloperSettings()
+        }
+    }
+}
+
+/**
+ * Demo data generation, on demand. This replaces the old behaviour where every fresh
+ * install silently received [DatabaseSeeder.DEMO_HISTORY_DAYS] days of invented history —
+ * including for real users, who then had no way to remove it.
+ */
+@Composable
+private fun DeveloperSettings(
+    viewModel: DeveloperToolsViewModel = hiltViewModel()
+) {
+    val isBusy by viewModel.isBusy.collectAsState()
+
+    SettingGroup(title = "Developer") {
+        Text(
+            "Debug builds only. Demo history is generated data, for exercising the " +
+                    "stats and history screens.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Button(
+            onClick = viewModel::regenerateDemoHistory,
+            enabled = !isBusy,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Generate ${DatabaseSeeder.DEMO_HISTORY_DAYS} days of demo history")
+        }
+        OutlinedButton(
+            onClick = viewModel::clearWorkoutHistory,
+            enabled = !isBusy,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Clear workout history")
         }
     }
 }

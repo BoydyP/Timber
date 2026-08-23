@@ -1,6 +1,7 @@
 package com.android.timberworkoutlogs.rules
 
 import com.android.timberworkoutlogs.database.AppDatabase
+import com.android.timberworkoutlogs.database.data.DatabaseSeeder
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -12,12 +13,16 @@ import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
 /**
- * A JUnit rule that ensures each test class starts with a fresh database seeded with production data.
- * 
+ * A JUnit rule that ensures each test class starts with a fresh database seeded with the
+ * default exercise and template catalog.
+ *
  * This rule:
  * - Clears all database tables before the test class runs
- * - Re-seeds the database with DatabaseSeeder.seedProdData()
+ * - Re-seeds the database with DatabaseSeeder.seedCatalog()
  * - Ensures consistent starting state for all tests in a class
+ *
+ * Note this seeds the catalog only, never workout history. Tests that need history should
+ * insert exactly the workouts they assert on.
  * 
  * Usage:
  * ```
@@ -63,50 +68,14 @@ class DatabaseSeedingRule : TestRule {
             
             // Use Room's built-in clearAllTables() which properly handles foreign key constraints
             database.clearAllTables()
-            
-            // Re-seed with fresh production data synchronously
-            seedProdDataSynchronously(database)
-            
+
+            // Re-seed with the same catalog the app itself uses. DatabaseSeeder.seedCatalog
+            // is a suspend function, so it can simply be awaited here — this rule used to
+            // keep its own copy of the seeding logic, which had already drifted out of sync.
+            DatabaseSeeder.seedCatalog(database)
+
             // Add a small delay to ensure data is fully committed and available to UI
             delay(100)
         }
-    }
-    
-    /**
-     * Synchronous version of DatabaseSeeder.seedProdData() to ensure seeding completes before tests run
-     */
-    private suspend fun seedProdDataSynchronously(db: AppDatabase) {
-        val exerciseDefDao = db.exerciseDefinitionDao()
-        val templateDao = db.workoutTemplateDao()
-
-        // Seed Default Exercises
-        val defaultExercises = com.android.timberworkoutlogs.database.data.DefaultExercises.getPredefinedExercises()
-        android.util.Log.d("DatabaseSeedingRule", "Seeding ${defaultExercises.size} default exercises")
-        
-        defaultExercises.forEach { exercise ->
-            try {
-                exerciseDefDao.addExerciseDefinition(exercise)
-                android.util.Log.d("DatabaseSeedingRule", "Added exercise: ${exercise.name} (${exercise.equipment})")
-            } catch (e: Exception) {
-                android.util.Log.e("DatabaseSeedingRule", "Failed to add exercise: ${exercise.name}", e)
-            }
-        }
-
-        // Seed Default Templates
-        val templatesWithExercises = com.android.timberworkoutlogs.database.data.DefaultTemplates.getTemplatesWithExercises(defaultExercises)
-        android.util.Log.d("DatabaseSeedingRule", "Seeding ${templatesWithExercises.size} default templates")
-        
-        templatesWithExercises.forEach { (template, exercises) ->
-            try {
-                val templateId = templateDao.insertTemplate(template)
-                val exercisesWithCorrectId = exercises.map { it.copy(templateId = templateId) }
-                templateDao.upsertTemplateExercises(exercisesWithCorrectId)
-                android.util.Log.d("DatabaseSeedingRule", "Added template: ${template.name} with ${exercises.size} exercises")
-            } catch (e: Exception) {
-                android.util.Log.e("DatabaseSeedingRule", "Failed to add template: ${template.name}", e)
-            }
-        }
-        
-        android.util.Log.d("DatabaseSeedingRule", "Seeding process completed")
     }
 }

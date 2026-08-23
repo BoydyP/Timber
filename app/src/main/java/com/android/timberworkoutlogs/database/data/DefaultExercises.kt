@@ -4,9 +4,32 @@ import com.android.timberworkoutlogs.models.ExerciseDefinition
 import com.android.timberworkoutlogs.models.ExerciseEquipment
 import com.android.timberworkoutlogs.models.LogType
 import com.android.timberworkoutlogs.models.MuscleGroup
+import java.util.UUID
 
 object DefaultExercises {
-    fun getPredefinedExercises(): List<ExerciseDefinition> {
+
+    /**
+     * Returns the built-in exercise catalog, with a stable id assigned to every entry.
+     *
+     * [ExerciseDefinition.id] defaults to a random UUID, so without this the same
+     * exercise would get a brand new id on every call. That makes seeding
+     * non-repeatable: re-running it inserts duplicate rows rather than matching the
+     * existing ones (the `IGNORE` conflict strategy never fires, because the primary
+     * key is always new). Deriving the id from the exercise's natural key instead
+     * means "Barbell Bench Press" has the same id on every device and every re-seed.
+     */
+    fun getPredefinedExercises(): List<ExerciseDefinition> =
+        predefinedExercises().map { it.copy(id = stableId(it.name, it.equipment)) }
+
+    /**
+     * Content-addressed id derived from the natural key of an exercise. Name and
+     * equipment together are unique across the catalog — the same movement performed
+     * with a barbell and with dumbbells is two distinct exercises.
+     */
+    private fun stableId(name: String, equipment: ExerciseEquipment): UUID =
+        UUID.nameUUIDFromBytes("$name|${equipment.name}".toByteArray())
+
+    private fun predefinedExercises(): List<ExerciseDefinition> {
         return listOf(
             // --- CHEST ---
             ExerciseDefinition(name = "Bench Press", equipment = ExerciseEquipment.BARBELL, muscleGroups = listOf(MuscleGroup.CHEST, MuscleGroup.TRICEPS, MuscleGroup.SHOULDERS), logType = LogType.WEIGHT_AND_REPS),

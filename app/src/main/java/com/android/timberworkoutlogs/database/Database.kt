@@ -13,7 +13,6 @@ import com.android.timberworkoutlogs.database.converters.LogTypeConverter
 import com.android.timberworkoutlogs.database.converters.MuscleGroupListConverter
 import com.android.timberworkoutlogs.database.converters.UUIDConverter
 import com.android.timberworkoutlogs.database.converters.WeightUnitConverter
-import com.android.timberworkoutlogs.database.data.DatabaseSeeder
 import com.android.timberworkoutlogs.models.ExerciseDefinition
 import com.android.timberworkoutlogs.models.TemplateExercise
 import com.android.timberworkoutlogs.models.Workout
@@ -113,15 +112,12 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        private fun isInTestEnvironment(): Boolean {
-            return try {
-                Class.forName("androidx.test.espresso.Espresso")
-                true
-            } catch (_: ClassNotFoundException) {
-                false
-            }
-        }
-
+        /**
+         * Note: this deliberately does not seed. Room's `onCreate` callback fires exactly
+         * once per install and cannot suspend, which forced seeding to be fire-and-forget
+         * and unobservable. `DatabaseInitializer` owns seeding instead, so it can be
+         * awaited and re-run.
+         */
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -129,19 +125,6 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "timber_database.db"
                 )
-                    .addCallback(object : Callback() {
-                        override fun onCreate(db: SupportSQLiteDatabase) {
-                            super.onCreate(db)
-                            INSTANCE?.let { database ->
-                                // Only seed automatically if not in test environment
-                                // Tests using DatabaseSeedingRule will handle their own seeding
-                                if (!isInTestEnvironment()) {
-//                                    DatabaseSeeder.seedProdData(database)
-                                    DatabaseSeeder.seedRealisticData(database)
-                                }
-                            }
-                        }
-                    })
                     .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .build()
                 INSTANCE = instance
