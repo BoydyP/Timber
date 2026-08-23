@@ -196,7 +196,7 @@ fun WorkoutHistoryScreenPreview() {
     val fakeSettingsRepository = SettingsRepository(fakeDataStore)
 
     // 3. Create a real ViewModel with the fake repository.
-    // Note: Creating a ViewModel directly in a Composable is generally an anti-pattern,
+    // Note: Creating a ViewModel directly in a Composable is generally an antipattern,
     // but it is a standard and necessary practice for creating isolated @Previews.
     val previewViewModel = WorkoutHistoryViewModel(fakeWorkoutRepository, fakeSettingsRepository)
 
