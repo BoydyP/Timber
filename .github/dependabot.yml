@@ -1,0 +1,31 @@
+version: 2
+updates:
+  # Gradle dependencies, including the gradle/libs.versions.toml version catalog.
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels: [dependencies]
+    # One PR per group rather than a dozen individual bumps. AGP/Kotlin/KSP are deliberately
+    # left ungrouped - they need to move together with the Compose compiler and usually break
+    # something, so they are easier to review one at a time.
+    groups:
+      androidx:
+        patterns:
+          - "androidx.*"
+      test:
+        patterns:
+          - "io.mockk:*"
+          - "app.cash.turbine:*"
+          - "junit:junit"
+          - "com.kaspersky.android-components:*"
+          - "org.jetbrains.kotlinx:kotlinx-coroutines-test"
+
+  # Keep the actions in .github/workflows pinned to current major versions.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    labels: [dependencies]

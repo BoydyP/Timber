@@ -110,3 +110,12 @@ fabric.properties
 !/gradle/wrapper/gradle-wrapper.jar
 
 # End of https://www.toptal.com/developers/gitignore/api/androidstudio
+
+### Project-specific ###
+
+# Local agent/assistant tooling config. Machine-specific, not worth sharing.
+.claude/
+
+# SQLite sidecar files, left behind whenever a .db asset is opened by a tool.
+*.db-shm
+*.db-wal
