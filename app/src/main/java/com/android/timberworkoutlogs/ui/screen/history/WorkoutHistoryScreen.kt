@@ -39,6 +39,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import java.util.UUID
 
@@ -100,29 +101,34 @@ fun WorkoutHistoryScreenPreview() {
     // This preview demonstrates how to mock dependencies for a screen.
     // 1. Create Fake DAOs that implement all methods from the real interfaces.
     class FakeWorkoutDao : WorkoutDao {
-        override fun getAllWorkouts(): Flow<List<Workout>> {
-            val sampleWorkouts = listOf(
-                Workout(
-                    id = 1,
-                    name = "Chest Day",
-                    startTime = System.currentTimeMillis() - 86400000,
-                    durationSeconds = 3600
-                ),
-                Workout(
-                    id = 2,
-                    name = "Leg Day",
-                    startTime = System.currentTimeMillis() - 172800000,
-                    durationSeconds = 4500
-                )
+        // Single source of truth for the fake, so lookups by id agree with the list.
+        private val sampleWorkouts = listOf(
+            Workout(
+                id = 1,
+                name = "Chest Day",
+                startTime = System.currentTimeMillis() - 86400000,
+                durationSeconds = 3600
+            ),
+            Workout(
+                id = 2,
+                name = "Leg Day",
+                startTime = System.currentTimeMillis() - 172800000,
+                durationSeconds = 4500
             )
-            return flowOf(sampleWorkouts)
-        }
+        )
+
+        override fun getAllWorkouts(): Flow<List<Workout>> = flowOf(sampleWorkouts)
         override suspend fun insertWorkout(workout: Workout): Long = 0L
         override suspend fun updateWorkout(workout: Workout) {}
         override suspend fun deleteWorkout(workout: Workout) {}
-        override suspend fun getWorkoutCount(): Int = 2
-        override fun getWorkoutFlow(id: Long): Flow<Workout> = flowOf(Workout(id = id))
-        override suspend fun getWorkout(id: Long): Workout? = Workout(id = id)
+        override suspend fun deleteAllWorkouts() {}
+        override suspend fun getWorkoutCount(): Int = sampleWorkouts.size
+
+        // Like Room, an id with no matching row yields nothing rather than a fabricated workout.
+        override fun getWorkoutFlow(id: Long): Flow<Workout> =
+            sampleWorkouts.find { it.id == id }?.let { flowOf(it) } ?: emptyFlow()
+
+        override suspend fun getWorkout(id: Long): Workout? = sampleWorkouts.find { it.id == id }
         override fun getWorkoutsWithExercisesFrom(startTimeMillis: Long): Flow<List<WorkoutWithExercises>> =
             flowOf(emptyList())
         
