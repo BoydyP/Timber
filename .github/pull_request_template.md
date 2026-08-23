@@ -13,7 +13,7 @@
 - [ ] `./gradlew lintDebug` passes
 - [ ] New behaviour is covered by tests, or there's a note below explaining why not
 - [ ] Any Room entity change bumps the schema version and adds a `Migration` in `Database.kt`
-- [ ] The Gradle wrapper version is unchanged (it's pinned to 9.4.1 on purpose — see CONTRIBUTING.md)
+- [ ] The Gradle wrapper version is unchanged (it's pinned to 9.5.0 on purpose — see CONTRIBUTING.md)
 
 ## Screenshots
 

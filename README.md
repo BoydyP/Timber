@@ -14,8 +14,8 @@ way to track their strength training progress, without the 'connected' nature im
 - **Workout Templates:** Create and save your own workout routines to start logging faster.
 - **Pre-built Programs:** Comes with popular, proven workout templates like StrongLifts 5x5 and
   Push/Pull/Legs (PPL) to get you started.
-- **History & Progress:** (Coming Soon) Visualize your progress over time with charts and
-  statistics.
+- **History & Progress:** Visualise your progress over time with volume charts, per-exercise
+  progression and estimated one-rep-max trends.
 - **Offline First:** Designed to work completely offline. Your data is stored locally and is always
   available.
 - **Material Design 3:** A clean, modern, and dynamic user interface built with the latest Material
@@ -77,25 +77,28 @@ To get the project up and running on your local machine, follow these steps:
    of [Android Studio](https://developer.android.com/studio) installed.
 2. **Clone the repository:**
    ```bash
-   git clone https://github.com/P440Boyd/Timber.git
+   git clone https://github.com/BoydyP/Timber.git
    ```
 3. **Open in Android Studio:** Open the cloned project in Android Studio.
-4. **Generate the Database:**
-    - The app requires a pre-populated database file to function.
-    - Find the `DatabaseSeedingTest.kt` file located in the `app/src/androidTest` directory.
-    - Run the `seedDatabaseAndCreateFile()` test on an Android emulator or a physical device.
-    - Once the test runs, use the Android Studio **Device Explorer** to locate the generated
-      database file. It will be in
-      `/data/data/com.android.timberworkoutlogs/databases/timber_database.db`.
-    - Download this file from the device and place it in the `app/src/main/assets/database/`
-      directory. You may need to create the `database` folder.
-5. **Build and Run:** Build and run the `app` module on an emulator or physical device.
+4. **Build and Run:** Build and run the `app` module on an emulator or physical device.
+
+No database setup is needed. The reference catalog — the 55 default exercises and the ten default
+templates — is seeded on first launch by `DatabaseInitializer.ensureCatalogSeeded()`. Your workout
+history starts empty.
+
+If you want populated charts to work on the stats or history screens, debug builds expose a
+**Developer** section at the bottom of Settings that can generate 60 days of demo history (and clear
+it again). It is compiled out of release builds. See [CONTRIBUTING.md](CONTRIBUTING.md) for the
+build and test commands in full.
 
 ## Contributing
 
 Contributions are welcome! If you have a suggestion or find a bug, please open an issue - there are
 templates for [bug reports](.github/ISSUE_TEMPLATE/bug_report.yml) and
 [feature requests](.github/ISSUE_TEMPLATE/feature_request.yml).
+
+Found a security issue? Please don't open a public issue — see [SECURITY.md](SECURITY.md) for how to
+report it privately.
 
 Before opening a pull request, please read [CONTRIBUTING.md](CONTRIBUTING.md). It covers the toolchain
 (including why the Gradle wrapper is pinned), the build and test commands, the conventions this

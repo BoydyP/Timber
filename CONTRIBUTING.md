@@ -14,11 +14,16 @@ the tests, and the conventions the codebase already follows.
 - **Android Studio** (Narwhal or newer) with the Android SDK for **API 36** installed.
 - **An emulator or device on API 34 or higher.** `minSdk` is 34.
 
-### Do not upgrade the Gradle wrapper past 9.4.1
+### Do not upgrade the Gradle wrapper past 9.5.0
 
-`gradle/wrapper/gradle-wrapper.properties` pins **Gradle 9.4.1** deliberately. Gradle 9.7.1 fails to
+`gradle/wrapper/gradle-wrapper.properties` pins **Gradle 9.5.0** deliberately. Gradle 9.7.1 fails to
 sync against the project's AGP version with `Service 'SystemInfo' is not available`. If Android
 Studio offers to upgrade the wrapper, decline it.
+
+The distribution's SHA-256 is pinned alongside the URL via `distributionSha256Sum`, so if you do
+change the Gradle version you have to update the checksum too — get it from
+`https://services.gradle.org/distributions/gradle-<version>-bin.zip.sha256`. A stale checksum makes
+the wrapper refuse to run rather than fail obscurely later.
 
 ### Build and run
 
