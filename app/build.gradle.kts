@@ -13,7 +13,7 @@ plugins {
 
 android {
     namespace = "com.android.timberworkoutlogs"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.android.timberworkoutlogs"
@@ -119,7 +119,6 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     androidTestImplementation(libs.mockk.android)
     androidTestImplementation(libs.mockk.agent)
