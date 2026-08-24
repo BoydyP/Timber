@@ -40,7 +40,7 @@ jobs:
       # auto-provisions a matching JVM into ~/.gradle/jdks on the first run; caching it keeps
       # subsequent runs from re-downloading ~200 MB.
       - name: Cache auto-provisioned daemon JVM
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.gradle/jdks
           key: gradle-daemon-jvm-${{ runner.os }}-${{ hashFiles('gradle/gradle-daemon-jvm.properties') }}
@@ -85,7 +85,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Cache auto-provisioned daemon JVM
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.gradle/jdks
           key: gradle-daemon-jvm-${{ runner.os }}-${{ hashFiles('gradle/gradle-daemon-jvm.properties') }}
