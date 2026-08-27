@@ -119,10 +119,19 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    // Required: ui-test-junit4 is declared without a version in libs.versions.toml and takes it
+    // from the BOM. Without this platform() the androidTest classpath resolves it to an empty
+    // version and the build fails with "Could not find androidx.compose.ui:ui-test-junit4:".
+    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     androidTestImplementation(libs.mockk.android)
     androidTestImplementation(libs.mockk.agent)
     androidTestImplementation(libs.hilt.android.testing)
+    // Required: generates the per-test `*_TestComponentDataSupplier` classes that
+    // `@HiltAndroidTest` needs. Hilt 2.57.2 wired this up implicitly via its Gradle plugin; 2.60.1
+    // does not, and without it every Hilt instrumentation test fails at the MarkThatRulesRanRule
+    // with "is missing generated file".
+    kspAndroidTest(libs.hilt.android.compiler)
     androidTestImplementation(libs.kaspresso)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
