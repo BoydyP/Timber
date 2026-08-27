@@ -8,6 +8,12 @@ updates:
       day: monday
     open-pull-requests-limit: 5
     labels: [dependencies]
+    ignore:
+      # The Gradle wrapper is pinned on purpose (see CONTRIBUTING.md) and its SHA-256 is pinned
+      # alongside it, so a version bump that doesn't also update `distributionSha256Sum` makes the
+      # wrapper refuse to run. 9.7.1 in particular fails with `Service 'SystemInfo' is not
+      # available`. Bump it by hand, checksum included.
+      - dependency-name: gradle-wrapper
     # One PR per group rather than a dozen individual bumps. AGP/Kotlin/KSP are deliberately
     # left ungrouped - they need to move together with the Compose compiler and usually break
     # something, so they are easier to review one at a time.
