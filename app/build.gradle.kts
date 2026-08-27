@@ -66,7 +66,7 @@ configurations.all {
     exclude(group = "com.intellij", module = "annotations")
     resolutionStrategy {
         if (name.contains("AndroidTest")) {
-            force("androidx.drawerlayout:drawerlayout:1.1.1")
+            force("androidx.drawerlayout:drawerlayout:1.2.0")
         }
     }
 }
