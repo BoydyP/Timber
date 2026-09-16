@@ -184,12 +184,21 @@ class WorkoutViewModel @Inject constructor(
         isInitializingSession = true
         viewModelScope.launch {
             try {
-                val currentTime = System.currentTimeMillis()
-                val newWorkout = Workout(startTime = currentTime)
-                val id = workoutRepository.insertWorkout(newWorkout)
-                currentWorkoutId = id
-                Log.d(TAG, "New workout session started with ID: $id")
-                onAddExercise()
+                // Serialized against switchToWorkoutSession: entering the screen for a
+                // template-started workout switches sessions while this insert is still in
+                // flight, and without the lock both would race to own currentWorkoutId.
+                sessionSwitchMutex.withLock {
+                    if (currentWorkoutId != null) {
+                        Log.d(TAG, "Session $currentWorkoutId already active, not starting a new one")
+                        return@withLock
+                    }
+                    val currentTime = System.currentTimeMillis()
+                    val newWorkout = Workout(startTime = currentTime)
+                    val id = workoutRepository.insertWorkout(newWorkout)
+                    currentWorkoutId = id
+                    Log.d(TAG, "New workout session started with ID: $id")
+                    onAddExercise()
+                }
             } finally {
                 isInitializingSession = false
             }
@@ -237,29 +246,50 @@ class WorkoutViewModel @Inject constructor(
     }
 
     fun onAddExercise() {
+        val id = currentWorkoutId
+        if (id == null) {
+            Log.e(TAG, "Cannot add exercise, workoutId is null")
+            return
+        }
         viewModelScope.launch {
-            currentWorkoutId?.let { id ->
-                val placeholderDefinitionId = UUID.randomUUID()
-                val defaultUnit = settingsRepository.weightUnit.first()
-                workoutExercises.add(
-                    WorkoutExercise(
-                        workoutId = id,
-                        definitionId = placeholderDefinitionId,
-                        sets = listOf(),
-                        unit = defaultUnit
-                    )
+            val placeholderDefinitionId = UUID.randomUUID()
+            val defaultUnit = settingsRepository.weightUnit.first()
+            // The session can be swapped while the unit preference loads - a workout started from
+            // a template replaces the whole list - and appending this placeholder afterwards would
+            // add an unsaved slot to somebody else's workout.
+            if (currentWorkoutId != id) {
+                Log.d(TAG, "Dropping placeholder for workout $id, session is now $currentWorkoutId")
+                return@launch
+            }
+            workoutExercises.add(
+                WorkoutExercise(
+                    workoutId = id,
+                    definitionId = placeholderDefinitionId,
+                    sets = listOf(),
+                    unit = defaultUnit
                 )
-                exerciseDefinitions.add(null)
-                Log.d(TAG, "Added new empty exercise slot to workout ID: $id. Unit is $defaultUnit")
-            } ?: Log.e(TAG, "Cannot add exercise, workoutId is null")
+            )
+            exerciseDefinitions.add(null)
+            Log.d(TAG, "Added new empty exercise slot to workout ID: $id. Unit is $defaultUnit")
         }
     }
 
     fun deleteExercise(exercise: WorkoutExercise) {
-        val index = workoutExercises.indexOf(exercise)
+        // Match on the row's own id rather than the whole object: two duplicates of the same
+        // exercise only differ by id, and the caller may be holding a slightly stale copy
+        // (indexOf would then miss the row entirely).
+        val index = workoutExercises.indexOfFirst { it.id == exercise.id }
         if (index != -1) {
             workoutExercises.removeAt(index)
             exerciseDefinitions.removeAt(index)
+        }
+        // A workout started from a template already has its exercise rows persisted, and
+        // onFinishWorkout only ever inserts, so dropping the row from the in-memory list is not
+        // enough - without this delete the exercise comes back when the session is reloaded or
+        // the workout is saved.
+        viewModelScope.launch {
+            workoutRepository.deleteWorkoutExercise(exercise.id)
+            Log.d(TAG, "Deleted exercise ${exercise.id} (slot $index) from workout $currentWorkoutId")
         }
     }
 
@@ -481,15 +511,19 @@ class WorkoutViewModel @Inject constructor(
                     }
                 }
 
+                // Resolve every definition up-front: workoutExercises and exerciseDefinitions are
+                // parallel lists matched by index, so suspending between mutating one and the
+                // other lets a concurrent onAddExercise splice its placeholder in between and
+                // shift every definition onto the wrong exercise.
                 val exercises = workoutRepository.getExercisesForWorkout(workoutId)
+                val definitions = exercises.map { exercise ->
+                    exerciseDefinitionRepository.getExerciseDefinition(exercise.definitionId)
+                }
+
                 workoutExercises.clear()
                 exerciseDefinitions.clear()
-                exercises.forEach { exercise ->
-                    workoutExercises.add(exercise)
-                    exerciseDefinitions.add(
-                        exerciseDefinitionRepository.getExerciseDefinition(exercise.definitionId)
-                    )
-                }
+                workoutExercises.addAll(exercises)
+                exerciseDefinitions.addAll(definitions)
                 currentWorkoutId = workoutId
                 Log.d(TAG, "Switched to workout session with ID: $workoutId (${exercises.size} exercises)")
             }
