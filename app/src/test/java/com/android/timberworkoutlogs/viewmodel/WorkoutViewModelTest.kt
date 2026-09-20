@@ -30,8 +30,10 @@ import io.mockk.unmockkStatic
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -185,6 +187,38 @@ class WorkoutViewModelTest {
             assertEquals(1, viewModel.exerciseDefinitions.size)
             assertFalse(viewModel.workoutExercises.any { it.id == toDelete.id })
         }
+
+    @Test
+    fun `deleteExercise removes only the swiped one of two identical exercises`() =
+        runTest(testDispatcher) {
+            advanceUntilIdle()
+            viewModel.onAddExercise()
+            advanceUntilIdle()
+            coEvery { exerciseDefinitionRepository.getExerciseDefinition(benchPressDef.id) } returns
+                benchPressDef
+            viewModel.onExerciseSelected(0, benchPressDef.id)
+            viewModel.onExerciseSelected(1, benchPressDef.id)
+            advanceUntilIdle()
+
+            val survivor = viewModel.workoutExercises[1]
+            viewModel.deleteExercise(viewModel.workoutExercises[0])
+
+            assertEquals(listOf(survivor.id), viewModel.workoutExercises.map { it.id })
+            assertEquals(listOf(benchPressDef), viewModel.exerciseDefinitions)
+        }
+
+    @Test
+    fun `deleteExercise also deletes the persisted row`() = runTest(testDispatcher) {
+        advanceUntilIdle()
+        val toDelete = viewModel.workoutExercises[0]
+
+        viewModel.deleteExercise(toDelete)
+        advanceUntilIdle()
+
+        // A workout started from a template is already persisted, so an in-memory removal alone
+        // would let the deleted exercise come back on the next load.
+        coVerify(exactly = 1) { workoutRepository.deleteWorkoutExercise(toDelete.id) }
+    }
 
     // ---------- onExerciseSelected ----------
 
@@ -633,6 +667,38 @@ class WorkoutViewModelTest {
             advanceUntilIdle()
 
             coVerify { workoutRepository.deleteWorkout(match { it.id == 1L }) }
+        }
+
+    @Test
+    fun `a placeholder added while a template workout loads cannot desync the definitions`() =
+        runTest(testDispatcher) {
+            advanceUntilIdle()
+            // Two of the same exercise, as a template holding a duplicate produces.
+            val first = WorkoutExercise(
+                workoutId = 99L,
+                definitionId = benchPressDef.id,
+                sets = listOf(WeightAndRepsSet(weight = 60.0, reps = 5)),
+            )
+            val second = first.copy(id = UUID.randomUUID())
+            coEvery { workoutRepository.getExercisesForWorkout(99L) } returns listOf(first, second)
+            coEvery { exerciseDefinitionRepository.getExerciseDefinition(benchPressDef.id) } coAnswers {
+                delay(50)
+                benchPressDef
+            }
+
+            viewModel.ensureWorkoutSession(99L)
+            // Land a placeholder from the previous session midway through loading: that used to
+            // splice an unsaved slot into workoutExercises and shift every definition onto the
+            // wrong exercise, so cards showed a name that belonged to their neighbour.
+            advanceTimeBy(60)
+            viewModel.onAddExercise()
+            advanceUntilIdle()
+
+            assertEquals(
+                listOf(first.id, second.id),
+                viewModel.workoutExercises.map { it.id }
+            )
+            assertEquals(listOf(benchPressDef, benchPressDef), viewModel.exerciseDefinitions)
         }
 
     @Test

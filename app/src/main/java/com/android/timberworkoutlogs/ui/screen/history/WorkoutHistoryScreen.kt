@@ -149,6 +149,7 @@ fun WorkoutHistoryScreenPreview() {
 
     class FakeWorkoutExerciseDao : WorkoutExerciseDao {
         override suspend fun insertWorkoutExercises(exercises: List<WorkoutExercise>) {}
+        override suspend fun deleteWorkoutExercise(exerciseId: UUID) {}
         override suspend fun getExercisesForWorkout(workoutId: Long): List<WorkoutExercise> {
             return if (workoutId == 1L) {
                 listOf(

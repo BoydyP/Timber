@@ -261,7 +261,8 @@ class TemplateToWorkoutIntegrationTest : TestCase() {
         step("Verify template can still be used in workout") {
             composeTestRule.onNodeWithText(templateName).performClick()
             composeTestRule.onNodeWithContentDescription("Start Workout").performClick()
-            composeTestRule.onNodeWithText("Select Exercise...").performClick()
+            // A template-started workout holds exactly the template's exercises: there is no
+            // empty "Select Exercise..." slot to open, the name is already on the card.
             composeTestRule.onNodeWithText("Dumbbell Bicep Curl").assertIsDisplayed()
         }
     }

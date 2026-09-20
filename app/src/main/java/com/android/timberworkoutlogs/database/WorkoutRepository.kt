@@ -61,6 +61,10 @@ class WorkoutRepository(
         }
     }
 
+    suspend fun deleteWorkoutExercise(exerciseId: UUID) {
+        workoutExerciseDao.deleteWorkoutExercise(exerciseId)
+    }
+
     suspend fun getExercisesForWorkout(workoutId: Long): List<WorkoutExercise> {
         return workoutExerciseDao.getExercisesForWorkout(workoutId)
     }
